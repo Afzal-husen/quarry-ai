@@ -9,6 +9,7 @@ from fastapi import APIRouter, File, HTTPException, Query, UploadFile, Request
 
 from backend.app.core.chunker import DocumentChunker
 from backend.app.core.parsers import DocumentParser, DocumentParsingError
+from backend.app.core.vectorstore import VectorStoreManager, VectorStoreError
 
 # Ensure environment variables are loaded
 load_dotenv()
@@ -30,6 +31,7 @@ parser = DocumentParser()
 default_size = int(os.getenv("CHUNK_SIZE", "500"))
 default_overlap = int(os.getenv("CHUNK_OVERLAP", "50"))
 chunker = DocumentChunker(default_chunk_size=default_size, default_chunk_overlap=default_overlap)
+vector_manager = VectorStoreManager()
 
 
 @router.post("/upload")
@@ -146,6 +148,18 @@ async def upload_file(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to persist chunked metadata to local storage: {str(e)}"
+        ) from e
+
+    # 8. Index chunks into isolated Chroma vector store
+    try:
+        vector_manager.index_document(
+            document_id=document_uuid,
+            source_filename=original_filename
+        )
+    except VectorStoreError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Document indexed to disk but vector indexing failed: {str(e)}"
         ) from e
 
     # Return success payload

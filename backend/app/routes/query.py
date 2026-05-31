@@ -1,0 +1,85 @@
+from pathlib import Path
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
+
+from backend.app.core.qa import QAPipeline, GroqConnectionError, InferenceError
+from backend.app.core.vectorstore import VectorStoreManager, VectorStoreError
+
+router = APIRouter()
+
+# Initialize core orchestrators
+vector_manager = VectorStoreManager()
+qa_pipeline = QAPipeline()
+
+
+class QueryRequest(BaseModel):
+    """Pydantic model representing the JSON request schema for document Q&A."""
+
+    document_id: str = Field(
+        ...,
+        description="The unique UUID of the uploaded and processed document."
+    )
+    question: str = Field(
+        ...,
+        description="The natural language question to ask related to the document context."
+    )
+    top_k: int = Field(
+        default=3,
+        ge=1,
+        le=10,
+        description="Number of most semantically relevant text chunks to retrieve (1-10)."
+    )
+
+
+@router.post("/query")
+async def query_document(body: QueryRequest):
+    """Answers questions related to an uploaded document using local vectors and ChatGroq inference.
+
+    Args:
+        body: The QueryRequest Pydantic JSON model.
+
+    Returns:
+        A JSON dictionary containing the generated "answer" and a list of source "citations".
+    """
+    # 1. Enforce strict 404 early fallback check for missing indices
+    db_path = vector_manager.vectorstore_dir / body.document_id
+    if not db_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Vector database index for document '{body.document_id}' does not exist on disk. Please upload and index the document first."
+        )
+
+    # 2. Retrieve top-K relevant semantic chunks from isolated database
+    try:
+        matching_chunks = vector_manager.retrieve_relevant_chunks(
+            document_id=body.document_id,
+            query=body.question,
+            top_k=body.top_k
+        )
+    except VectorStoreError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Local vector store retrieval failed: {str(e)}"
+        )
+
+    # 3. Generate strict grounded response via ChatGroq
+    try:
+        payload = qa_pipeline.generate_answer(
+            query=body.question,
+            retrieved_docs=matching_chunks
+        )
+    except GroqConnectionError as e:
+        # Expose meaningful API unconfigured/connection issues as developer status 500
+        raise HTTPException(
+            status_code=500,
+            detail=f"Groq API connection/credentials error: {str(e)}"
+        )
+    except InferenceError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"LLM generative inference failure: {str(e)}"
+        )
+
+    # Return success payload containing answer and source page-level citations
+    return payload

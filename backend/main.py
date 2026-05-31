@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
 from backend.app.routes.upload import router as upload_router
+from backend.app.routes.query import router as query_router
 
 # Load environment configurations relative to the module root
 env_path = Path(__file__).parent / ".env"
@@ -15,6 +16,7 @@ load_dotenv(dotenv_path=env_path)
 BASE_DIR = Path(__file__).resolve().parent
 (BASE_DIR / "data" / "uploads").mkdir(parents=True, exist_ok=True)
 (BASE_DIR / "data" / "chunks").mkdir(parents=True, exist_ok=True)
+(BASE_DIR / "data" / "vectorstore").mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(
     title="Document RAG REST API",
@@ -24,6 +26,9 @@ app = FastAPI(
 
 # Register ingestion routes
 app.include_router(upload_router, tags=["Document Ingestion"])
+
+# Register Q&A query routes
+app.include_router(query_router, tags=["Document Q&A"])
 
 
 @app.get("/", include_in_schema=False)
