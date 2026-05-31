@@ -17,5 +17,6 @@ dependencies = [
     "pypdf",
     "python-multipart",
     "pytest",
-    "httpx"
+    "httpx",
+    "langchain-chroma"
 ]
