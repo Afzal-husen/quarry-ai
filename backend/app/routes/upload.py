@@ -7,9 +7,9 @@ from typing import Optional
 from dotenv import load_dotenv
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile, Request
 
-from backend.app.core.chunker import DocumentChunker
-from backend.app.core.parsers import DocumentParser, DocumentParsingError
-from backend.app.core.vectorstore import VectorStoreManager, VectorStoreError
+from app.core.chunker import DocumentChunker
+from app.core.parsers import DocumentParser, DocumentParsingError
+from app.core.vectorstore import VectorStoreManager, VectorStoreError
 
 # Ensure environment variables are loaded
 load_dotenv()
@@ -30,7 +30,8 @@ parser = DocumentParser()
 # Load chunk configurations from environment with fallbacks
 default_size = int(os.getenv("CHUNK_SIZE", "500"))
 default_overlap = int(os.getenv("CHUNK_OVERLAP", "50"))
-chunker = DocumentChunker(default_chunk_size=default_size, default_chunk_overlap=default_overlap)
+chunker = DocumentChunker(default_chunk_size=default_size,
+                          default_chunk_overlap=default_overlap)
 vector_manager = VectorStoreManager()
 
 
@@ -38,8 +39,10 @@ vector_manager = VectorStoreManager()
 async def upload_file(
     request: Request,
     file: UploadFile = File(...),
-    chunk_size: Optional[int] = Query(None, description="Character size of each split text block"),
-    chunk_overlap: Optional[int] = Query(None, description="Character overlap between consecutive chunks")
+    chunk_size: Optional[int] = Query(
+        None, description="Character size of each split text block"),
+    chunk_overlap: Optional[int] = Query(
+        None, description="Character overlap between consecutive chunks")
 ):
     """Uploads a PDF, DOC, or DOCX document, parses its contents, and indexes the split chunks locally.
 
@@ -62,7 +65,8 @@ async def upload_file(
         )
 
     # 2. Check Content-Length header if present at request or file level
-    content_length = request.headers.get("content-length") or file.headers.get("content-length")
+    content_length = request.headers.get(
+        "content-length") or file.headers.get("content-length")
     if content_length:
         try:
             if int(content_length) > MAX_FILE_SIZE_BYTES:
@@ -121,7 +125,8 @@ async def upload_file(
     except Exception as e:
         if temp_file_path.exists():
             temp_file_path.unlink()
-        raise HTTPException(status_code=500, detail=f"Unexpected parsing engine failure: {str(e)}") from e
+        raise HTTPException(
+            status_code=500, detail=f"Unexpected parsing engine failure: {str(e)}") from e
 
     # 6. Chunk Extracted Text Content
     try:

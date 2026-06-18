@@ -3,8 +3,8 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from backend.app.core.qa import QAPipeline, GroqConnectionError, InferenceError
-from backend.app.core.vectorstore import VectorStoreManager, VectorStoreError
+from app.core.qa import QAPipeline, GroqConnectionError, InferenceError
+from app.core.vectorstore import VectorStoreManager, VectorStoreError
 
 router = APIRouter()
 
