@@ -1,6 +1,7 @@
 import os
 import threading
 from typing import Any, Dict, List, Optional
+from pydantic import SecretStr
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.documents import Document
@@ -47,7 +48,7 @@ class GroqConnectionManager:
                         cls._instance = ChatGroq(
                             model=model_name,
                             temperature=0.0,
-                            api_key=api_key
+                            api_key=SecretStr(api_key)
                         )
                     except Exception as e:
                         raise GroqConnectionError(
