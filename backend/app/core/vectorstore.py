@@ -67,10 +67,11 @@ class VectorStoreManager:
         self.chunks_dir = self.base_dir / "data" / "chunks"
         self.vectorstore_dir = self.base_dir / "data" / "vectorstore"
 
-    def index_document(self, document_id: str, source_filename: str) -> Path:
+    def index_document(self, user_id: str, document_id: str, source_filename: str) -> Path:
         """Reads serialized JSON chunks and indexes them inside an isolated Chroma DB folder on disk.
 
         Args:
+            user_id: The unique UUID of the authenticated user.
             document_id: The unique UUID of the uploaded document.
             source_filename: The original name of the uploaded document.
 
@@ -80,7 +81,7 @@ class VectorStoreManager:
         Raises:
             VectorStoreError: If chunks do not exist, or indexing persists incorrectly.
         """
-        chunks_file_path = self.chunks_dir / f"{document_id}.json"
+        chunks_file_path = self.chunks_dir / user_id / f"{document_id}.json"
         if not chunks_file_path.exists():
             raise VectorStoreError(f"Ingested chunks metadata file not found at {chunks_file_path}")
 
@@ -108,7 +109,7 @@ class VectorStoreManager:
             documents.append(doc)
 
         # 3. Resolve persistent directory path
-        db_path = self.vectorstore_dir / document_id
+        db_path = self.vectorstore_dir / user_id / document_id
 
         # 4. Initialize isolated Chroma vector index and persist embeddings on disk
         try:
@@ -132,10 +133,11 @@ class VectorStoreManager:
 
         return db_path
 
-    def get_retriever(self, document_id: str, top_k: int = 3) -> VectorStoreRetriever:
+    def get_retriever(self, user_id: str, document_id: str, top_k: int = 3) -> VectorStoreRetriever:
         """Loads an isolated Chroma DB from disk and returns a native LangChain VectorStoreRetriever.
 
         Args:
+            user_id: The unique UUID of the authenticated user.
             document_id: The unique UUID of the target document.
             top_k: The number of relevant matching chunks to return (default 3).
 
@@ -145,7 +147,7 @@ class VectorStoreManager:
         Raises:
             VectorStoreError: If the document index directory does not exist or loading fails.
         """
-        db_path = self.vectorstore_dir / document_id
+        db_path = self.vectorstore_dir / user_id / document_id
         if not db_path.exists():
             raise VectorStoreError(
                 f"Vector database index for document '{document_id}' does not exist on disk."
@@ -165,6 +167,7 @@ class VectorStoreManager:
 
     def retrieve_relevant_chunks(
         self,
+        user_id: str,
         document_id: str,
         query: str,
         top_k: int = 3
@@ -172,6 +175,7 @@ class VectorStoreManager:
         """Loads an isolated Chroma DB from disk and retrieves the top-K semantically matching chunks.
 
         Args:
+            user_id: The unique UUID of the authenticated user.
             document_id: The unique UUID of the target document.
             query: The natural language search query.
             top_k: The number of relevant matching chunks to return (default 3).
@@ -182,7 +186,7 @@ class VectorStoreManager:
         Raises:
             VectorStoreError: If the document index directory does not exist or querying fails.
         """
-        db_path = self.vectorstore_dir / document_id
+        db_path = self.vectorstore_dir / user_id / document_id
         if not db_path.exists():
             raise VectorStoreError(
                 f"Vector database index for document '{document_id}' does not exist on disk."

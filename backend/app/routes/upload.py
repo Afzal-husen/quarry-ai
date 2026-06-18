@@ -82,8 +82,10 @@ async def upload_file(
     # 3. Generate unique document UUID
     document_uuid = str(uuid.uuid4())
     saved_filename = f"{document_uuid}{suffix}"
-    UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
-    temp_file_path = UPLOADS_DIR / saved_filename
+    user_id = current_user["id"]
+    user_upload_dir = UPLOADS_DIR / user_id
+    user_upload_dir.mkdir(parents=True, exist_ok=True)
+    temp_file_path = user_upload_dir / saved_filename
 
     # 4. Stream upload data chunk-by-chunk to disk to preserve memory
     total_bytes_written = 0
@@ -149,7 +151,7 @@ async def upload_file(
             document_id=document_uuid,
             source_filename=original_filename,
             chunks=split_docs,
-            output_dir=CHUNKS_DIR
+            output_dir=CHUNKS_DIR / user_id
         )
     except Exception as e:
         raise HTTPException(
@@ -160,6 +162,7 @@ async def upload_file(
     # 8. Index chunks into isolated Chroma vector store
     try:
         vector_manager.index_document(
+            user_id=user_id,
             document_id=document_uuid,
             source_filename=original_filename
         )

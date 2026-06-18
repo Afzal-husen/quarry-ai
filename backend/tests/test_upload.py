@@ -86,11 +86,11 @@ def test_upload_valid_pdf(auth_headers):
     document_id = payload["document_id"]
 
     # Verify that raw file exists in uploads folder
-    raw_file_path = UPLOADS_DIR / f"{document_id}.pdf"
+    raw_file_path = UPLOADS_DIR / "user-123" / f"{document_id}.pdf"
     assert raw_file_path.exists(), f"Raw file not persisted at {raw_file_path}"
 
     # Verify that serialized chunks exist in chunks folder
-    chunks_file_path = CHUNKS_DIR / f"{document_id}.json"
+    chunks_file_path = CHUNKS_DIR / "user-123" / f"{document_id}.json"
     assert chunks_file_path.exists(), f"Chunks metadata not persisted at {chunks_file_path}"
 
     # Verify JSON content structure
@@ -130,7 +130,7 @@ def test_upload_chunking_parameter_overrides(auth_headers):
     payload = response.json()
     document_id = payload["document_id"]
 
-    chunks_file_path = CHUNKS_DIR / f"{document_id}.json"
+    chunks_file_path = CHUNKS_DIR / "user-123" / f"{document_id}.json"
     with open(chunks_file_path, "r", encoding="utf-8") as f:
         metadata = json.load(f)
         assert metadata["total_chunks"] > 1

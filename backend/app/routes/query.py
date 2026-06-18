@@ -46,18 +46,29 @@ async def query_document(
     Returns:
         A JSON dictionary containing the generated "answer" and a list of source "citations".
     """
-    # 1. Enforce strict 404 early fallback check for missing indices
-    db_path = vector_manager.vectorstore_dir / body.document_id
-    if not db_path.exists():
+    # 1. Enforce strict ownership boundaries and 404 early checks
+    # Find if the document exists for ANY user
+    global_matches = list(vector_manager.vectorstore_dir.glob(f"*/{body.document_id}"))
+    if not global_matches:
         raise HTTPException(
             status_code=404,
             detail=f"Vector database index for document '{body.document_id}' does not exist on disk. Please upload and index the document first."
+        )
+
+    # Check if the document belongs specifically to the current authenticated user
+    user_id = current_user["id"]
+    db_path = vector_manager.vectorstore_dir / user_id / body.document_id
+    if not db_path.exists():
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: You do not own or have permission to access this document."
         )
 
     # 2. Retrieve top-K relevant semantic chunks from isolated database
     retriever = None
     try:
         retriever = vector_manager.get_retriever(
+            user_id=user_id,
             document_id=body.document_id,
             top_k=body.top_k
         )

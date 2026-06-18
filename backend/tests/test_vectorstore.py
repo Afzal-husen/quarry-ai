@@ -62,21 +62,23 @@ def test_vectorstore_indexing_and_retrieval():
     }
 
     # 2. Persist mock chunks to temp JSON file
-    manager.chunks_dir.mkdir(parents=True, exist_ok=True)
-    temp_chunks_path = manager.chunks_dir / f"{document_uuid}.json"
+    temp_chunks_dir = manager.chunks_dir / "test-user-123"
+    temp_chunks_dir.mkdir(parents=True, exist_ok=True)
+    temp_chunks_path = temp_chunks_dir / f"{document_uuid}.json"
     with open(temp_chunks_path, "w", encoding="utf-8") as f:
         json.dump(mock_chunks, f, indent=4)
 
-    db_path = manager.vectorstore_dir / document_uuid
+    db_path = manager.vectorstore_dir / "test-user-123" / document_uuid
 
     try:
         # 3. Index documents into isolated Chroma vector store
-        persisted_path = manager.index_document(document_uuid, source_filename)
+        persisted_path = manager.index_document("test-user-123", document_uuid, source_filename)
         assert persisted_path == db_path
         assert db_path.exists(), f"Chroma database path '{db_path}' was not created!"
 
         # 4. Query isolated database and verify semantic retrieval
         retrieved_docs = manager.retrieve_relevant_chunks(
+            user_id="test-user-123",
             document_id=document_uuid,
             query="Tell me about FastAPI web frameworks in Python.",
             top_k=1
@@ -91,6 +93,7 @@ def test_vectorstore_indexing_and_retrieval():
 
         # Verify semantic ranking
         retrieved_rag = manager.retrieve_relevant_chunks(
+            user_id="test-user-123",
             document_id=document_uuid,
             query="What is RAG retrieval model optimization?",
             top_k=1
@@ -102,5 +105,13 @@ def test_vectorstore_indexing_and_retrieval():
         # 5. Clean up temporary files on disk
         if temp_chunks_path.exists():
             temp_chunks_path.unlink()
+        # Clean up mock user chunks directory if empty
+        if temp_chunks_dir.exists() and not list(temp_chunks_dir.iterdir()):
+            temp_chunks_dir.rmdir()
+            
         if db_path.exists():
             shutil.rmtree(db_path)
+        # Clean up mock user vectorstore directory if empty
+        user_vector_dir = manager.vectorstore_dir / "test-user-123"
+        if user_vector_dir.exists() and not list(user_vector_dir.iterdir()):
+            user_vector_dir.rmdir()

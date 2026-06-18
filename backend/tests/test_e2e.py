@@ -121,17 +121,18 @@ def uploaded_doc_id(ensure_fixture, auth_headers):
 
 def _cleanup_doc(doc_id: str):
     """Remove all persisted artefacts for the given document id."""
-    vectorstore_path = BASE_DIR / "data" / "vectorstore" / doc_id
+    vectorstore_path = BASE_DIR / "data" / "vectorstore" / "user-e2e-123" / doc_id
     if vectorstore_path.exists():
         shutil.rmtree(vectorstore_path, ignore_errors=True)
 
-    chunks_file = BASE_DIR / "data" / "chunks" / f"{doc_id}.json"
+    chunks_file = BASE_DIR / "data" / "chunks" / "user-e2e-123" / f"{doc_id}.json"
     if chunks_file.exists():
         chunks_file.unlink(missing_ok=True)
 
-    upload_dir = BASE_DIR / "data" / "uploads"
-    for upload_file in upload_dir.glob(f"{doc_id}*"):
-        upload_file.unlink(missing_ok=True)
+    upload_dir = BASE_DIR / "data" / "uploads" / "user-e2e-123"
+    if upload_dir.exists():
+        for upload_file in upload_dir.glob(f"{doc_id}*"):
+            upload_file.unlink(missing_ok=True)
 
 
 def _write_minimal_pdf(dest: Path):
@@ -201,14 +202,14 @@ class TestUploadE2E:
 
     def test_upload_creates_vectorstore(self, uploaded_doc_id):
         """The vector store directory must exist on disk after a successful upload."""
-        vectorstore_path = BASE_DIR / "data" / "vectorstore" / uploaded_doc_id
+        vectorstore_path = BASE_DIR / "data" / "vectorstore" / "user-e2e-123" / uploaded_doc_id
         assert vectorstore_path.exists(), (
             f"Vector store for '{uploaded_doc_id}' was not created at {vectorstore_path}"
         )
 
     def test_upload_creates_chunks_metadata(self, uploaded_doc_id):
         """A JSON metadata file for chunk information must exist after upload."""
-        chunks_file = BASE_DIR / "data" / "chunks" / f"{uploaded_doc_id}.json"
+        chunks_file = BASE_DIR / "data" / "chunks" / "user-e2e-123" / f"{uploaded_doc_id}.json"
         assert chunks_file.exists(), f"Chunks metadata JSON not found: {chunks_file}"
 
 
@@ -419,3 +420,36 @@ class TestQueryNotFoundE2E:
         assert fake_id in data["detail"], (
             f"Expected '{fake_id}' in error detail, got: {data['detail']}"
         )
+
+
+class TestMultiTenancyQueryE2E:
+    """Verify that querying documents belonging to another tenant returns 403 Forbidden."""
+
+    def test_query_other_users_document_returns_403(self, uploaded_doc_id):
+        """Querying a document uploaded by another user must return 403 Forbidden."""
+        # Create and register a second tenant
+        username_b = "test_e2e_user_b"
+        UserDatabaseManager.create_user(
+            user_id="user-e2e-456",
+            username=username_b,
+            hashed_password="hashedpassword"
+        )
+        token_b = create_access_token({"sub": username_b})
+        headers_b = {"Authorization": f"Bearer {token_b}"}
+
+        # Query the document uploaded by the first tenant (user-e2e-123)
+        response = client.post(
+            "/query",
+            json={
+                "document_id": uploaded_doc_id,
+                "question": "What is the capital of France?",
+                "top_k": 3
+            },
+            headers=headers_b
+        )
+        assert response.status_code == 403, (
+            f"Expected 403 Forbidden, got {response.status_code}: {response.text}"
+        )
+        data = response.json()
+        assert "detail" in data
+        assert "Forbidden" in data["detail"]
