@@ -1,14 +1,17 @@
 import json
 import sys
 from pathlib import Path
+import pytest
+from fastapi.testclient import TestClient
 
 # Add backend directory to sys.path to allow absolute imports relative to backend/
 ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from fastapi.testclient import TestClient
-
+import app.core.database as db_mod
+from app.core.database import UserDatabaseManager
+from app.core.auth import create_access_token
 from main import app
 
 client = TestClient(app)
@@ -22,25 +25,57 @@ CHUNKS_DIR = BASE_DIR / "data" / "chunks"
 MINIMAL_PDF_BYTES = b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 3 3] /Resources << >> /Contents 4 0 R >>\nendobj\n4 0 obj\n<< /Length 93 >>\nstream\nBT /F1 1 Tf (This is a longer text string that will definitely be split into multiple chunks.) Tj ET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f \n0000000009 00000 n \n0000000062 00000 n \n0000000121 00000 n \n0000000224 00000 n \ntrailer\n<< /Size 5 /Root 1 0 R >>\nstartxref\n296\n%%EOF"
 
 
+@pytest.fixture(autouse=True)
+def setup_test_db(tmp_path):
+    """Isolates user database for each test case using a temporary db file path."""
+    test_db = tmp_path / "test_users.db"
+    old_db_path = db_mod.DB_PATH
+    db_mod.DB_PATH = test_db
+    
+    UserDatabaseManager.initialize_db()
+    yield
+    db_mod.DB_PATH = old_db_path
+
+
+@pytest.fixture
+def auth_headers():
+    """Registers a test user and returns request headers with a valid Bearer JWT."""
+    username = "testuploader"
+    UserDatabaseManager.create_user(
+        user_id="user-123",
+        username=username,
+        hashed_password="hashedpassword"
+    )
+    token = create_access_token({"sub": username})
+    return {"Authorization": f"Bearer {token}"}
+
+
 def test_health_check():
-    """Verify that the health check endpoint returns 200 OK and expected payload."""
+    """Verify that the health check endpoint returns 200 OK and expected payload (no auth required)."""
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
 
-def test_upload_invalid_extension():
+def test_upload_unauthorized():
+    """Verify that upload requests without credentials return HTTP 401 Unauthorized."""
+    files = {"file": ("test.pdf", MINIMAL_PDF_BYTES, "application/pdf")}
+    response = client.post("/upload", files=files)
+    assert response.status_code == 401
+
+
+def test_upload_invalid_extension(auth_headers):
     """Verify that unsupported extensions are immediately rejected with HTTP 400."""
     files = {"file": ("test.txt", b"plain text content", "text/plain")}
-    response = client.post("/upload", files=files)
+    response = client.post("/upload", files=files, headers=auth_headers)
     assert response.status_code == 400
     assert "Unsupported file extension" in response.json()["detail"]
 
 
-def test_upload_valid_pdf():
+def test_upload_valid_pdf(auth_headers):
     """Verify that uploading a valid PDF successfully processes, stores, and chunks it."""
     files = {"file": ("test.pdf", MINIMAL_PDF_BYTES, "application/pdf")}
-    response = client.post("/upload", files=files)
+    response = client.post("/upload", files=files, headers=auth_headers)
 
     assert response.status_code == 200
     payload = response.json()
@@ -73,21 +108,23 @@ def test_upload_valid_pdf():
         assert first_chunk["page_index"] == 0
 
 
-def test_upload_size_limit_header():
+def test_upload_size_limit_header(auth_headers):
     """Verify that content-length headers exceeding 50 MB are immediately rejected."""
     files = {"file": ("test.pdf", MINIMAL_PDF_BYTES, "application/pdf")}
-    # Send content-length header indicating 60 MB
+    # Send content-length header indicating 60 MB and merge auth headers
     headers = {"content-length": str(60 * 1024 * 1024)}
+    headers.update(auth_headers)
+    
     response = client.post("/upload", files=files, headers=headers)
     assert response.status_code == 400
     assert "exceeds the 50 MB limit" in response.json()["detail"]
 
 
-def test_upload_chunking_parameter_overrides():
+def test_upload_chunking_parameter_overrides(auth_headers):
     """Verify that dynamic query overrides affect the character splitting dimensions."""
     files = {"file": ("test_override.pdf", MINIMAL_PDF_BYTES, "application/pdf")}
     # Force tiny chunks of 5 characters and 2 overlap
-    response = client.post("/upload?chunk_size=5&chunk_overlap=2", files=files)
+    response = client.post("/upload?chunk_size=5&chunk_overlap=2", files=files, headers=auth_headers)
     assert response.status_code == 200
 
     payload = response.json()
@@ -96,7 +133,6 @@ def test_upload_chunking_parameter_overrides():
     chunks_file_path = CHUNKS_DIR / f"{document_id}.json"
     with open(chunks_file_path, "r", encoding="utf-8") as f:
         metadata = json.load(f)
-        # Tiny chunks should cause more fragmenting
         assert metadata["total_chunks"] > 1
         for chunk in metadata["chunks"]:
             assert chunk["char_length"] <= 5

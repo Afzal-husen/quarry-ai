@@ -19,4 +19,6 @@ dependencies = [
     "pytest",
     "httpx",
     "langchain-chroma",
+    "bcrypt>=5.0.0",
+    "pyjwt>=2.13.0",
 ]

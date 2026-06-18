@@ -5,11 +5,12 @@ from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile, Request
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile, Request, Depends
 
 from app.core.chunker import DocumentChunker
 from app.core.parsers import DocumentParser, DocumentParsingError
 from app.core.vectorstore import VectorStoreManager, VectorStoreError
+from app.core.auth import get_current_user
 
 # Ensure environment variables are loaded
 load_dotenv()
@@ -42,7 +43,8 @@ async def upload_file(
     chunk_size: Optional[int] = Query(
         None, description="Character size of each split text block"),
     chunk_overlap: Optional[int] = Query(
-        None, description="Character overlap between consecutive chunks")
+        None, description="Character overlap between consecutive chunks"),
+    current_user: dict = Depends(get_current_user)
 ):
     """Uploads a PDF, DOC, or DOCX document, parses its contents, and indexes the split chunks locally.
 

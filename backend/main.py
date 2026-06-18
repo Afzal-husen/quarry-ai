@@ -5,12 +5,17 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
+from app.core.database import UserDatabaseManager
 from app.routes.upload import router as upload_router
 from app.routes.query import router as query_router
+from app.routes.auth import router as auth_router
 
 # Load environment configurations relative to the module root
 env_path = Path(__file__).parent / ".env"
 load_dotenv(dotenv_path=env_path)
+
+# Initialize user database
+UserDatabaseManager.initialize_db()
 
 # Ensure local storage directories exist on server startup
 BASE_DIR = Path(__file__).resolve().parent
@@ -23,6 +28,9 @@ app = FastAPI(
     description="REST API enabling Retrieval-Augmented Generation (RAG) over uploaded PDF and DOCX files.",
     version="0.1.0"
 )
+
+# Register authentication routes
+app.include_router(auth_router)
 
 # Register ingestion routes
 app.include_router(upload_router, tags=["Document Ingestion"])

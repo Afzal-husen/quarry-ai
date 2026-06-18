@@ -1,10 +1,11 @@
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 
 from app.core.qa import QAPipeline, GroqConnectionError, InferenceError
 from app.core.vectorstore import VectorStoreManager, VectorStoreError
+from app.core.auth import get_current_user
 
 router = APIRouter()
 
@@ -33,7 +34,10 @@ class QueryRequest(BaseModel):
 
 
 @router.post("/query")
-async def query_document(body: QueryRequest):
+async def query_document(
+    body: QueryRequest,
+    current_user: dict = Depends(get_current_user)
+):
     """Answers questions related to an uploaded document using local vectors and ChatGroq inference.
 
     Args:

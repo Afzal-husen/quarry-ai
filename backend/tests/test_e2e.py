@@ -26,11 +26,13 @@ import shutil
 import uuid
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-
 import pytest
 from fastapi.testclient import TestClient
 from langchain_core.documents import Document
 
+import app.core.database as db_mod
+from app.core.database import UserDatabaseManager
+from app.core.auth import create_access_token
 from main import app
 
 # Resolve storage root relative to this test file (backend/tests/ -> backend/)
@@ -53,26 +55,51 @@ client = TestClient(app)
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(scope="module", autouse=True)
+def setup_test_db():
+    """Isolates user database for the E2E module run."""
+    test_db = BASE_DIR / "data" / "test_e2e_users.db"
+    old_db_path = db_mod.DB_PATH
+    db_mod.DB_PATH = test_db
+    
+    UserDatabaseManager.initialize_db()
+    yield
+    db_mod.DB_PATH = old_db_path
+    if test_db.exists():
+        test_db.unlink()
+
+
+@pytest.fixture(scope="module")
+def auth_headers(setup_test_db):
+    """Registers a test user and returns auth headers."""
+    username = "test_e2e_user"
+    UserDatabaseManager.create_user(
+        user_id="user-e2e-123",
+        username=username,
+        hashed_password="hashedpassword"
+    )
+    token = create_access_token({"sub": username})
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture(scope="module")
 def ensure_fixture():
     """Create a minimal single-page PDF fixture if it does not already exist."""
     FIXTURE_DIR.mkdir(parents=True, exist_ok=True)
 
     if not PDF_FIXTURE.exists():
-        # Build a valid minimal PDF in pure bytes (no external dependency)
         _write_minimal_pdf(PDF_FIXTURE)
 
     yield
 
-    # Module-level teardown: leave fixtures in place for re-runs
-
 
 @pytest.fixture(scope="module")
-def uploaded_doc_id(ensure_fixture):
+def uploaded_doc_id(ensure_fixture, auth_headers):
     """Upload the sample PDF once per module and return the document_id for reuse."""
     with PDF_FIXTURE.open("rb") as fh:
         response = client.post(
             "/upload",
-            files={"file": ("sample.pdf", fh, "application/pdf")}
+            files={"file": ("sample.pdf", fh, "application/pdf")},
+            headers=auth_headers
         )
 
     assert response.status_code == 200, (
@@ -85,7 +112,6 @@ def uploaded_doc_id(ensure_fixture):
 
     yield doc_id
 
-    # Cleanup: remove vector store, chunks, and uploads created for this doc
     _cleanup_doc(doc_id)
 
 
@@ -95,17 +121,14 @@ def uploaded_doc_id(ensure_fixture):
 
 def _cleanup_doc(doc_id: str):
     """Remove all persisted artefacts for the given document id."""
-    # Remove isolated Chroma vectorstore directory
     vectorstore_path = BASE_DIR / "data" / "vectorstore" / doc_id
     if vectorstore_path.exists():
         shutil.rmtree(vectorstore_path, ignore_errors=True)
 
-    # Remove flat-file chunk metadata: chunks are stored as {doc_id}.json
     chunks_file = BASE_DIR / "data" / "chunks" / f"{doc_id}.json"
     if chunks_file.exists():
         chunks_file.unlink(missing_ok=True)
 
-    # Remove raw upload file (named {doc_id}.pdf or similar)
     upload_dir = BASE_DIR / "data" / "uploads"
     for upload_file in upload_dir.glob(f"{doc_id}*"):
         upload_file.unlink(missing_ok=True)
@@ -119,19 +142,10 @@ def _write_minimal_pdf(dest: Path):
         "The Eiffel Tower is located in Paris, France."
     )
 
-    # Construct a minimal PDF using the raw cross-reference table format
     objects = []
-
-    # Object 1: catalog
     objects.append(b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n")
-
-    # Object 2: pages
     objects.append(b"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n")
-
-    # Object 4: font
     objects.append(b"4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n")
-
-    # Object 3: page
     objects.append(
         b"3 0 obj\n"
         b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
@@ -139,7 +153,6 @@ def _write_minimal_pdf(dest: Path):
         b"endobj\n"
     )
 
-    # Object 5: content stream
     stream_content = (
         f"BT\n/F1 12 Tf\n72 720 Td\n({page_text})\nTj\nET"
     ).encode("latin-1")
@@ -158,7 +171,6 @@ def _write_minimal_pdf(dest: Path):
         f"0 6\n"
         "0000000000 65535 f \n"
     )
-    # Build offsets for each object
     offsets = []
     pos = len(header)
     for obj in objects:
@@ -196,7 +208,6 @@ class TestUploadE2E:
 
     def test_upload_creates_chunks_metadata(self, uploaded_doc_id):
         """A JSON metadata file for chunk information must exist after upload."""
-        # Chunks are stored as a flat file: data/chunks/{doc_id}.json
         chunks_file = BASE_DIR / "data" / "chunks" / f"{uploaded_doc_id}.json"
         assert chunks_file.exists(), f"Chunks metadata JSON not found: {chunks_file}"
 
@@ -206,7 +217,7 @@ class TestQueryE2E:
 
     # --- Mocked LLM tests (always run, no API key required) ---
 
-    def test_query_returns_200_mocked(self, uploaded_doc_id):
+    def test_query_returns_200_mocked(self, uploaded_doc_id, auth_headers):
         """A valid query with a mocked LLM must return HTTP 200."""
         from langchain_groq import ChatGroq
         from langchain_core.messages import AIMessage
@@ -223,13 +234,14 @@ class TestQueryE2E:
                     "document_id": uploaded_doc_id,
                     "question": "What is the capital of France?",
                     "top_k": 3
-                }
+                },
+                headers=auth_headers
             )
         assert response.status_code == 200, (
             f"Query failed with status {response.status_code}: {response.text}"
         )
 
-    def test_query_response_has_answer_field_mocked(self, uploaded_doc_id):
+    def test_query_response_has_answer_field_mocked(self, uploaded_doc_id, auth_headers):
         """The mocked response JSON must contain a non-empty 'answer' string."""
         from langchain_groq import ChatGroq
         from langchain_core.messages import AIMessage
@@ -246,14 +258,15 @@ class TestQueryE2E:
                     "document_id": uploaded_doc_id,
                     "question": "What is the capital of France?",
                     "top_k": 3
-                }
+                },
+                headers=auth_headers
             )
         data = response.json()
         assert "answer" in data, f"Expected 'answer' key in response, got: {data.keys()}"
         assert isinstance(data["answer"], str)
         assert len(data["answer"]) > 0
 
-    def test_query_response_has_citations_field_mocked(self, uploaded_doc_id):
+    def test_query_response_has_citations_field_mocked(self, uploaded_doc_id, auth_headers):
         """The mocked response JSON must include a 'citations' list."""
         from langchain_groq import ChatGroq
         from langchain_core.messages import AIMessage
@@ -270,7 +283,8 @@ class TestQueryE2E:
                     "document_id": uploaded_doc_id,
                     "question": "Where is the Eiffel Tower?",
                     "top_k": 3
-                }
+                },
+                headers=auth_headers
             )
         data = response.json()
         assert "citations" in data, f"Expected 'citations' key in response, got: {data.keys()}"
@@ -278,7 +292,7 @@ class TestQueryE2E:
 
     # --- Validation tests (no LLM call — always run) ---
 
-    def test_query_top_k_validation_min(self, uploaded_doc_id):
+    def test_query_top_k_validation_min(self, uploaded_doc_id, auth_headers):
         """top_k must be >= 1; sending 0 should return a 422 validation error."""
         response = client.post(
             "/query",
@@ -286,13 +300,14 @@ class TestQueryE2E:
                 "document_id": uploaded_doc_id,
                 "question": "Test question?",
                 "top_k": 0
-            }
+            },
+            headers=auth_headers
         )
         assert response.status_code == 422, (
             f"Expected 422 Unprocessable Entity for top_k=0, got {response.status_code}"
         )
 
-    def test_query_top_k_validation_max(self, uploaded_doc_id):
+    def test_query_top_k_validation_max(self, uploaded_doc_id, auth_headers):
         """top_k must be <= 10; sending 11 should return a 422 validation error."""
         response = client.post(
             "/query",
@@ -300,25 +315,28 @@ class TestQueryE2E:
                 "document_id": uploaded_doc_id,
                 "question": "Test question?",
                 "top_k": 11
-            }
+            },
+            headers=auth_headers
         )
         assert response.status_code == 422, (
             f"Expected 422 Unprocessable Entity for top_k=11, got {response.status_code}"
         )
 
-    def test_query_missing_question_returns_422(self, uploaded_doc_id):
+    def test_query_missing_question_returns_422(self, uploaded_doc_id, auth_headers):
         """Omitting the required 'question' field must return 422."""
         response = client.post(
             "/query",
-            json={"document_id": uploaded_doc_id}
+            json={"document_id": uploaded_doc_id},
+            headers=auth_headers
         )
         assert response.status_code == 422
 
-    def test_query_missing_document_id_returns_422(self):
+    def test_query_missing_document_id_returns_422(self, auth_headers):
         """Omitting the required 'document_id' field must return 422."""
         response = client.post(
             "/query",
-            json={"question": "Where is Paris?"}
+            json={"question": "Where is Paris?"},
+            headers=auth_headers
         )
         assert response.status_code == 422
 
@@ -328,7 +346,7 @@ class TestQueryE2E:
         not os.getenv("GROQ_API_KEY"),
         reason="GROQ_API_KEY not configured — skipping live Groq API test"
     )
-    def test_query_returns_200_live(self, uploaded_doc_id):
+    def test_query_returns_200_live(self, uploaded_doc_id, auth_headers):
         """A valid query against the live Groq API must return HTTP 200."""
         response = client.post(
             "/query",
@@ -336,7 +354,8 @@ class TestQueryE2E:
                 "document_id": uploaded_doc_id,
                 "question": "What is the capital of France?",
                 "top_k": 3
-            }
+            },
+            headers=auth_headers
         )
         assert response.status_code == 200, (
             f"Live query failed with status {response.status_code}: {response.text}"
@@ -346,7 +365,7 @@ class TestQueryE2E:
         not os.getenv("GROQ_API_KEY"),
         reason="GROQ_API_KEY not configured — skipping live Groq API test"
     )
-    def test_query_live_answer_is_grounded(self, uploaded_doc_id):
+    def test_query_live_answer_is_grounded(self, uploaded_doc_id, auth_headers):
         """Live Groq answer must be a non-empty string grounded in the document."""
         response = client.post(
             "/query",
@@ -354,7 +373,8 @@ class TestQueryE2E:
                 "document_id": uploaded_doc_id,
                 "question": "What is the capital of France?",
                 "top_k": 3
-            }
+            },
+            headers=auth_headers
         )
         data = response.json()
         assert "answer" in data
@@ -365,7 +385,7 @@ class TestQueryE2E:
 class TestQueryNotFoundE2E:
     """Verify 404 handling for queries against non-existent documents."""
 
-    def test_query_unknown_document_id_returns_404(self):
+    def test_query_unknown_document_id_returns_404(self, auth_headers):
         """Querying a document_id that has never been uploaded must return 404."""
         fake_id = str(uuid.uuid4())
         response = client.post(
@@ -374,13 +394,14 @@ class TestQueryNotFoundE2E:
                 "document_id": fake_id,
                 "question": "Does this document exist?",
                 "top_k": 3
-            }
+            },
+            headers=auth_headers
         )
         assert response.status_code == 404, (
             f"Expected 404 for unknown document '{fake_id}', got {response.status_code}"
         )
 
-    def test_query_404_detail_mentions_document_id(self):
+    def test_query_404_detail_mentions_document_id(self, auth_headers):
         """The 404 error detail must reference the missing document_id."""
         fake_id = str(uuid.uuid4())
         response = client.post(
@@ -389,7 +410,8 @@ class TestQueryNotFoundE2E:
                 "document_id": fake_id,
                 "question": "Does this document exist?",
                 "top_k": 3
-            }
+            },
+            headers=auth_headers
         )
         assert response.status_code == 404
         data = response.json()
