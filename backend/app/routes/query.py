@@ -1,7 +1,8 @@
 from pathlib import Path
+import uuid
 
 from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, validator
 
 from app.core.qa import QAPipeline, GroqConnectionError, InferenceError
 from app.core.vectorstore import VectorStoreManager, VectorStoreError
@@ -25,6 +26,15 @@ class QueryRequest(BaseModel):
         ...,
         description="The natural language question to ask related to the document context."
     )
+
+    @field_validator("document_id")
+    def validate_document_uuid(cls, value):
+        """Enforces that document_id is a valid UUID to protect against path traversal."""
+        try:
+            uuid.UUID(value)
+            return value
+        except ValueError as e:
+            raise ValueError("document_id must be a valid UUID string.") from e
     top_k: int = Field(
         default=3,
         ge=1,
@@ -48,7 +58,8 @@ async def query_document(
     """
     # 1. Enforce strict ownership boundaries and 404 early checks
     # Find if the document exists for ANY user
-    global_matches = list(vector_manager.vectorstore_dir.glob(f"*/{body.document_id}"))
+    global_matches = list(
+        vector_manager.vectorstore_dir.glob(f"*/{body.document_id}"))
     if not global_matches:
         raise HTTPException(
             status_code=404,
