@@ -3,8 +3,8 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from backend.app.core.qa import QAPipeline, GroqConnectionError, InferenceError
-from backend.app.core.vectorstore import VectorStoreManager, VectorStoreError
+from app.core.qa import QAPipeline, GroqConnectionError, InferenceError
+from app.core.vectorstore import VectorStoreManager, VectorStoreError
 
 router = APIRouter()
 
@@ -51,17 +51,25 @@ async def query_document(body: QueryRequest):
         )
 
     # 2. Retrieve top-K relevant semantic chunks from isolated database
+    retriever = None
     try:
-        matching_chunks = vector_manager.retrieve_relevant_chunks(
+        retriever = vector_manager.get_retriever(
             document_id=body.document_id,
-            query=body.question,
             top_k=body.top_k
         )
+        matching_chunks = retriever.invoke(body.question)
     except VectorStoreError as e:
         raise HTTPException(
             status_code=500,
             detail=f"Local vector store retrieval failed: {str(e)}"
         )
+    finally:
+        if retriever is not None:
+            client = getattr(retriever.vectorstore, "_client", None)
+            if client:
+                close_fn = getattr(client, "close", None)
+                if close_fn and callable(close_fn):
+                    close_fn()
 
     # 3. Generate strict grounded response via ChatGroq
     try:

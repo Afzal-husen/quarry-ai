@@ -7,9 +7,9 @@ from typing import Optional
 from dotenv import load_dotenv
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile, Request
 
-from backend.app.core.chunker import DocumentChunker
-from backend.app.core.parsers import DocumentParser, DocumentParsingError
-from backend.app.core.vectorstore import VectorStoreManager, VectorStoreError
+from app.core.chunker import DocumentChunker
+from app.core.parsers import DocumentParser, DocumentParsingError
+from app.core.vectorstore import VectorStoreManager, VectorStoreError
 
 # Ensure environment variables are loaded
 load_dotenv()

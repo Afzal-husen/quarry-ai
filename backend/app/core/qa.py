@@ -3,7 +3,8 @@ import threading
 from typing import Any, Dict, List, Optional
 from pydantic import SecretStr
 
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.documents import Document
 from langchain_groq import ChatGroq
 
@@ -47,7 +48,6 @@ class GroqConnectionManager:
                     try:
                         cls._instance = ChatGroq(
                             model=model_name,
-                            temperature=0.0,
                             api_key=SecretStr(api_key)
                         )
                     except Exception as e:
@@ -99,19 +99,12 @@ class QAPipeline:
         # 3. Assemble and trigger ChatGroq model
         try:
             model = GroqConnectionManager.get_chat_model()
-            messages = [
-                SystemMessage(content=system_instruction),
-                HumanMessage(content=query)
-            ]
-            response = model.invoke(messages)
-            # Robustly extract text content from Groq response (handles str or list)
-            if isinstance(response.content, str):
-                answer = response.content.strip()
-            else:
-                # Handles list-of-chunks format
-                answer = "\n".join([
-                    str(item).strip() for item in response.content
-                ])
+            prompt = ChatPromptTemplate.from_messages([
+                ("system", system_instruction),
+                ("human", "{question}")
+            ])
+            chain = prompt | model | StrOutputParser()
+            answer = chain.invoke({"context": context_text, "question": query})
         except Exception as e:
             raise InferenceError(
                 f"Groq generative inference failed: {str(e)}") from e

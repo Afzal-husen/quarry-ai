@@ -4,13 +4,13 @@ from unittest.mock import MagicMock, patch
 from pathlib import Path
 import pytest
 
-# Add project root to sys.path to allow absolute backend imports
-ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+# Add backend directory to sys.path to allow absolute imports relative to backend/
+ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from langchain_core.documents import Document
-from backend.app.core.qa import GroqConnectionManager, QAPipeline, GroqConnectionError, InferenceError
+from app.core.qa import GroqConnectionManager, QAPipeline, GroqConnectionError, InferenceError
 
 
 def test_groq_connection_manager_missing_key():
@@ -23,14 +23,16 @@ def test_groq_connection_manager_missing_key():
         assert "GROQ_API_KEY is not configured" in str(exc_info.value)
 
 
-@patch("backend.app.core.qa.GroqConnectionManager")
+@patch("app.core.qa.GroqConnectionManager")
 def test_qa_pipeline_successful_generation(mock_connection_manager):
     """Verify that QAPipeline successfully structures prompts, calls model, and extracts citations."""
     # 1. Setup mock LLM response
-    mock_llm = MagicMock()
-    mock_response = MagicMock()
-    mock_response.content = "FastAPI is a Python web framework."
+    from langchain_groq import ChatGroq
+    from langchain_core.messages import AIMessage
+    mock_llm = MagicMock(spec=ChatGroq)
+    mock_response = AIMessage(content="FastAPI is a Python web framework.")
     mock_llm.invoke.return_value = mock_response
+    mock_llm.return_value = mock_response
     mock_connection_manager.get_chat_model.return_value = mock_llm
 
     # 2. Setup mock documents
@@ -55,22 +57,25 @@ def test_qa_pipeline_successful_generation(mock_connection_manager):
     assert result["citations"][0]["text"] == "FastAPI is a modern, fast web framework."
 
     # 4. Verify system prompt assembly contains our context
-    called_messages = mock_llm.invoke.call_args[0][0]
+    called_prompt_value = mock_llm.invoke.call_args[0][0]
+    called_messages = called_prompt_value.to_messages()
     system_msg = called_messages[0].content
     assert "fastapi_guide.pdf" in system_msg
     assert "Page 4" in system_msg
     assert "FastAPI is a modern, fast web framework." in system_msg
 
 
-@patch("backend.app.core.qa.GroqConnectionManager")
+@patch("app.core.qa.GroqConnectionManager")
 def test_qa_pipeline_strict_grounding_fallback(mock_connection_manager):
     """Verify that if LLM triggers the fallback message, the citation list is cleaned and returns empty."""
     # 1. Setup mock LLM response returning fallback message
     fallback_msg = "I am sorry, but the provided documents do not contain the answer to your question."
-    mock_llm = MagicMock()
-    mock_response = MagicMock()
-    mock_response.content = fallback_msg
+    from langchain_groq import ChatGroq
+    from langchain_core.messages import AIMessage
+    mock_llm = MagicMock(spec=ChatGroq)
+    mock_response = AIMessage(content=fallback_msg)
     mock_llm.invoke.return_value = mock_response
+    mock_llm.return_value = mock_response
     mock_connection_manager.get_chat_model.return_value = mock_llm
 
     retrieved_docs = [

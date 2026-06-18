@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
+from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_huggingface import HuggingFaceEmbeddings
 
 
@@ -130,6 +131,37 @@ class VectorStoreManager:
             ) from e
 
         return db_path
+
+    def get_retriever(self, document_id: str, top_k: int = 3) -> VectorStoreRetriever:
+        """Loads an isolated Chroma DB from disk and returns a native LangChain VectorStoreRetriever.
+
+        Args:
+            document_id: The unique UUID of the target document.
+            top_k: The number of relevant matching chunks to return (default 3).
+
+        Returns:
+            A native LangChain VectorStoreRetriever.
+
+        Raises:
+            VectorStoreError: If the document index directory does not exist or loading fails.
+        """
+        db_path = self.vectorstore_dir / document_id
+        if not db_path.exists():
+            raise VectorStoreError(
+                f"Vector database index for document '{document_id}' does not exist on disk."
+            )
+
+        try:
+            embeddings = EmbeddingsManager.get_embeddings()
+            vectorstore = Chroma(
+                persist_directory=str(db_path),
+                embedding_function=embeddings
+            )
+            return vectorstore.as_retriever(search_kwargs={"k": top_k})
+        except Exception as e:
+            raise VectorStoreError(
+                f"Failed to load isolated Chroma database for document '{document_id}': {str(e)}"
+            ) from e
 
     def retrieve_relevant_chunks(
         self,

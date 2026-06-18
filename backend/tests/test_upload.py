@@ -2,14 +2,14 @@ import json
 import sys
 from pathlib import Path
 
-# Add project root to sys.path to allow absolute backend.main imports
-ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+# Add backend directory to sys.path to allow absolute imports relative to backend/
+ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from fastapi.testclient import TestClient
 
-from backend.main import app
+from main import app
 
 client = TestClient(app)
 

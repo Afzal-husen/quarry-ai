@@ -1,9 +1,9 @@
 import sys
 from pathlib import Path
 
-# Ensure the monorepo root is on sys.path so that `backend.*` absolute imports resolve
-# when pytest is invoked from inside the backend/ directory.
-_REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+# Ensure the backend directory is on sys.path so that absolute imports resolve
+# when pytest is invoked.
+_REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
@@ -31,7 +31,7 @@ import pytest
 from fastapi.testclient import TestClient
 from langchain_core.documents import Document
 
-from backend.main import app
+from main import app
 
 # Resolve storage root relative to this test file (backend/tests/ -> backend/)
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -208,12 +208,14 @@ class TestQueryE2E:
 
     def test_query_returns_200_mocked(self, uploaded_doc_id):
         """A valid query with a mocked LLM must return HTTP 200."""
-        mock_llm = MagicMock()
-        mock_response = MagicMock()
-        mock_response.content = "Paris is the capital of France."
+        from langchain_groq import ChatGroq
+        from langchain_core.messages import AIMessage
+        mock_llm = MagicMock(spec=ChatGroq)
+        mock_response = AIMessage(content="Paris is the capital of France.")
         mock_llm.invoke.return_value = mock_response
+        mock_llm.return_value = mock_response
 
-        with patch("backend.app.core.qa.GroqConnectionManager") as mock_mgr:
+        with patch("app.core.qa.GroqConnectionManager") as mock_mgr:
             mock_mgr.get_chat_model.return_value = mock_llm
             response = client.post(
                 "/query",
@@ -229,12 +231,14 @@ class TestQueryE2E:
 
     def test_query_response_has_answer_field_mocked(self, uploaded_doc_id):
         """The mocked response JSON must contain a non-empty 'answer' string."""
-        mock_llm = MagicMock()
-        mock_response = MagicMock()
-        mock_response.content = "Paris is the capital of France."
+        from langchain_groq import ChatGroq
+        from langchain_core.messages import AIMessage
+        mock_llm = MagicMock(spec=ChatGroq)
+        mock_response = AIMessage(content="Paris is the capital of France.")
         mock_llm.invoke.return_value = mock_response
+        mock_llm.return_value = mock_response
 
-        with patch("backend.app.core.qa.GroqConnectionManager") as mock_mgr:
+        with patch("app.core.qa.GroqConnectionManager") as mock_mgr:
             mock_mgr.get_chat_model.return_value = mock_llm
             response = client.post(
                 "/query",
@@ -251,12 +255,14 @@ class TestQueryE2E:
 
     def test_query_response_has_citations_field_mocked(self, uploaded_doc_id):
         """The mocked response JSON must include a 'citations' list."""
-        mock_llm = MagicMock()
-        mock_response = MagicMock()
-        mock_response.content = "The Eiffel Tower is located in Paris."
+        from langchain_groq import ChatGroq
+        from langchain_core.messages import AIMessage
+        mock_llm = MagicMock(spec=ChatGroq)
+        mock_response = AIMessage(content="The Eiffel Tower is located in Paris.")
         mock_llm.invoke.return_value = mock_response
+        mock_llm.return_value = mock_response
 
-        with patch("backend.app.core.qa.GroqConnectionManager") as mock_mgr:
+        with patch("app.core.qa.GroqConnectionManager") as mock_mgr:
             mock_mgr.get_chat_model.return_value = mock_llm
             response = client.post(
                 "/query",

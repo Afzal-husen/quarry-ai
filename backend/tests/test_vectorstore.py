@@ -4,12 +4,12 @@ import sys
 import uuid
 from pathlib import Path
 
-# Add project root to sys.path to allow absolute backend imports
-ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+# Add backend directory to sys.path to allow absolute imports relative to backend/
+ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from backend.app.core.vectorstore import EmbeddingsManager, VectorStoreManager
+from app.core.vectorstore import EmbeddingsManager, VectorStoreManager
 
 
 def test_embeddings_manager_singleton():

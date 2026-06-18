@@ -5,8 +5,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
-from backend.app.routes.upload import router as upload_router
-from backend.app.routes.query import router as query_router
+from app.routes.upload import router as upload_router
+from app.routes.query import router as query_router
 
 # Load environment configurations relative to the module root
 env_path = Path(__file__).parent / ".env"
