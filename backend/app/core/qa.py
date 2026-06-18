@@ -36,14 +36,13 @@ class GroqConnectionManager:
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
-                    # Enforce secure validation of the Groq API key
                     api_key = os.getenv("GROQ_API_KEY")
                     if not api_key:
                         raise GroqConnectionError(
                             "GROQ_API_KEY is not configured inside .env or the system environment."
                         )
-
-                    model_name = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+                    model_name = os.getenv(
+                        "GROQ_MODEL", "llama-3.1-8b-instant")
                     try:
                         cls._instance = ChatGroq(
                             model=model_name,
@@ -83,7 +82,8 @@ class QAPipeline:
                 f"Snippet:\n{doc.page_content}"
             )
 
-        context_text = "\n\n---\n\n".join(context_blocks) if context_blocks else "NO DOCUMENT CONTEXT AVAILABLE"
+        context_text = "\n\n---\n\n".join(
+            context_blocks) if context_blocks else "NO DOCUMENT CONTEXT AVAILABLE"
 
         # 2. Build the strict grounding system prompt instruction
         fallback_msg = "I am sorry, but the provided documents do not contain the answer to your question."
@@ -103,9 +103,17 @@ class QAPipeline:
                 HumanMessage(content=query)
             ]
             response = model.invoke(messages)
-            answer = response.content.strip()
+            # Robustly extract text content from Groq response (handles str or list)
+            if isinstance(response.content, str):
+                answer = response.content.strip()
+            else:
+                # Handles list-of-chunks format
+                answer = "\n".join([
+                    str(item).strip() for item in response.content
+                ])
         except Exception as e:
-            raise InferenceError(f"Groq generative inference failed: {str(e)}") from e
+            raise InferenceError(
+                f"Groq generative inference failed: {str(e)}") from e
 
         # 4. Format structured citation outputs
         citations = []
