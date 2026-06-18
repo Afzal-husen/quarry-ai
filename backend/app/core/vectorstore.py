@@ -119,8 +119,11 @@ class VectorStoreManager:
                 persist_directory=str(db_path)
             )
             # Explicitly close the database client to release on-disk file descriptors (critical for Windows)
-            if hasattr(vectorstore, "_client") and hasattr(vectorstore._client, "close"):
-                vectorstore._client.close()
+            client = getattr(vectorstore, "_client", None)
+            if client:
+                close_fn = getattr(client, "close", None)
+                if close_fn and callable(close_fn):
+                    close_fn()
         except Exception as e:
             raise VectorStoreError(
                 f"Failed to index documents into Chroma database at {db_path}: {str(e)}"
@@ -162,8 +165,11 @@ class VectorStoreManager:
             )
             results = vectorstore.similarity_search(query, k=top_k)
             # Explicitly close the database client to release on-disk file descriptors (critical for Windows)
-            if hasattr(vectorstore, "_client") and hasattr(vectorstore._client, "close"):
-                vectorstore._client.close()
+            client = getattr(vectorstore, "_client", None)
+            if client:
+                close_fn = getattr(client, "close", None)
+                if close_fn and callable(close_fn):
+                    close_fn()
             return results
         except Exception as e:
             raise VectorStoreError(
