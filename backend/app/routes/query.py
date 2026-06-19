@@ -4,9 +4,17 @@ import uuid
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field, field_validator, validator
 
+# FlashRank Pydantic model requires Ranker to be imported first
+from flashrank import Ranker
+from langchain_community.document_compressors import FlashrankRerank
+from langchain_classic.retrievers import ContextualCompressionRetriever
+
+
 from app.core.qa import QAPipeline, GroqConnectionError, InferenceError
 from app.core.vectorstore import VectorStoreManager, VectorStoreError
 from app.core.auth import get_current_user
+from app.core.reranker import RerankManager, RerankerError
+
 
 router = APIRouter()
 
@@ -78,20 +86,35 @@ async def query_document(
     # 2. Retrieve top-K relevant semantic chunks from isolated database
     retriever = None
     try:
-        retriever = vector_manager.get_hybrid_retriever(
+        # Scale candidate pool size to top_k * 3, clamped between 10 and 25
+        candidate_k = max(10, min(25, body.top_k * 3))
+        base_retriever = vector_manager.get_hybrid_retriever(
             user_id=user_id,
             document_id=body.document_id,
-            top_k=body.top_k
+            top_k=candidate_k
         )
+
+        # Load cached singleton ranker and wrap base retriever in compressor
+        ranker = RerankManager.get_ranker()
+        compressor = FlashrankRerank(client=ranker, top_n=body.top_k)
+        retriever = ContextualCompressionRetriever(
+            base_compressor=compressor,
+            base_retriever=base_retriever
+        )
+
         matching_chunks = retriever.invoke(body.question)
-    except VectorStoreError as e:
+    except (VectorStoreError, RerankerError) as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Local vector store retrieval failed: {str(e)}"
+            detail=f"Local vector store retrieval or reranking failed: {str(e)}"
         )
     finally:
         if retriever is not None:
-            retrievers_to_close = getattr(retriever, "retrievers", [retriever])
+            # Resolve the base retriever to close child Chroma database connections
+            resolved_retriever = getattr(
+                retriever, "base_retriever", retriever)
+            retrievers_to_close = getattr(
+                resolved_retriever, "retrievers", [resolved_retriever])
             for r in retrievers_to_close:
                 vectorstore = getattr(r, "vectorstore", None)
                 if vectorstore is not None:

@@ -22,4 +22,5 @@ dependencies = [
     "rank_bm25",
     "bcrypt>=5.0.0",
     "pyjwt>=2.13.0",
+    "flashrank",
 ]
