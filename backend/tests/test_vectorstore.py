@@ -161,6 +161,7 @@ def test_vectorstore_hybrid_retrieval(monkeypatch):
     manager.index_document(user_id, document_uuid, source_filename)
     db_path = manager.vectorstore_dir / user_id / document_uuid
 
+    retriever = None
     try:
         # Mock weights via monkeypatch
         monkeypatch.setenv("HYBRID_LEXICAL_WEIGHT", "0.7")
@@ -194,7 +195,7 @@ def test_vectorstore_hybrid_retrieval(monkeypatch):
 
     finally:
         # Clean up database client file locks on Windows
-        if 'retriever' in locals() and retriever is not None:
+        if retriever is not None:
             retrievers_to_close = getattr(retriever, "retrievers", [retriever])
             for r in retrievers_to_close:
                 vectorstore = getattr(r, "vectorstore", None)
