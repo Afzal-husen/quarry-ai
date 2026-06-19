@@ -78,7 +78,7 @@ async def query_document(
     # 2. Retrieve top-K relevant semantic chunks from isolated database
     retriever = None
     try:
-        retriever = vector_manager.get_retriever(
+        retriever = vector_manager.get_hybrid_retriever(
             user_id=user_id,
             document_id=body.document_id,
             top_k=body.top_k
@@ -91,11 +91,15 @@ async def query_document(
         )
     finally:
         if retriever is not None:
-            client = getattr(retriever.vectorstore, "_client", None)
-            if client:
-                close_fn = getattr(client, "close", None)
-                if close_fn and callable(close_fn):
-                    close_fn()
+            retrievers_to_close = getattr(retriever, "retrievers", [retriever])
+            for r in retrievers_to_close:
+                vectorstore = getattr(r, "vectorstore", None)
+                if vectorstore is not None:
+                    client = getattr(vectorstore, "_client", None)
+                    if client:
+                        close_fn = getattr(client, "close", None)
+                        if close_fn and callable(close_fn):
+                            close_fn()
 
     # 3. Generate strict grounded response via ChatGroq
     try:

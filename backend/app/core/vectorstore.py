@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import threading
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -8,6 +9,8 @@ from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.retrievers import BM25Retriever
+from langchain_classic.retrievers import EnsembleRetriever
 
 
 class EmbeddingsError(Exception):
@@ -211,3 +214,89 @@ class VectorStoreManager:
             raise VectorStoreError(
                 f"Failed to query isolated Chroma database for document '{document_id}': {str(e)}"
             ) from e
+
+    def get_hybrid_retriever(
+        self,
+        user_id: str,
+        document_id: str,
+        top_k: int = 3
+    ) -> EnsembleRetriever:
+        """Loads a user-isolated BM25 retriever dynamically from text chunks and combines
+
+        it with the Chroma vector store retriever using Reciprocal Rank Fusion (RRF).
+
+        Args:
+            user_id: The unique UUID of the authenticated user.
+            document_id: The unique UUID of the target document.
+            top_k: The number of relevant matching chunks to return (default 3).
+
+        Returns:
+            An EnsembleRetriever combining lexical and semantic search components.
+
+        Raises:
+            VectorStoreError: If the chunks or vector index does not exist.
+        """
+        # 1. Resolve paths
+        chunks_file_path = self.chunks_dir / user_id / f"{document_id}.json"
+        if not chunks_file_path.exists():
+            raise VectorStoreError(
+                f"Ingested chunks metadata file not found at {chunks_file_path}. Please upload the document first."
+            )
+
+        # 2. Load serialized JSON chunks
+        try:
+            with open(chunks_file_path, "r", encoding="utf-8") as f:
+                payload = json.load(f)
+        except Exception as e:
+            raise VectorStoreError(f"Failed to read chunks metadata file: {str(e)}") from e
+
+        chunks_list = payload.get("chunks", [])
+        if not chunks_list:
+            raise VectorStoreError("Metadata payload contains empty chunks list.")
+
+        # 3. Convert raw chunk dicts into standard LangChain Document objects
+        documents: List[Document] = []
+        for chunk in chunks_list:
+            metadata: Dict[str, Any] = {
+                "chunk_id": chunk["chunk_id"],
+                "page_index": chunk["page_index"],
+                "source_filename": payload.get("source_filename", "unknown"),
+                "document_id": document_id
+            }
+            doc = Document(page_content=chunk["text"], metadata=metadata)
+            documents.append(doc)
+
+        # 4. Tokenization preprocessing for case-insensitive BM25 search
+        def preprocess_text(text: str) -> List[str]:
+            return re.findall(r"\w+", text.lower())
+
+        # 5. Initialize BM25 retriever dynamically
+        try:
+            bm25_retriever = BM25Retriever.from_documents(
+                documents=documents,
+                preprocess_func=preprocess_text
+            )
+            bm25_retriever.k = top_k
+        except Exception as e:
+            raise VectorStoreError(f"Failed to initialize BM25 retriever dynamically: {str(e)}") from e
+
+        # 6. Initialize vector retriever
+        vector_retriever = self.get_retriever(user_id=user_id, document_id=document_id, top_k=top_k)
+
+        # 7. Load weights from environment configurations with balanced default fallbacks
+        try:
+            lexical_weight = float(os.getenv("HYBRID_LEXICAL_WEIGHT", "0.5"))
+            semantic_weight = float(os.getenv("HYBRID_SEMANTIC_WEIGHT", "0.5"))
+        except ValueError:
+            lexical_weight = 0.5
+            semantic_weight = 0.5
+
+        # 8. Construct EnsembleRetriever with Reciprocal Rank Fusion (RRF)
+        try:
+            ensemble_retriever = EnsembleRetriever(
+                retrievers=[bm25_retriever, vector_retriever],
+                weights=[lexical_weight, semantic_weight]
+            )
+            return ensemble_retriever
+        except Exception as e:
+            raise VectorStoreError(f"Failed to construct hybrid EnsembleRetriever: {str(e)}") from e
