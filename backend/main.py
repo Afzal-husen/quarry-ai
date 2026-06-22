@@ -9,6 +9,7 @@ from app.core.database import UserDatabaseManager
 from app.routes.upload import router as upload_router
 from app.routes.query import router as query_router
 from app.routes.auth import router as auth_router
+from app.routes.documents import router as documents_router
 
 # Load environment configurations relative to the module root
 env_path = Path(__file__).parent / ".env"
@@ -37,6 +38,9 @@ app.include_router(upload_router, tags=["Document Ingestion"])
 
 # Register Q&A query routes
 app.include_router(query_router, tags=["Document Q&A"])
+
+# Register documents lifecycle routes
+app.include_router(documents_router, prefix="/documents", tags=["Documents"])
 
 
 @app.get("/", include_in_schema=False)

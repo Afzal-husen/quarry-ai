@@ -1,6 +1,7 @@
 import json
 import os
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -57,7 +58,8 @@ class DocumentChunker:
         document_id: str,
         source_filename: str,
         chunks: List[Document],
-        output_dir: Path
+        output_dir: Path,
+        uploaded_at: Optional[str] = None
     ) -> Path:
         """Serializes and persists the chunked documents inside a structured JSON metadata format.
 
@@ -66,12 +68,16 @@ class DocumentChunker:
             source_filename: The original name of the uploaded document file.
             chunks: A list of split Document objects.
             output_dir: Directory where the chunked JSON metadata is saved.
+            uploaded_at: Optional ISO 8601 UTC timestamp string.
 
         Returns:
             The Path where the JSON serialization metadata is persisted.
         """
         output_dir.mkdir(parents=True, exist_ok=True)
         destination_path = output_dir / f"{document_id}.json"
+
+        if uploaded_at is None:
+            uploaded_at = datetime.now(timezone.utc).isoformat()
 
         serialized_chunks = []
         for index, chunk in enumerate(chunks):
@@ -89,6 +95,7 @@ class DocumentChunker:
         payload: Dict[str, Any] = {
             "document_id": document_id,
             "source_filename": source_filename,
+            "uploaded_at": uploaded_at,
             "total_chunks": len(serialized_chunks),
             "chunks": serialized_chunks
         }

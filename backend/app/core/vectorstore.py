@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import shutil
 import threading
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -135,6 +136,25 @@ class VectorStoreManager:
             ) from e
 
         return db_path
+
+    def delete_document(self, user_id: str, document_id: str) -> None:
+        """Removes the isolated Chroma DB index directory from disk for a given user and document.
+
+        Args:
+            user_id: The unique UUID of the authenticated user.
+            document_id: The unique UUID of the target document.
+
+        Raises:
+            VectorStoreError: If directory removal fails.
+        """
+        db_path = self.vectorstore_dir / user_id / document_id
+        if db_path.exists():
+            try:
+                shutil.rmtree(db_path)
+            except Exception as e:
+                raise VectorStoreError(
+                    f"Failed to delete Chroma database index directory at {db_path}: {str(e)}"
+                ) from e
 
     def get_retriever(self, user_id: str, document_id: str, top_k: int = 3) -> VectorStoreRetriever:
         """Loads an isolated Chroma DB from disk and returns a native LangChain VectorStoreRetriever.
