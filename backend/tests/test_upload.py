@@ -1,5 +1,7 @@
 import json
+import shutil
 import sys
+import time
 from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
@@ -27,13 +29,32 @@ MINIMAL_PDF_BYTES = b"%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendo
 
 @pytest.fixture(autouse=True)
 def setup_test_db(tmp_path):
-    """Isolates user database for each test case using a temporary db file path."""
+    """Isolates user database for each test case and cleans up test data directories."""
     test_db = tmp_path / "test_users.db"
     old_db_path = db_mod.DB_PATH
     db_mod.DB_PATH = test_db
     
+    # Clean up test directories to ensure absolute isolation
+    for parent_dir in [UPLOADS_DIR, CHUNKS_DIR, BASE_DIR / "data" / "vectorstore"]:
+        user_dir = parent_dir / "user-123"
+        if user_dir.exists():
+            try:
+                shutil.rmtree(user_dir)
+            except Exception:
+                pass
+
     UserDatabaseManager.initialize_db()
     yield
+
+    # Teardown cleanup
+    for parent_dir in [UPLOADS_DIR, CHUNKS_DIR, BASE_DIR / "data" / "vectorstore"]:
+        user_dir = parent_dir / "user-123"
+        if user_dir.exists():
+            try:
+                shutil.rmtree(user_dir)
+            except Exception:
+                pass
+
     db_mod.DB_PATH = old_db_path
 
 
@@ -77,13 +98,26 @@ def test_upload_valid_pdf(auth_headers):
     files = {"file": ("test.pdf", MINIMAL_PDF_BYTES, "application/pdf")}
     response = client.post("/upload", files=files, headers=auth_headers)
 
-    assert response.status_code == 200
+    assert response.status_code == 202
     payload = response.json()
-    assert payload["status"] == "success"
-    assert "document_id" in payload
-    assert payload["filename"] == "test.pdf"
+    assert "job_id" in payload
+    assert payload["status"] == "pending"
 
-    document_id = payload["document_id"]
+    job_id = payload["job_id"]
+
+    # Poll status endpoint until background ingestion completes
+    status = "pending"
+    for _ in range(50):
+        status_res = client.get(f"/upload/{job_id}/status", headers=auth_headers)
+        assert status_res.status_code == 200
+        status_data = status_res.json()
+        status = status_data["status"]
+        if status in ["complete", "failed"]:
+            break
+        time.sleep(0.1)
+
+    assert status == "complete"
+    document_id = job_id
 
     # Verify that raw file exists in uploads folder
     raw_file_path = UPLOADS_DIR / "user-123" / f"{document_id}.pdf"
@@ -125,10 +159,24 @@ def test_upload_chunking_parameter_overrides(auth_headers):
     files = {"file": ("test_override.pdf", MINIMAL_PDF_BYTES, "application/pdf")}
     # Force tiny chunks of 5 characters and 2 overlap
     response = client.post("/upload?chunk_size=5&chunk_overlap=2", files=files, headers=auth_headers)
-    assert response.status_code == 200
+    assert response.status_code == 202
 
     payload = response.json()
-    document_id = payload["document_id"]
+    job_id = payload["job_id"]
+
+    # Poll status endpoint until background ingestion completes
+    status = "pending"
+    for _ in range(50):
+        status_res = client.get(f"/upload/{job_id}/status", headers=auth_headers)
+        assert status_res.status_code == 200
+        status_data = status_res.json()
+        status = status_data["status"]
+        if status in ["complete", "failed"]:
+            break
+        time.sleep(0.1)
+
+    assert status == "complete"
+    document_id = job_id
 
     chunks_file_path = CHUNKS_DIR / "user-123" / f"{document_id}.json"
     with open(chunks_file_path, "r", encoding="utf-8") as f:

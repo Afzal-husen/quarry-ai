@@ -1,6 +1,7 @@
 import json
 import shutil
 import sys
+import time
 from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
@@ -101,8 +102,20 @@ def test_document_lifecycle_flow(auth_headers, other_auth_headers):
     # 1. Upload document as user-123
     files = {"file": ("lifecycle_test.pdf", MINIMAL_PDF_BYTES, "application/pdf")}
     upload_res = client.post("/upload", files=files, headers=auth_headers)
-    assert upload_res.status_code == 200
-    doc_id = upload_res.json()["document_id"]
+    assert upload_res.status_code == 202
+    doc_id = upload_res.json()["job_id"]
+
+    # Poll status endpoint until background ingestion completes
+    status = "pending"
+    for _ in range(50):
+        status_res = client.get(f"/upload/{doc_id}/status", headers=auth_headers)
+        assert status_res.status_code == 200
+        status = status_res.json()["status"]
+        if status in ["complete", "failed"]:
+            break
+        time.sleep(0.1)
+
+    assert status == "complete"
 
     # Verify files created on disk
     raw_path = UPLOADS_DIR / "user-123" / f"{doc_id}.pdf"
@@ -180,8 +193,20 @@ def test_reindex_missing_raw_file(auth_headers):
     """Verify that re-indexing fails with 404 if the original raw file was deleted on disk."""
     files = {"file": ("to_be_partial.pdf", MINIMAL_PDF_BYTES, "application/pdf")}
     upload_res = client.post("/upload", files=files, headers=auth_headers)
-    assert upload_res.status_code == 200
-    doc_id = upload_res.json()["document_id"]
+    assert upload_res.status_code == 202
+    doc_id = upload_res.json()["job_id"]
+
+    # Poll status endpoint until background Ingestion completes
+    status = "pending"
+    for _ in range(50):
+        status_res = client.get(f"/upload/{doc_id}/status", headers=auth_headers)
+        assert status_res.status_code == 200
+        status = status_res.json()["status"]
+        if status in ["complete", "failed"]:
+            break
+        time.sleep(0.1)
+
+    assert status == "complete"
 
     # Delete the raw uploaded file on disk
     raw_path = UPLOADS_DIR / "user-123" / f"{doc_id}.pdf"

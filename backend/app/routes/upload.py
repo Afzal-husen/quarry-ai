@@ -1,11 +1,14 @@
 import os
 import shutil
+import threading
 import uuid
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile, Request, Depends
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile, Request, Depends, BackgroundTasks
+from fastapi.responses import JSONResponse
 
 from app.core.chunker import DocumentChunker
 from app.core.parsers import DocumentParser, DocumentParsingError
@@ -28,17 +31,104 @@ ALLOWED_EXTENSIONS = {".pdf", ".doc", ".docx"}
 
 # Initialize core services
 parser = DocumentParser()
-# Load chunk configurations from environment with fallbacks
 default_size = int(os.getenv("CHUNK_SIZE", "500"))
 default_overlap = int(os.getenv("CHUNK_OVERLAP", "50"))
 chunker = DocumentChunker(default_chunk_size=default_size,
                           default_chunk_overlap=default_overlap)
 vector_manager = VectorStoreManager()
 
+# In-memory job registry and thread-safety lock
+ingestion_jobs = {}
+jobs_lock = threading.Lock()
 
-@router.post("/upload")
+
+def prune_expired_jobs():
+    """Removes job records that are older than 24 hours to prevent memory leaks."""
+    now = datetime.now(timezone.utc)
+    expired_keys = []
+    with jobs_lock:
+        for key, job in list(ingestion_jobs.items()):
+            if now - job["created_at"] > timedelta(hours=24):
+                expired_keys.append(key)
+        for key in expired_keys:
+            del ingestion_jobs[key]
+
+
+def run_ingestion_job(
+    document_id: str,
+    temp_file_path: Path,
+    original_filename: str,
+    user_id: str,
+    chunk_size: Optional[int],
+    chunk_overlap: Optional[int]
+):
+    """Synchronously executes parsing, chunking, and indexing in a background threadpool thread."""
+    with jobs_lock:
+        if document_id in ingestion_jobs:
+            ingestion_jobs[document_id]["status"] = "processing"
+
+    try:
+        # 1. Parse Document contents
+        documents = parser.parse_file(temp_file_path)
+
+        # 2. Chunk Extracted Text Content
+        split_docs = chunker.split_documents(
+            documents,
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap
+        )
+
+        # 3. Serialize Chunks and Save JSON Metadata locally
+        chunker.save_chunks(
+            document_id=document_id,
+            source_filename=original_filename,
+            chunks=split_docs,
+            output_dir=CHUNKS_DIR / user_id
+        )
+
+        # 4. Index chunks into isolated Chroma vector store
+        vector_manager.index_document(
+            user_id=user_id,
+            document_id=document_id,
+            source_filename=original_filename
+        )
+
+        # Update job status to complete
+        with jobs_lock:
+            if document_id in ingestion_jobs:
+                ingestion_jobs[document_id]["status"] = "complete"
+
+    except Exception as e:
+        # Perform hard cleanup on failure
+        if temp_file_path.exists():
+            try:
+                temp_file_path.unlink()
+            except Exception:
+                pass
+
+        chunks_file_path = CHUNKS_DIR / user_id / f"{document_id}.json"
+        if chunks_file_path.exists():
+            try:
+                chunks_file_path.unlink()
+            except Exception:
+                pass
+
+        try:
+            vector_manager.delete_document(user_id=user_id, document_id=document_id)
+        except Exception:
+            pass
+
+        # Update job status to failed with error message
+        with jobs_lock:
+            if document_id in ingestion_jobs:
+                ingestion_jobs[document_id]["status"] = "failed"
+                ingestion_jobs[document_id]["error"] = str(e)
+
+
+@router.post("/upload", status_code=202)
 async def upload_file(
     request: Request,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     chunk_size: Optional[int] = Query(
         None, description="Character size of each split text block"),
@@ -46,16 +136,17 @@ async def upload_file(
         None, description="Character overlap between consecutive chunks"),
     current_user: dict = Depends(get_current_user)
 ):
-    """Uploads a PDF, DOC, or DOCX document, parses its contents, and indexes the split chunks locally.
+    """Uploads a PDF, DOC, or DOCX document, and dispatches the parsing and vector indexing to the background.
 
     Args:
         request: The incoming FastAPI HTTP request.
+        background_tasks: The FastAPI background task manager.
         file: The uploaded file (must be PDF or Word format, max 50 MB).
         chunk_size: Optional query parameter override for splitting chunk size.
         chunk_overlap: Optional query parameter override for splitting chunk overlap.
 
     Returns:
-        A JSON dictionary containing the generated unique document ID and source filename.
+        HTTP 202 status code and the generated job ID.
     """
     # 1. Validate File Extension
     original_filename = file.filename or "unknown"
@@ -79,7 +170,7 @@ async def upload_file(
         except ValueError:
             pass
 
-    # 3. Generate unique document UUID
+    # 3. Generate unique document UUID / job ID
     document_uuid = str(uuid.uuid4())
     saved_filename = f"{document_uuid}{suffix}"
     user_id = current_user["id"]
@@ -118,64 +209,75 @@ async def upload_file(
     finally:
         await file.close()
 
-    # 5. Parse Document contents
-    try:
-        documents = parser.parse_file(temp_file_path)
-    except DocumentParsingError as e:
-        # Clean up temp file on parsing failure
-        if temp_file_path.exists():
-            temp_file_path.unlink()
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        if temp_file_path.exists():
-            temp_file_path.unlink()
-        raise HTTPException(
-            status_code=500, detail=f"Unexpected parsing engine failure: {str(e)}") from e
+    # Clean up old jobs from registry
+    prune_expired_jobs()
 
-    # 6. Chunk Extracted Text Content
+    # 5. Register the job in the registry
+    with jobs_lock:
+        ingestion_jobs[document_uuid] = {
+            "status": "pending",
+            "document_id": document_uuid,
+            "filename": original_filename,
+            "user_id": user_id,
+            "created_at": datetime.now(timezone.utc),
+            "error": None
+        }
+
+    # 6. Dispatch the ingestion pipeline to Starlette's threadpool worker
+    background_tasks.add_task(
+        run_ingestion_job,
+        document_uuid,
+        temp_file_path,
+        original_filename,
+        user_id,
+        chunk_size,
+        chunk_overlap
+    )
+
+    # 7. Return 202 Accepted immediately
+    return JSONResponse(
+        status_code=202,
+        content={
+            "job_id": document_uuid,
+            "status": "pending"
+        }
+    )
+
+
+@router.get("/upload/{job_id}/status")
+async def get_job_status(
+    job_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Retrieves the current execution status and metadata of a background ingestion job."""
     try:
-        split_docs = chunker.split_documents(
-            documents,
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap
+        uuid.UUID(job_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=422,
+            detail="job_id must be a valid UUID string."
         )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"An error occurred during character splitting: {str(e)}"
-        ) from e
 
-    # 7. Serialize Chunks and Save JSON Metadata locally
-    try:
-        chunker.save_chunks(
-            document_id=document_uuid,
-            source_filename=original_filename,
-            chunks=split_docs,
-            output_dir=CHUNKS_DIR / user_id
+    # Clean up old jobs from registry
+    prune_expired_jobs()
+
+    with jobs_lock:
+        job = ingestion_jobs.get(job_id)
+
+    if not job:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Job '{job_id}' not found."
         )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to persist chunked metadata to local storage: {str(e)}"
-        ) from e
 
-    # 8. Index chunks into isolated Chroma vector store
-    try:
-        vector_manager.index_document(
-            user_id=user_id,
-            document_id=document_uuid,
-            source_filename=original_filename
+    if job["user_id"] != current_user["id"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: You do not own or have permission to access this job."
         )
-    except VectorStoreError as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Document indexed to disk but vector indexing failed: {str(e)}"
-        ) from e
 
-    # Return success payload
     return {
-        "document_id": document_uuid,
-        "filename": original_filename,
-        "status": "success",
-        "chunks_count": len(split_docs)
+        "status": job["status"],
+        "document_id": job["document_id"],
+        "error": job["error"]
     }

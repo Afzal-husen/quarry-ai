@@ -102,17 +102,29 @@ def uploaded_doc_id(ensure_fixture, auth_headers):
             headers=auth_headers
         )
 
-    assert response.status_code == 200, (
+    assert response.status_code == 202, (
         f"Upload setup fixture failed — status {response.status_code}: {response.text}"
     )
 
     data = response.json()
-    doc_id = data.get("document_id")
-    assert doc_id is not None, "Upload response must contain a document_id"
+    job_id = data.get("job_id")
+    assert job_id is not None, "Upload response must contain a job_id"
 
-    yield doc_id
+    import time
+    status = "pending"
+    for _ in range(100):
+        status_res = client.get(f"/upload/{job_id}/status", headers=auth_headers)
+        if status_res.status_code == 200:
+            status = status_res.json()["status"]
+            if status in ["complete", "failed"]:
+                break
+        time.sleep(0.1)
 
-    _cleanup_doc(doc_id)
+    assert status == "complete", f"Ingestion job failed or timed out: {status_res.text}"
+
+    yield job_id
+
+    _cleanup_doc(job_id)
 
 
 # ---------------------------------------------------------------------------
