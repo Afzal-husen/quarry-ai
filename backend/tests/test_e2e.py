@@ -345,7 +345,7 @@ class TestQueryE2E:
         assert response.status_code == 422
 
     def test_query_missing_document_id_returns_422(self, auth_headers):
-        """Omitting the required 'document_id' field must return 422."""
+        """Omitting both 'document_id' and 'document_ids' fields must return 422."""
         response = client.post(
             "/query",
             json={"question": "Where is Paris?"},

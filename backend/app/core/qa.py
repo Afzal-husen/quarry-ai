@@ -117,6 +117,7 @@ class QAPipeline:
                 citations.append({
                     "source_filename": doc.metadata.get("source_filename", "Unknown Document"),
                     "page_index": doc.metadata.get("page_index", 0),
+                    "document_id": doc.metadata.get("document_id", ""),
                     "text": doc.page_content
                 })
 

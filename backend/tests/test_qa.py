@@ -39,7 +39,7 @@ def test_qa_pipeline_successful_generation(mock_connection_manager):
     retrieved_docs = [
         Document(
             page_content="FastAPI is a modern, fast web framework.",
-            metadata={"source_filename": "fastapi_guide.pdf", "page_index": 4, "chunk_id": "c-1"}
+            metadata={"source_filename": "fastapi_guide.pdf", "page_index": 4, "chunk_id": "c-1", "document_id": "doc-uuid-1"}
         )
     ]
 
@@ -54,6 +54,7 @@ def test_qa_pipeline_successful_generation(mock_connection_manager):
     assert len(result["citations"]) == 1
     assert result["citations"][0]["source_filename"] == "fastapi_guide.pdf"
     assert result["citations"][0]["page_index"] == 4
+    assert result["citations"][0]["document_id"] == "doc-uuid-1"
     assert result["citations"][0]["text"] == "FastAPI is a modern, fast web framework."
 
     # 4. Verify system prompt assembly contains our context
