@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from app.core.auth import get_current_user
 from app.core.chunker import DocumentChunker
 from app.core.parsers import DocumentParser, DocumentParsingError
-from app.core.vectorstore import VectorStoreManager, VectorStoreError
+from app.core.vectorstore import VectorStoreManager, VectorStoreError, ChromaConnectionCache
 
 router = APIRouter()
 
@@ -162,6 +162,9 @@ async def delete_document(
             detail="Forbidden: You do not own or have permission to access this document."
         )
 
+    # Evict the Chroma client connection from cache before attempting disk deletion
+    ChromaConnectionCache.evict(user_id=user_id, document_id=document_id)
+
     # Synchronously delete all existing artifacts
     if vectorstore_path.exists():
         try:
@@ -238,6 +241,9 @@ async def reindex_document(
             status_code=403,
             detail="Forbidden: You do not own or have permission to access this document."
         )
+
+    # Evict the Chroma client connection from cache before attempting reindexing cleanup
+    ChromaConnectionCache.evict(user_id=user_id, document_id=document_id)
 
     # Verify original raw upload file is present to allow parsing
     upload_files = [f for f in upload_files if f.suffix.lower() in ALLOWED_EXTENSIONS]

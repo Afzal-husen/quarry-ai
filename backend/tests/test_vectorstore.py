@@ -9,7 +9,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from app.core.vectorstore import EmbeddingsManager, VectorStoreManager
+from app.core.vectorstore import EmbeddingsManager, VectorStoreManager, ChromaConnectionCache
 
 
 def test_embeddings_manager_singleton():
@@ -102,6 +102,9 @@ def test_vectorstore_indexing_and_retrieval():
         assert "Retrieval-Augmented Generation" in retrieved_rag[0].page_content
 
     finally:
+        # Evict from cache to release file locks on Windows
+        ChromaConnectionCache.evict("test-user-123", document_uuid)
+
         # 5. Clean up temporary files on disk
         if temp_chunks_path.exists():
             temp_chunks_path.unlink()
@@ -194,17 +197,8 @@ def test_vectorstore_hybrid_retrieval(monkeypatch):
             )
 
     finally:
-        # Clean up database client file locks on Windows
-        if retriever is not None:
-            retrievers_to_close = getattr(retriever, "retrievers", [retriever])
-            for r in retrievers_to_close:
-                vectorstore = getattr(r, "vectorstore", None)
-                if vectorstore is not None:
-                    client = getattr(vectorstore, "_client", None)
-                    if client:
-                        close_fn = getattr(client, "close", None)
-                        if close_fn and callable(close_fn):
-                            close_fn()
+        # Evict from cache to release file locks on Windows
+        ChromaConnectionCache.evict(user_id, document_uuid)
 
         # Clean up files on disk
         if temp_chunks_path.exists():

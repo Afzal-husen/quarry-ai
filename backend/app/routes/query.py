@@ -108,21 +108,6 @@ async def query_document(
             status_code=500,
             detail=f"Local vector store retrieval or reranking failed: {str(e)}"
         )
-    finally:
-        if retriever is not None:
-            # Resolve the base retriever to close child Chroma database connections
-            resolved_retriever = getattr(
-                retriever, "base_retriever", retriever)
-            retrievers_to_close = getattr(
-                resolved_retriever, "retrievers", [resolved_retriever])
-            for r in retrievers_to_close:
-                vectorstore = getattr(r, "vectorstore", None)
-                if vectorstore is not None:
-                    client = getattr(vectorstore, "_client", None)
-                    if client:
-                        close_fn = getattr(client, "close", None)
-                        if close_fn and callable(close_fn):
-                            close_fn()
 
     # 3. Generate strict grounded response via ChatGroq
     try:

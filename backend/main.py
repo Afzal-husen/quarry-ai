@@ -10,6 +10,7 @@ from app.routes.upload import router as upload_router
 from app.routes.query import router as query_router
 from app.routes.auth import router as auth_router
 from app.routes.documents import router as documents_router
+from app.core.vectorstore import ChromaConnectionCache
 
 # Load environment configurations relative to the module root
 env_path = Path(__file__).parent / ".env"
@@ -53,6 +54,13 @@ async def root_redirect():
 async def health_check():
     """Lightweight health check returning static ok status."""
     return {"status": "ok"}
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanly close all open cached Chroma client connections on application exit."""
+    ChromaConnectionCache.clear()
+
 
 
 if __name__ == "__main__":

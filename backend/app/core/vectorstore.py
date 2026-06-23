@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 import threading
+from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -60,6 +61,79 @@ class EmbeddingsManager:
                             f"Failed to initialize Hugging Face embedding model '{model_name}': {str(e)}"
                         ) from e
         return cls._instance
+
+
+class ChromaConnectionCache:
+    """Thread-safe bounded LRU cache for Chroma client instances."""
+
+    _cache: OrderedDict = OrderedDict()
+    _lock = threading.Lock()
+    _max_size: int = 100
+
+    @classmethod
+    def get(cls, user_id: str, document_id: str, db_path: Path, embeddings: Any) -> Chroma:
+        """Fetches an existing Chroma client from the cache or instantiates a new one.
+
+        Evicts the oldest client using LRU policy if capacity is exceeded.
+        """
+        key = (user_id, document_id)
+        with cls._lock:
+            if key in cls._cache:
+                # Move to end to mark as recently used
+                cls._cache.move_to_end(key)
+                return cls._cache[key]
+
+            # Instantiate new Chroma client
+            vectorstore = Chroma(
+                persist_directory=str(db_path),
+                embedding_function=embeddings
+            )
+
+            # Check capacity and evict oldest if necessary
+            if len(cls._cache) >= cls._max_size:
+                cls._evict_lru_under_lock()
+
+            cls._cache[key] = vectorstore
+            return vectorstore
+
+    @classmethod
+    def _evict_lru_under_lock(cls) -> None:
+        """Helper to evict the least recently used client. Must be called under lock."""
+        if not cls._cache:
+            return
+        # Pop the first element (oldest in OrderedDict)
+        oldest_key, oldest_vectorstore = cls._cache.popitem(last=False)
+        cls._close_client(oldest_vectorstore)
+
+    @classmethod
+    def evict(cls, user_id: str, document_id: str) -> None:
+        """Removes the Chroma client from the cache and explicitly closes its SQLite connection."""
+        key = (user_id, document_id)
+        with cls._lock:
+            vectorstore = cls._cache.pop(key, None)
+            if vectorstore:
+                cls._close_client(vectorstore)
+
+    @classmethod
+    def clear(cls) -> None:
+        """Closes all cached connections and clears the cache."""
+        with cls._lock:
+            for vectorstore in cls._cache.values():
+                cls._close_client(vectorstore)
+            cls._cache.clear()
+
+    @classmethod
+    def _close_client(cls, vectorstore: Chroma) -> None:
+        """Helper to call close() on Chroma's internal PersistentClient."""
+        client = getattr(vectorstore, "_client", None)
+        if client:
+            close_fn = getattr(client, "_close", None) or getattr(client, "close", None)
+            if close_fn and callable(close_fn):
+                try:
+                    close_fn()
+                except Exception:
+                    pass
+
 
 
 class VectorStoreManager:
@@ -178,9 +252,11 @@ class VectorStoreManager:
 
         try:
             embeddings = EmbeddingsManager.get_embeddings()
-            vectorstore = Chroma(
-                persist_directory=str(db_path),
-                embedding_function=embeddings
+            vectorstore = ChromaConnectionCache.get(
+                user_id=user_id,
+                document_id=document_id,
+                db_path=db_path,
+                embeddings=embeddings
             )
             return vectorstore.as_retriever(search_kwargs={"k": top_k})
         except Exception as e:
@@ -217,18 +293,14 @@ class VectorStoreManager:
 
         try:
             embeddings = EmbeddingsManager.get_embeddings()
-            # Load the persistent Chroma DB instance
-            vectorstore = Chroma(
-                persist_directory=str(db_path),
-                embedding_function=embeddings
+            # Load the persistent Chroma DB instance from cache
+            vectorstore = ChromaConnectionCache.get(
+                user_id=user_id,
+                document_id=document_id,
+                db_path=db_path,
+                embeddings=embeddings
             )
             results = vectorstore.similarity_search(query, k=top_k)
-            # Explicitly close the database client to release on-disk file descriptors (critical for Windows)
-            client = getattr(vectorstore, "_client", None)
-            if client:
-                close_fn = getattr(client, "close", None)
-                if close_fn and callable(close_fn):
-                    close_fn()
             return results
         except Exception as e:
             raise VectorStoreError(
