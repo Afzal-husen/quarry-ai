@@ -54,7 +54,8 @@ class QueryRequest(BaseModel):
     )
 
     # Internal resolved field — populated by model_validator
-    resolved_document_ids: List[str] = Field(default_factory=list, exclude=True)
+    resolved_document_ids: List[str] = Field(
+        default_factory=list, exclude=True)
 
     @field_validator("document_id")
     @classmethod
@@ -93,7 +94,7 @@ class QueryRequest(BaseModel):
         # document_ids takes precedence; otherwise fall back to [document_id]
         if self.document_ids:
             self.resolved_document_ids = self.document_ids
-        else:
+        elif self.document_id:
             self.resolved_document_ids = [self.document_id]
         return self
 
@@ -122,7 +123,8 @@ async def query_document(
     # 1. Enforce strict ownership boundaries for every requested document ID
     for doc_id in target_ids:
         # Find if the document exists for ANY user
-        global_matches = list(vector_manager.vectorstore_dir.glob(f"*/{doc_id}"))
+        global_matches = list(
+            vector_manager.vectorstore_dir.glob(f"*/{doc_id}"))
         if not global_matches:
             raise HTTPException(
                 status_code=404,
@@ -171,7 +173,8 @@ async def query_document(
     try:
         ranker = RerankManager.get_ranker()
         compressor = FlashrankRerank(client=ranker, top_n=body.top_k)
-        matching_chunks = compressor.compress_documents(deduped_chunks, body.question)
+        matching_chunks = compressor.compress_documents(
+            deduped_chunks, body.question)
     except RerankerError as e:
         raise HTTPException(
             status_code=500,
@@ -226,7 +229,8 @@ async def query_document_stream(
 
     # 1. Enforce strict ownership boundaries for every requested document ID
     for doc_id in target_ids:
-        global_matches = list(vector_manager.vectorstore_dir.glob(f"*/{doc_id}"))
+        global_matches = list(
+            vector_manager.vectorstore_dir.glob(f"*/{doc_id}"))
         if not global_matches:
             raise HTTPException(
                 status_code=404,
@@ -274,7 +278,8 @@ async def query_document_stream(
     try:
         ranker = RerankManager.get_ranker()
         compressor = FlashrankRerank(client=ranker, top_n=body.top_k)
-        matching_chunks = compressor.compress_documents(deduped_chunks, body.question)
+        matching_chunks = compressor.compress_documents(
+            deduped_chunks, body.question)
     except RerankerError as e:
         raise HTTPException(
             status_code=500,

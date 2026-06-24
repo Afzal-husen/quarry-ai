@@ -1,6 +1,6 @@
 import os
 import threading
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 from pydantic import SecretStr
 
 from langchain_core.prompts import ChatPromptTemplate
@@ -60,7 +60,7 @@ class GroqConnectionManager:
 class QAPipeline:
     """Orchestrates strict grounding prompts assembly and Groq generative answering workflows."""
 
-    def generate_answer(self, query: str, retrieved_docs: List[Document]) -> Dict[str, Any]:
+    def generate_answer(self, query: str, retrieved_docs: Sequence[Document]) -> Dict[str, Any]:
         """Synthesizes an answer to the query based strictly on retrieved document context.
 
         Args:
@@ -129,7 +129,7 @@ class QAPipeline:
     async def generate_answer_stream(
         self,
         query: str,
-        retrieved_docs: List[Document],
+        retrieved_docs: Sequence[Document],
     ):
         """Streams the generative answer token-by-token using ChatGroq's async streaming.
 
