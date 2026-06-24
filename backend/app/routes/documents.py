@@ -48,8 +48,20 @@ class ReindexResponse(BaseModel):
     chunks_count: int = Field(..., description="The updated total count of text chunks.")
 
 
-@router.get("", response_model=List[DocumentItem])
-async def list_documents(current_user: dict = Depends(get_current_user)):
+class PaginatedDocumentsResponse(BaseModel):
+    """Pydantic model representing a paginated envelope for listing documents."""
+    total: int = Field(..., description="Total count of documents owned by the user.")
+    limit: int = Field(..., description="Maximum count of items requested in this page.")
+    offset: int = Field(..., description="Number of items skipped from the start of the list.")
+    items: List[DocumentItem] = Field(..., description="List of document items on the current page.")
+
+
+@router.get("", response_model=PaginatedDocumentsResponse)
+async def list_documents(
+    limit: int = Query(10, description="Max number of documents to return."),
+    offset: int = Query(0, description="Number of documents to skip."),
+    current_user: dict = Depends(get_current_user)
+):
     """Lists all uploaded documents for the authenticated user and displays their current lifecycle status."""
     user_id = current_user["id"]
     user_chunks_dir = CHUNKS_DIR / user_id
@@ -115,7 +127,19 @@ async def list_documents(current_user: dict = Depends(get_current_user)):
             can_reindex=raw_file_exists
         ))
 
-    return results
+    # Clamp pagination parameters
+    clamped_limit = max(1, min(100, limit))
+    clamped_offset = max(0, offset)
+
+    total = len(results)
+    paginated_items = results[clamped_offset : clamped_offset + clamped_limit]
+
+    return PaginatedDocumentsResponse(
+        total=total,
+        limit=clamped_limit,
+        offset=clamped_offset,
+        items=paginated_items
+    )
 
 
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
