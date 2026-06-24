@@ -25,7 +25,13 @@ class UserAuthRequest(BaseModel):
     )
 
 
-@router.post("/signup", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/signup",
+    status_code=status.HTTP_201_CREATED,
+    summary="Register User",
+    description="Registers a new user account with secure hashed password storage.",
+    response_description="Returns the user ID of the newly created account."
+)
 async def signup(body: UserAuthRequest):
     """Registers a new user account with hashed password storage."""
     hashed = hash_password(body.password)
@@ -54,7 +60,12 @@ async def signup(body: UserAuthRequest):
     }
 
 
-@router.post("/login")
+@router.post(
+    "/login",
+    summary="Login User",
+    description="Authenticates user credentials and returns a valid JWT access token.",
+    response_description="Returns bearer access token details on successful authentication."
+)
 async def login(body: UserAuthRequest):
     """Authenticates credentials and returns a valid JWT access token."""
     user = UserDatabaseManager.get_user_by_username(body.username)
