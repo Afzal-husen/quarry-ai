@@ -4,7 +4,7 @@ from typing import Optional
 
 import bcrypt
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from app.core.database import UserDatabaseManager
@@ -96,10 +96,14 @@ def verify_access_token(token: str) -> dict:
         ) from e
 
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(reusable_oauth2)) -> dict:
+def get_current_user(
+    request: Request,
+    credentials: HTTPAuthorizationCredentials = Depends(reusable_oauth2)
+) -> dict:
     """FastAPI route dependency to retrieve and authenticate the current user.
 
     Args:
+        request: The FastAPI request object.
         credentials: The parsed Bearer token credentials.
 
     Returns:
@@ -125,4 +129,6 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(reusabl
             detail="User account no longer exists in database.",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    # Propagate user_id to request state for structured logging middleware
+    request.state.user_id = user["id"]
     return user
