@@ -32,9 +32,23 @@ class JSONFormatter(logging.Formatter):
         return json.dumps(log_data)
 
 
+class DynamicStdoutStreamHandler(logging.StreamHandler):
+    """A logging StreamHandler that dynamically resolves sys.stdout at write time to support testing capturing."""
+    def __init__(self):
+        super().__init__()
+
+    @property
+    def stream(self):
+        return sys.stdout
+
+    @stream.setter
+    def stream(self, value):
+        pass
+
+
 def setup_structured_logging():
     """Sets up standard library root logger and overrides Uvicorn access/error/default log handlers to use structured JSON."""
-    handler = logging.StreamHandler(sys.stdout)
+    handler = DynamicStdoutStreamHandler()
     handler.setFormatter(JSONFormatter())
     
     # Configure root logger

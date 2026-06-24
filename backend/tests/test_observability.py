@@ -124,13 +124,15 @@ def test_unhandled_exception_logging_with_traceback(capsys):
     """Verify unhandled exceptions trigger 500 JSON response and log standard traceback metadata."""
     capsys.readouterr()
     
-    # Mocking an endpoint to raise Exception to trigger the unhandled exception logger
-    from unittest.mock import patch
+    from unittest.mock import patch, MagicMock
     
-    # Let's mock a method in a route handler, e.g. list_documents to raise ValueError
-    with patch("app.routes.documents.CHUNKS_DIR.glob", side_effect=Exception("Database connection loss mock error")):
+    mock_chunks_dir = MagicMock()
+    mock_chunks_dir.__truediv__.return_value.exists.side_effect = Exception("Database connection loss mock error")
+    
+    local_client = TestClient(app, raise_server_exceptions=False)
+    with patch("app.routes.documents.CHUNKS_DIR", mock_chunks_dir):
         headers = _auth_headers()
-        resp = client.get("/documents", headers=headers)
+        resp = local_client.get("/documents", headers=headers)
         assert resp.status_code == 500
         
     captured = capsys.readouterr()
