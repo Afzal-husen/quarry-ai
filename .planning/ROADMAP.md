@@ -152,7 +152,7 @@ This roadmap delivers production readiness across 7 feature areas: document life
 
 **Plans**: 1 plan
 
-- [ ] 18-01: Add FastAPI middleware for request logging, instrument retrieval/reranking/generation with timers, configure structured JSON formatter.
+- [x] 18-01: Add FastAPI middleware for request logging, instrument retrieval/reranking/generation with timers, configure structured JSON formatter. (completed 2026-06-24)
 
 ---
 
@@ -186,8 +186,8 @@ This roadmap delivers production readiness across 7 feature areas: document life
 | 14. Chroma Connection Caching | PERF-03 | 1/1 | Complete    | 2026-06-23 |
 | 15. Multi-document Q&A | MULTI-01, MULTI-02, MULTI-03 | 1/1 | Complete ✅ | 2026-06-23 |
 | 16. Streaming LLM Responses | STREAM-01, STREAM-02 | 1/1 | Complete ✅ | 2026-06-24 |
-| 17. API Quality & DX | API-01, API-02, API-03, API-04 | 0/1 | Pending |
-| 18. Observability & Structured Logging | OBS-01, OBS-02, OBS-03 | 0/1 | Pending |
+| 17. API Quality & DX | API-01, API-02, API-03, API-04 | 1/1 | Complete ✅ | 2026-06-24 |
+| 18. Observability & Structured Logging | OBS-01, OBS-02, OBS-03 | 1/1 | Complete ✅ | 2026-06-24 |
 | 19. Advanced Chunking Strategies | CHUNK-01, CHUNK-02, CHUNK-03 | 0/1 | Pending |
 
 ---
