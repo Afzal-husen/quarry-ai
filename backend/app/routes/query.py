@@ -3,8 +3,10 @@ from pathlib import Path
 from typing import List, Optional
 import uuid
 
-from fastapi import APIRouter, HTTPException, Depends
+import os
+from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.responses import StreamingResponse
+from app.core.limiter import limiter
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 # FlashRank Pydantic model requires Ranker to be imported first
@@ -100,7 +102,9 @@ class QueryRequest(BaseModel):
 
 
 @router.post("/query")
+@limiter.limit(os.getenv("RATE_LIMIT_QUERY", "30/minute"))
 async def query_document(
+    request: Request,
     body: QueryRequest,
     current_user: dict = Depends(get_current_user)
 ):
@@ -204,7 +208,9 @@ async def query_document(
 
 
 @router.post("/query/stream")
+@limiter.limit(os.getenv("RATE_LIMIT_QUERY", "30/minute"))
 async def query_document_stream(
+    request: Request,
     body: QueryRequest,
     current_user: dict = Depends(get_current_user)
 ):
