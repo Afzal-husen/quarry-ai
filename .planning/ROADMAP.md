@@ -15,8 +15,8 @@ This roadmap delivers production readiness across 7 feature areas: document life
 - [x] **Phase 14: Chroma Connection Caching** — Cache open Chroma client instances per document to eliminate per-request open/close overhead. (completed 2026-06-23)
 - [x] **Phase 15: Multi-document Q&A** — Query across multiple document IDs in a single request with merged results and per-doc citations. (completed 2026-06-23)
 - [x] **Phase 16: Streaming LLM Responses** — Stream answer tokens via SSE using the same auth + hybrid retrieval + reranking pipeline. (completed 2026-06-24)
-- [ ] **Phase 17: API Quality & DX** — Rate limiting, pagination, standardized error schema, and OpenAPI polish.
-- [ ] **Phase 18: Observability & Structured Logging** — Structured JSON request logs, phased query latency breakdown, and error tracebacks.
+- [x] **Phase 17: API Quality & DX** — Rate limiting, pagination, standardized error schema, and OpenAPI polish. (completed 2026-06-24)
+- [x] **Phase 18: Observability & Structured Logging** — Structured JSON request logs, phased query latency breakdown, and error tracebacks. (completed 2026-06-24)
 - [ ] **Phase 19: Advanced Chunking Strategies** — Semantic chunking, parent-document retriever, and configurable sliding window overlap.
 
 ---
