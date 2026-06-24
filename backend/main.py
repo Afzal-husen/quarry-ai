@@ -12,9 +12,18 @@ from app.routes.auth import router as auth_router
 from app.routes.documents import router as documents_router
 from app.core.vectorstore import ChromaConnectionCache
 
+import logging
+import time
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import StreamingResponse
+from app.core.logging_config import setup_structured_logging
+
 # Load environment configurations relative to the module root
 env_path = Path(__file__).parent / ".env"
 load_dotenv(dotenv_path=env_path)
+
+# Initialize structured logging
+setup_structured_logging()
 
 # Initialize user database
 UserDatabaseManager.initialize_db()
@@ -39,9 +48,56 @@ app = FastAPI(
     version="0.1.0"
 )
 
+class StructuredLoggingMiddleware(BaseHTTPMiddleware):
+    """FastAPI Middleware to intercept requests and log details as JSON."""
+    async def dispatch(self, request: Request, call_next):
+        start_time = time.perf_counter()
+        
+        # Initialize default request state variables to prevent AttributeErrors
+        request.state.user_id = None
+        request.state.latency_breakdown = None
+        
+        response = await call_next(request)
+        
+        def log_request(duration_ms: float):
+            user_id = getattr(request.state, "user_id", None)
+            latency = getattr(request.state, "latency_breakdown", None)
+            
+            log_payload = {
+                "method": request.method,
+                "path": request.url.path,
+                "status_code": response.status_code,
+                "duration_ms": round(duration_ms, 2),
+                "user_id": user_id,
+                "client_ip": request.client.host if request.client else "127.0.0.1",
+            }
+            if latency:
+                log_payload["latency_breakdown"] = latency
+                
+            logging.getLogger("app.request").info("Request completed", extra=log_payload)
+
+        if isinstance(response, StreamingResponse):
+            original_iterator = response.body_iterator
+            
+            async def wrapped_iterator():
+                try:
+                    async for chunk in original_iterator:
+                        yield chunk
+                finally:
+                    duration_ms = (time.perf_counter() - start_time) * 1000
+                    log_request(duration_ms)
+                    
+            response.body_iterator = wrapped_iterator()
+            return response
+        else:
+            duration_ms = (time.perf_counter() - start_time) * 1000
+            log_request(duration_ms)
+            return response
+
 # Set up rate limiter state and middleware
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(StructuredLoggingMiddleware)
 
 # Register custom exception handlers for standardized error format
 @app.exception_handler(RequestValidationError)
@@ -116,6 +172,17 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
+    # Log unhandled exception with traceback and request metadata
+    user_id = getattr(request.state, "user_id", None)
+    logging.getLogger("app.exception").error(
+        f"Unhandled Exception: {str(exc)}",
+        exc_info=exc,
+        extra={
+            "method": request.method,
+            "path": request.url.path,
+            "user_id": user_id,
+        }
+    )
     return JSONResponse(
         status_code=500,
         content={
