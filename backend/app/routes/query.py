@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from typing import List, Optional
 import uuid
+import time
 
 import os
 from fastapi import APIRouter, HTTPException, Depends, Request
@@ -151,6 +152,7 @@ async def query_document(
             )
 
     # 2. Per-document hybrid retrieval — pool chunks from all requested documents
+    start_retrieval = time.perf_counter()
     candidate_k = max(10, min(25, body.top_k * 3))
     pooled_chunks: List[Document] = []
 
@@ -168,8 +170,10 @@ async def query_document(
             status_code=500,
             detail=f"Local vector store retrieval failed: {str(e)}"
         )
+    retrieval_ms = (time.perf_counter() - start_retrieval) * 1000
 
     # 3. Deduplicate pooled chunks by exact stripped text, preserving insertion order
+    start_rerank = time.perf_counter()
     seen_texts = set()
     deduped_chunks: List[Document] = []
     for doc in pooled_chunks:
@@ -189,8 +193,10 @@ async def query_document(
             status_code=500,
             detail=f"Reranking failed: {str(e)}"
         )
+    reranking_ms = (time.perf_counter() - start_rerank) * 1000
 
     # 5. Generate strict grounded response via ChatGroq
+    start_gen = time.perf_counter()
     try:
         payload = qa_pipeline.generate_answer(
             query=body.question,
@@ -207,6 +213,15 @@ async def query_document(
             status_code=500,
             detail=f"LLM generative inference failure: {str(e)}"
         )
+    generation_ms = (time.perf_counter() - start_gen) * 1000
+
+    total_ms = retrieval_ms + reranking_ms + generation_ms
+    request.state.latency_breakdown = {
+        "retrieval_ms": round(retrieval_ms, 2),
+        "reranking_ms": round(reranking_ms, 2),
+        "generation_ms": round(generation_ms, 2),
+        "total_ms": round(total_ms, 2)
+    }
 
     # Return success payload containing answer and source page-level citations
     return JSONResponse(content=payload)
@@ -263,6 +278,7 @@ async def query_document_stream(
             )
 
     # 2. Per-document hybrid retrieval — pool chunks from all requested documents
+    start_retrieval = time.perf_counter()
     candidate_k = max(10, min(25, body.top_k * 3))
     pooled_chunks: List[Document] = []
 
@@ -280,8 +296,10 @@ async def query_document_stream(
             status_code=500,
             detail=f"Local vector store retrieval failed: {str(e)}"
         )
+    retrieval_ms = (time.perf_counter() - start_retrieval) * 1000
 
     # 3. Deduplicate pooled chunks by exact stripped text, preserving insertion order
+    start_rerank = time.perf_counter()
     seen_texts = set()
     deduped_chunks: List[Document] = []
     for doc in pooled_chunks:
@@ -301,6 +319,7 @@ async def query_document_stream(
             status_code=500,
             detail=f"Reranking failed: {str(e)}"
         )
+    reranking_ms = (time.perf_counter() - start_rerank) * 1000
 
     # 5. Build citation metadata — emitted as the first SSE event before streaming begins
     citations = [
@@ -313,12 +332,21 @@ async def query_document_stream(
         for doc in matching_chunks
     ]
 
+    # Initialize latency breakdown dictionary
+    request.state.latency_breakdown = {
+        "retrieval_ms": round(retrieval_ms, 2),
+        "reranking_ms": round(reranking_ms, 2),
+        "generation_ms": 0.0,
+        "total_ms": 0.0
+    }
+
     # 6. Define the async SSE generator
     async def sse_generator():
         # First event: emit citation metadata so clients can render source refs immediately
         yield f"data: {json.dumps({'citations': citations})}\n\n"
 
         # Stream LLM tokens
+        start_gen = time.perf_counter()
         try:
             async for token in qa_pipeline.generate_answer_stream(
                 query=body.question,
@@ -328,6 +356,13 @@ async def query_document_stream(
         except (GroqConnectionError, InferenceError) as e:
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
             return
+        finally:
+            generation_ms = (time.perf_counter() - start_gen) * 1000
+            total_ms = retrieval_ms + reranking_ms + generation_ms
+            request.state.latency_breakdown.update({
+                "generation_ms": round(generation_ms, 2),
+                "total_ms": round(total_ms, 2)
+            })
 
         # Terminal event
         yield "data: [DONE]\n\n"
