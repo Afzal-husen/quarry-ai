@@ -1,8 +1,10 @@
+import json
 from pathlib import Path
 from typing import List, Optional
 import uuid
 
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 # FlashRank Pydantic model requires Ranker to be imported first
@@ -196,3 +198,117 @@ async def query_document(
 
     # Return success payload containing answer and source page-level citations
     return payload
+
+
+@router.post("/query/stream")
+async def query_document_stream(
+    body: QueryRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Streams LLM answer tokens via Server-Sent Events for one or more uploaded documents.
+
+    Runs the same auth + ownership + hybrid retrieval + reranking pipeline as POST /query,
+    then streams the ChatGroq response token-by-token using the SSE protocol.
+
+    Event sequence:
+      1. data: {"citations": [...]}  — source citations emitted before streaming begins
+      2. data: {"token": "..."}      — one event per LLM output token
+      3. data: [DONE]                — terminal event signals end of stream
+
+    Args:
+        body: The QueryRequest Pydantic JSON model (identical schema to /query).
+
+    Returns:
+        A StreamingResponse with Content-Type: text/event-stream.
+    """
+    user_id = current_user["id"]
+    target_ids = body.resolved_document_ids
+
+    # 1. Enforce strict ownership boundaries for every requested document ID
+    for doc_id in target_ids:
+        global_matches = list(vector_manager.vectorstore_dir.glob(f"*/{doc_id}"))
+        if not global_matches:
+            raise HTTPException(
+                status_code=404,
+                detail=(
+                    f"Vector database index for document '{doc_id}' does not exist on disk. "
+                    "Please upload and index the document first."
+                )
+            )
+        db_path = vector_manager.vectorstore_dir / user_id / doc_id
+        if not db_path.exists():
+            raise HTTPException(
+                status_code=403,
+                detail="Forbidden: You do not own or have permission to access this document."
+            )
+
+    # 2. Per-document hybrid retrieval — pool chunks from all requested documents
+    candidate_k = max(10, min(25, body.top_k * 3))
+    pooled_chunks: List[Document] = []
+
+    try:
+        for doc_id in target_ids:
+            base_retriever = vector_manager.get_hybrid_retriever(
+                user_id=user_id,
+                document_id=doc_id,
+                top_k=candidate_k
+            )
+            chunks = base_retriever.invoke(body.question)
+            pooled_chunks.extend(chunks)
+    except (VectorStoreError, RerankerError) as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Local vector store retrieval failed: {str(e)}"
+        )
+
+    # 3. Deduplicate pooled chunks by exact stripped text, preserving insertion order
+    seen_texts = set()
+    deduped_chunks: List[Document] = []
+    for doc in pooled_chunks:
+        key = doc.page_content.strip()
+        if key not in seen_texts:
+            seen_texts.add(key)
+            deduped_chunks.append(doc)
+
+    # 4. Rerank deduplicated chunks with FlashRank and slice to top_k
+    try:
+        ranker = RerankManager.get_ranker()
+        compressor = FlashrankRerank(client=ranker, top_n=body.top_k)
+        matching_chunks = compressor.compress_documents(deduped_chunks, body.question)
+    except RerankerError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Reranking failed: {str(e)}"
+        )
+
+    # 5. Build citation metadata — emitted as the first SSE event before streaming begins
+    citations = [
+        {
+            "source_filename": doc.metadata.get("source_filename", "Unknown Document"),
+            "page_index": doc.metadata.get("page_index", 0),
+            "document_id": doc.metadata.get("document_id", ""),
+            "text": doc.page_content,
+        }
+        for doc in matching_chunks
+    ]
+
+    # 6. Define the async SSE generator
+    async def sse_generator():
+        # First event: emit citation metadata so clients can render source refs immediately
+        yield f"data: {json.dumps({'citations': citations})}\n\n"
+
+        # Stream LLM tokens
+        try:
+            async for token in qa_pipeline.generate_answer_stream(
+                query=body.question,
+                retrieved_docs=matching_chunks
+            ):
+                yield f"data: {json.dumps({'token': token})}\n\n"
+        except (GroqConnectionError, InferenceError) as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+            return
+
+        # Terminal event
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(sse_generator(), media_type="text/event-stream")

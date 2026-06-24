@@ -125,3 +125,60 @@ class QAPipeline:
             "answer": answer,
             "citations": citations
         }
+
+    async def generate_answer_stream(
+        self,
+        query: str,
+        retrieved_docs: List[Document],
+    ):
+        """Streams the generative answer token-by-token using ChatGroq's async streaming.
+
+        Builds the same strict-grounding system prompt as generate_answer(), but invokes
+        the LangChain chain with .astream() to yield individual text tokens as they arrive.
+
+        Args:
+            query: The user's natural language question.
+            retrieved_docs: A list of reranked LangChain Document chunks.
+
+        Yields:
+            Individual string tokens from the LLM response.
+
+        Raises:
+            InferenceError: Raised inside the generator if the streaming call fails.
+        """
+        # 1. Format document snippets context — identical logic to generate_answer()
+        context_blocks = []
+        for doc in retrieved_docs:
+            filename = doc.metadata.get("source_filename", "Unknown Document")
+            page = doc.metadata.get("page_index", 0)
+            context_blocks.append(
+                f"Source: {filename} (Page {page})\n"
+                f"Snippet:\n{doc.page_content}"
+            )
+
+        context_text = "\n\n---\n\n".join(
+            context_blocks) if context_blocks else "NO DOCUMENT CONTEXT AVAILABLE"
+
+        # 2. Build the strict grounding system prompt — same constraints as the sync path
+        fallback_msg = "I am sorry, but the provided documents do not contain the answer to your question."
+        system_instruction = (
+            "You are a helpful assistant designed to perform question-answering over documents.\n"
+            "Answer the user's question based strictly on the provided context snippets below.\n"
+            f"If the answer cannot be found or inferred from the provided context snippets, you MUST respond EXACTLY with: '{fallback_msg}'\n"
+            "Do NOT use any external or general knowledge, and do NOT make up or extrapolate facts.\n\n"
+            f"Retrieved Document Context:\n{context_text}"
+        )
+
+        # 3. Assemble the LangChain chain and stream tokens via async generator
+        try:
+            model = GroqConnectionManager.get_chat_model()
+            prompt = ChatPromptTemplate.from_messages([
+                ("system", system_instruction),
+                ("human", "{question}")
+            ])
+            chain = prompt | model | StrOutputParser()
+            async for token in chain.astream({"context": context_text, "question": query}):
+                yield token
+        except Exception as e:
+            raise InferenceError(
+                f"Groq streaming inference failed: {str(e)}") from e
