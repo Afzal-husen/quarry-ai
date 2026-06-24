@@ -2,24 +2,25 @@
 
 import os
 import sys
-import uuid
-import json
 from pathlib import Path
-from unittest.mock import patch, MagicMock
-
-import pytest
-from fastapi.testclient import TestClient
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-import app.core.database as db_mod
-from app.core.database import UserDatabaseManager
-from app.core.auth import create_access_token, hash_password
 from main import app
+from app.core.auth import create_access_token, hash_password
+from app.core.database import UserDatabaseManager
+import app.core.database as db_mod
+import uuid
+import json
+from unittest.mock import patch, MagicMock
+
+import pytest
+from fastapi.testclient import TestClient
 
 client = TestClient(app)
+
 
 @pytest.fixture(autouse=True)
 def setup_test_db(tmp_path):
@@ -83,7 +84,8 @@ def test_pagination_default_values():
 
 def test_pagination_clamping():
     """Out of bound limits/offsets are clamped instead of causing validation errors."""
-    resp = client.get("/documents?limit=999&offset=-10", headers=_auth_headers())
+    resp = client.get("/documents?limit=999&offset=-10",
+                      headers=_auth_headers())
     assert resp.status_code == 200
     payload = resp.json()
     # Clamped max limit=100, min offset=0
@@ -91,15 +93,26 @@ def test_pagination_clamping():
     assert payload["offset"] == 0
 
 
-# ---------------------------------------------------------------------------
-# Rate Limiting Tests (API-01)
-# ---------------------------------------------------------------------------
-
+@pytest.mark.enable_rate_limiting
 def test_rate_limiting_upload_triggers_429():
     """Rate limiter eventually triggers 429 when limits are exceeded."""
-    # Use patch.dict to configure low rate limit for testing
-    with patch.dict(os.environ, {"RATE_LIMIT_UPLOAD": "1/minute"}):
-        # We perform two quick uploads to trigger 429
-        # Since upload requires file input and checks disk directory, we can test it
-        # Or mock the endpoint limiter check. Let's make actual requests to a rate limited path.
-        pass
+    headers = _auth_headers()
+    files = {"file": ("test_limit.pdf", b"%PDF-1.4 \n%%EOF", "application/pdf")}
+    
+    responses = []
+    for _ in range(6):
+        # Disable background task to speed up test execution
+        with patch("fastapi.BackgroundTasks.add_task"):
+            resp = client.post("/upload", files=files, headers=headers)
+            responses.append(resp)
+            
+    status_codes = [r.status_code for r in responses]
+    assert 429 in status_codes
+    
+    # Verify the 429 response structure
+    r_429 = [r for r in responses if r.status_code == 429][0]
+    payload = r_429.json()
+    assert payload["code"] == "RATE_LIMIT_EXCEEDED"
+    assert "detail" in payload
+    assert payload["field"] is None
+    assert "Retry-After" in r_429.headers

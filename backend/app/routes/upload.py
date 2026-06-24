@@ -14,6 +14,7 @@ from app.core.chunker import DocumentChunker
 from app.core.parsers import DocumentParser, DocumentParsingError
 from app.core.vectorstore import VectorStoreManager, VectorStoreError
 from app.core.auth import get_current_user
+from app.core.limiter import limiter
 
 # Ensure environment variables are loaded
 load_dotenv()
@@ -125,7 +126,14 @@ def run_ingestion_job(
                 ingestion_jobs[document_id]["error"] = str(e)
 
 
-@router.post("/upload", status_code=202)
+@router.post(
+    "/upload",
+    status_code=202,
+    summary="Upload Document",
+    description="Uploads a PDF, DOC, or DOCX document and dispatches the parsing and vector indexing to the background.",
+    response_description="Returns the background ingestion job ID and status."
+)
+@limiter.limit(os.getenv("RATE_LIMIT_UPLOAD", "5/minute"))
 async def upload_file(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -244,8 +252,15 @@ async def upload_file(
     )
 
 
-@router.get("/upload/{job_id}/status")
+@router.get(
+    "/upload/{job_id}/status",
+    summary="Get Ingestion Job Status",
+    description="Retrieves the current execution status and metadata of a background ingestion job.",
+    response_description="Returns job status, document ID, and error details if failed."
+)
+@limiter.limit(os.getenv("RATE_LIMIT_UPLOAD", "5/minute"))
 async def get_job_status(
+    request: Request,
     job_id: str,
     current_user: dict = Depends(get_current_user)
 ):
@@ -276,8 +291,10 @@ async def get_job_status(
             detail="Forbidden: You do not own or have permission to access this job."
         )
 
-    return {
-        "status": job["status"],
-        "document_id": job["document_id"],
-        "error": job["error"]
-    }
+    return JSONResponse(
+        content={
+            "status": job["status"],
+            "document_id": job["document_id"],
+            "error": job["error"]
+        }
+    )

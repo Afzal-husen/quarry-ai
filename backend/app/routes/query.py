@@ -5,7 +5,7 @@ import uuid
 
 import os
 from fastapi import APIRouter, HTTPException, Depends, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from app.core.limiter import limiter
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -101,7 +101,12 @@ class QueryRequest(BaseModel):
         return self
 
 
-@router.post("/query")
+@router.post(
+    "/query",
+    summary="Query Documents",
+    description="Answers questions related to one or more uploaded documents using local vectors and ChatGroq inference.",
+    response_description="Returns the generated answer and a list of source citations."
+)
 @limiter.limit(os.getenv("RATE_LIMIT_QUERY", "30/minute"))
 async def query_document(
     request: Request,
@@ -204,10 +209,15 @@ async def query_document(
         )
 
     # Return success payload containing answer and source page-level citations
-    return payload
+    return JSONResponse(content=payload)
 
 
-@router.post("/query/stream")
+@router.post(
+    "/query/stream",
+    summary="Stream Query Response",
+    description="Streams LLM answer tokens via Server-Sent Events (SSE) for one or more uploaded documents.",
+    response_description="A Server-Sent Events streaming response."
+)
 @limiter.limit(os.getenv("RATE_LIMIT_QUERY", "30/minute"))
 async def query_document_stream(
     request: Request,

@@ -88,7 +88,9 @@ def test_list_documents_empty(auth_headers):
     """Verify that listing documents for a user with no uploads returns an empty list."""
     response = client.get("/documents", headers=auth_headers)
     assert response.status_code == 200
-    assert response.json() == []
+    payload = response.json()
+    assert payload["total"] == 0
+    assert payload["items"] == []
 
 
 def test_list_documents_unauthorized():
@@ -129,7 +131,8 @@ def test_document_lifecycle_flow(auth_headers, other_auth_headers):
     # 2. List documents as user-123
     list_res = client.get("/documents", headers=auth_headers)
     assert list_res.status_code == 200
-    docs = list_res.json()
+    payload = list_res.json()
+    docs = payload["items"]
     assert len(docs) == 1
     doc = docs[0]
     assert doc["document_id"] == doc_id
@@ -141,7 +144,9 @@ def test_document_lifecycle_flow(auth_headers, other_auth_headers):
     # 3. List documents as user-456 (should be empty for other user)
     other_list_res = client.get("/documents", headers=other_auth_headers)
     assert other_list_res.status_code == 200
-    assert other_list_res.json() == []
+    other_payload = other_list_res.json()
+    assert other_payload["total"] == 0
+    assert other_payload["items"] == []
 
     # 4. Try to reindex user-123's document using user-456's token (should return 403)
     reindex_forbidden_res = client.post(f"/documents/{doc_id}/reindex", headers=other_auth_headers)
@@ -215,7 +220,8 @@ def test_reindex_missing_raw_file(auth_headers):
 
     # Verify status is listed as partial
     list_res = client.get("/documents", headers=auth_headers)
-    doc_info = list_res.json()[0]
+    payload = list_res.json()
+    doc_info = payload["items"][0]
     assert doc_info["status"] == "partial"
     assert doc_info["can_reindex"] is False
 

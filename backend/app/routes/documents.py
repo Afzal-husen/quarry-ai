@@ -56,19 +56,34 @@ class PaginatedDocumentsResponse(BaseModel):
     items: List[DocumentItem] = Field(..., description="List of document items on the current page.")
 
 
-@router.get("", response_model=PaginatedDocumentsResponse)
+@router.get(
+    "",
+    response_model=PaginatedDocumentsResponse,
+    summary="List Documents",
+    description="Retrieves a paginated list of uploaded documents, including metadata, chunk counts, and indexing status.",
+    response_description="A paginated response containing document details."
+)
 async def list_documents(
     limit: int = Query(10, description="Max number of documents to return."),
     offset: int = Query(0, description="Number of documents to skip."),
     current_user: dict = Depends(get_current_user)
 ):
     """Lists all uploaded documents for the authenticated user and displays their current lifecycle status."""
+    # Clamp pagination parameters early to ensure all return paths use them
+    clamped_limit = max(1, min(100, limit))
+    clamped_offset = max(0, offset)
+
     user_id = current_user["id"]
     user_chunks_dir = CHUNKS_DIR / user_id
 
     results = []
     if not user_chunks_dir.exists():
-        return results
+        return PaginatedDocumentsResponse(
+            total=0,
+            limit=clamped_limit,
+            offset=clamped_offset,
+            items=[]
+        )
 
     for chunk_file in user_chunks_dir.glob("*.json"):
         document_id = chunk_file.stem
@@ -127,10 +142,6 @@ async def list_documents(
             can_reindex=raw_file_exists
         ))
 
-    # Clamp pagination parameters
-    clamped_limit = max(1, min(100, limit))
-    clamped_offset = max(0, offset)
-
     total = len(results)
     paginated_items = results[clamped_offset : clamped_offset + clamped_limit]
 
@@ -142,7 +153,13 @@ async def list_documents(
     )
 
 
-@router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{document_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete Document",
+    description="Deletes all stored artifacts of a document including its uploaded file, text chunks, and vector store indices.",
+    response_description="Returns HTTP 204 No Content upon successful deletion."
+)
 async def delete_document(
     document_id: str,
     current_user: dict = Depends(get_current_user)
@@ -220,7 +237,13 @@ async def delete_document(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.post("/{document_id}/reindex", response_model=ReindexResponse)
+@router.post(
+    "/{document_id}/reindex",
+    response_model=ReindexResponse,
+    summary="Reindex Document",
+    description="Reuses the existing raw upload file on disk to re-run the parse, chunk, and index pipeline with optional chunk overrides.",
+    response_description="Returns metadata about the re-indexed document and total chunk count."
+)
 async def reindex_document(
     document_id: str,
     chunk_size: Optional[int] = Query(None, description="Character size of each split text block"),

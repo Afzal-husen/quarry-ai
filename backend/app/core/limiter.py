@@ -19,4 +19,4 @@ def custom_rate_limit_key(request: Request) -> str:
     return request.client.host if request.client else "127.0.0.1"
 
 # Shared Limiter instance
-limiter = Limiter(key_func=custom_rate_limit_key)
+limiter = Limiter(key_func=custom_rate_limit_key, headers_enabled=True)

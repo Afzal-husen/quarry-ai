@@ -133,7 +133,7 @@ This roadmap delivers production readiness across 7 feature areas: document life
 
 **Plans**: 1 plan
 
-- [ ] 17-01: Add slowapi rate limiter middleware, update GET /documents pagination, standardize error response models, fill OpenAPI metadata.
+- [x] 17-01: Add slowapi rate limiter middleware, update GET /documents pagination, standardize error response models, fill OpenAPI metadata. (completed 2026-06-24)
 
 ---
 

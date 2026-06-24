@@ -25,3 +25,8 @@ dependencies = [
     "flashrank",
     "slowapi",
 ]
+
+[tool.pytest.ini_options]
+markers = [
+    "enable_rate_limiting: enable slowapi rate limiting for this test case",
+]

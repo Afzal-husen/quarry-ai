@@ -25,7 +25,8 @@ BASE_DIR = Path(__file__).resolve().parent
 (BASE_DIR / "data" / "chunks").mkdir(parents=True, exist_ok=True)
 (BASE_DIR / "data" / "vectorstore").mkdir(parents=True, exist_ok=True)
 
-from slowapi.errors import RateLimitExceeded, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.middleware import SlowAPIMiddleware
 from app.core.limiter import limiter
 from fastapi.exceptions import RequestValidationError
