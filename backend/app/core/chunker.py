@@ -163,10 +163,11 @@ class DocumentChunker:
                 else:
                     # Semantic chunking inside parent chunk boundaries
                     buffer_window = chunk_overlap if chunk_overlap is not None else 1
+                    t_type = semantic_threshold_type if semantic_threshold_type is not None else "percentile"
                     child_texts = self._split_semantically(
                         text=parent_chunk.page_content,
                         sentence_buffer_window=buffer_window,
-                        threshold_type=semantic_threshold_type,
+                        threshold_type=t_type,
                         threshold_value=semantic_threshold
                     )
 
