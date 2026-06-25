@@ -1,0 +1,624 @@
+{
+  "version": 1,
+  "timestamp": "2026-05-31T05:14:33.661Z",
+  "nodes": [
+    {
+      "label": "main.py",
+      "file_type": "code",
+      "source_file": "backend/main.py",
+      "source_location": "L1",
+      "id": "backend_main_py",
+      "community": 1,
+      "norm_label": "main.py"
+    },
+    {
+      "label": "root_redirect()",
+      "file_type": "code",
+      "source_file": "backend/main.py",
+      "source_location": "L20",
+      "id": "backend_main_root_redirect",
+      "community": 1,
+      "norm_label": "root_redirect()"
+    },
+    {
+      "label": "health_check()",
+      "file_type": "code",
+      "source_file": "backend/main.py",
+      "source_location": "L26",
+      "id": "backend_main_health_check",
+      "community": 1,
+      "norm_label": "health_check()"
+    },
+    {
+      "label": "Redirect incoming root requests directly to interactive OpenAPI docs.",
+      "file_type": "rationale",
+      "source_file": "backend/main.py",
+      "source_location": "L21",
+      "id": "backend_main_rationale_21",
+      "community": 1,
+      "norm_label": "redirect incoming root requests directly to interactive openapi docs."
+    },
+    {
+      "label": "Lightweight health check returning static ok status.",
+      "file_type": "rationale",
+      "source_file": "backend/main.py",
+      "source_location": "L27",
+      "id": "backend_main_rationale_27",
+      "community": 1,
+      "norm_label": "lightweight health check returning static ok status."
+    },
+    {
+      "label": "GEMINI.md",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L1",
+      "id": "gemini_md",
+      "community": 0,
+      "norm_label": "gemini.md"
+    },
+    {
+      "label": "Project",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L3",
+      "id": "document_rag_gemini_project",
+      "community": 2,
+      "norm_label": "project"
+    },
+    {
+      "label": "Constraints",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L11",
+      "id": "document_rag_gemini_constraints",
+      "community": 2,
+      "norm_label": "constraints"
+    },
+    {
+      "label": "Technology Stack",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L21",
+      "id": "document_rag_gemini_technology_stack",
+      "community": 0,
+      "norm_label": "technology stack"
+    },
+    {
+      "label": "Languages",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L23",
+      "id": "document_rag_gemini_languages",
+      "community": 0,
+      "norm_label": "languages"
+    },
+    {
+      "label": "Runtime",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L28",
+      "id": "document_rag_gemini_runtime",
+      "community": 0,
+      "norm_label": "runtime"
+    },
+    {
+      "label": "Frameworks",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L35",
+      "id": "document_rag_gemini_frameworks",
+      "community": 0,
+      "norm_label": "frameworks"
+    },
+    {
+      "label": "Key Dependencies",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L41",
+      "id": "document_rag_gemini_key_dependencies",
+      "community": 0,
+      "norm_label": "key dependencies"
+    },
+    {
+      "label": "Configuration",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L46",
+      "id": "document_rag_gemini_configuration",
+      "community": 0,
+      "norm_label": "configuration"
+    },
+    {
+      "label": "Platform Requirements",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L51",
+      "id": "document_rag_gemini_platform_requirements",
+      "community": 0,
+      "norm_label": "platform requirements"
+    },
+    {
+      "label": "Conventions",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L60",
+      "id": "document_rag_gemini_conventions",
+      "community": 0,
+      "norm_label": "conventions"
+    },
+    {
+      "label": "Naming Patterns",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L62",
+      "id": "document_rag_gemini_naming_patterns",
+      "community": 0,
+      "norm_label": "naming patterns"
+    },
+    {
+      "label": "Code Style",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L71",
+      "id": "document_rag_gemini_code_style",
+      "community": 0,
+      "norm_label": "code style"
+    },
+    {
+      "label": "Import Organization",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L78",
+      "id": "document_rag_gemini_import_organization",
+      "community": 0,
+      "norm_label": "import organization"
+    },
+    {
+      "label": "Error Handling",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L83",
+      "id": "document_rag_gemini_error_handling",
+      "community": 0,
+      "norm_label": "error handling"
+    },
+    {
+      "label": "Logging",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L88",
+      "id": "document_rag_gemini_logging",
+      "community": 0,
+      "norm_label": "logging"
+    },
+    {
+      "label": "Comments",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L92",
+      "id": "document_rag_gemini_comments",
+      "community": 0,
+      "norm_label": "comments"
+    },
+    {
+      "label": "Architecture",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L102",
+      "id": "document_rag_gemini_architecture",
+      "community": 0,
+      "norm_label": "architecture"
+    },
+    {
+      "label": "Pattern Overview",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L104",
+      "id": "document_rag_gemini_pattern_overview",
+      "community": 0,
+      "norm_label": "pattern overview"
+    },
+    {
+      "label": "Layers",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L110",
+      "id": "document_rag_gemini_layers",
+      "community": 0,
+      "norm_label": "layers"
+    },
+    {
+      "label": "Data Flow",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L117",
+      "id": "document_rag_gemini_data_flow",
+      "community": 0,
+      "norm_label": "data flow"
+    },
+    {
+      "label": "Key Abstractions",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L121",
+      "id": "document_rag_gemini_key_abstractions",
+      "community": 0,
+      "norm_label": "key abstractions"
+    },
+    {
+      "label": "Entry Points",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L125",
+      "id": "document_rag_gemini_entry_points",
+      "community": 0,
+      "norm_label": "entry points"
+    },
+    {
+      "label": "Error Handling",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L131",
+      "id": "document_rag_gemini_error_handling_131",
+      "community": 0,
+      "norm_label": "error handling"
+    },
+    {
+      "label": "Cross-Cutting Concerns",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L135",
+      "id": "document_rag_gemini_cross_cutting_concerns",
+      "community": 0,
+      "norm_label": "cross-cutting concerns"
+    },
+    {
+      "label": "Project Skills",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L143",
+      "id": "document_rag_gemini_project_skills",
+      "community": 0,
+      "norm_label": "project skills"
+    },
+    {
+      "label": "GSD Workflow Enforcement",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L150",
+      "id": "document_rag_gemini_gsd_workflow_enforcement",
+      "community": 0,
+      "norm_label": "gsd workflow enforcement"
+    },
+    {
+      "label": "Developer Profile",
+      "file_type": "document",
+      "source_file": "GEMINI.md",
+      "source_location": "L165",
+      "id": "document_rag_gemini_developer_profile",
+      "community": 0,
+      "norm_label": "developer profile"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "backend/README.md",
+      "source_location": "L1",
+      "id": "backend_readme_md",
+      "community": 3,
+      "norm_label": "readme.md"
+    }
+  ],
+  "edges": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.py",
+      "source_location": "L26",
+      "weight": 1,
+      "source": "backend_main_py",
+      "target": "backend_main_health_check",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.py",
+      "source_location": "L20",
+      "weight": 1,
+      "source": "backend_main_py",
+      "target": "backend_main_root_redirect",
+      "confidence_score": 1
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.py",
+      "source_location": "L21",
+      "weight": 1,
+      "source": "backend_main_rationale_21",
+      "target": "backend_main_root_redirect",
+      "confidence_score": 1
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "backend/main.py",
+      "source_location": "L27",
+      "weight": 1,
+      "source": "backend_main_rationale_27",
+      "target": "backend_main_health_check",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L102",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_architecture",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L71",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_code_style",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L92",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_comments",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L46",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_configuration",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L60",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_conventions",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L135",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_cross_cutting_concerns",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L117",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_data_flow",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L165",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_developer_profile",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L125",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_entry_points",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L83",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_error_handling",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L131",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_error_handling_131",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L35",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_frameworks",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L150",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_gsd_workflow_enforcement",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L78",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_import_organization",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L121",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_key_abstractions",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L41",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_key_dependencies",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L23",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_languages",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L110",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_layers",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L88",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_logging",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L62",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_naming_patterns",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L104",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_pattern_overview",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L51",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_platform_requirements",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L3",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_project",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L143",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_project_skills",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L28",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_runtime",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L21",
+      "weight": 1,
+      "source": "gemini_md",
+      "target": "document_rag_gemini_technology_stack",
+      "confidence_score": 1
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "GEMINI.md",
+      "source_location": "L11",
+      "weight": 1,
+      "source": "document_rag_gemini_project",
+      "target": "document_rag_gemini_constraints",
+      "confidence_score": 1
+    }
+  ]
+}
