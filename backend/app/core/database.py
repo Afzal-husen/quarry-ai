@@ -164,6 +164,25 @@ class ChatDatabaseManager:
             conn.close()
 
     @classmethod
+    def get_session_by_id(cls, session_id: str) -> Optional[Dict[str, Any]]:
+        """Retrieves a chat session by id without verifying user ownership."""
+        conn = cls.get_connection()
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT id, user_id, title, created_at FROM chat_sessions WHERE id = ?;",
+                (session_id,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return dict(row)
+            return None
+        finally:
+            conn.close()
+
+
+    @classmethod
     def list_sessions(cls, user_id: str, limit: int, offset: int) -> List[Dict[str, Any]]:
         """Lists chat sessions for a specific user, ordered by creation date descending (newest first)."""
         conn = cls.get_connection()

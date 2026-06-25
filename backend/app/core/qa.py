@@ -227,3 +227,27 @@ class QAPipeline:
                 f"Query condensation failed: {str(e)}. Falling back to raw user query."
             )
             return question
+
+    def generate_session_title(self, question: str) -> str:
+        """Summarizes the user question in 3-5 words as a chat session title.
+
+        Args:
+            question: The user's question.
+
+        Returns:
+            The summarized session title, or "New Chat" on failure.
+        """
+        try:
+            model = GroqConnectionManager.get_chat_model()
+            prompt = ChatPromptTemplate.from_messages([
+                ("human", "Summarize the user question in 3-5 words as a chat session title. Do not use quotes, punctuation, or preamble. Question: {question}")
+            ])
+            chain = prompt | model | StrOutputParser()
+            title = chain.invoke({"question": question})
+            return title.strip().strip('"').strip("'")
+        except Exception as e:
+            logging.getLogger("app.exception").warning(
+                f"Session title generation failed: {str(e)}. Falling back to 'New Chat'."
+            )
+            return "New Chat"
+

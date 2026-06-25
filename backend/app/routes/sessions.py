@@ -1,7 +1,7 @@
 import json
 import uuid
 from datetime import datetime, timezone
-from typing import Optional, List
+from typing import Optional, List, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
@@ -37,8 +37,9 @@ class MessageResponse(BaseModel):
     id: str
     role: str
     content: str
-    metadata: Optional[dict] = None
+    metadata: Optional[Any] = None
     created_at: str
+
 
 
 class SessionDetailResponse(BaseModel):

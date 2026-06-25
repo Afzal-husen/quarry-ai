@@ -1,4 +1,5 @@
 import json
+import logging
 from pathlib import Path
 from typing import List, Optional
 import uuid
@@ -21,6 +22,7 @@ from app.core.qa import QAPipeline, GroqConnectionError, InferenceError
 from app.core.vectorstore import VectorStoreManager, VectorStoreError
 from app.core.auth import get_current_user
 from app.core.reranker import RerankManager, RerankerError
+from app.core.database import ChatDatabaseManager
 
 
 router = APIRouter()
@@ -55,10 +57,26 @@ class QueryRequest(BaseModel):
         le=10,
         description="Number of most semantically relevant text chunks to retrieve (1-10)."
     )
+    session_id: Optional[str] = Field(
+        None,
+        description="The unique UUID of a chat session, if querying inside a session context."
+    )
 
     # Internal resolved field — populated by model_validator
     resolved_document_ids: List[str] = Field(
         default_factory=list, exclude=True)
+
+    @field_validator("session_id")
+    @classmethod
+    def validate_session_uuid(cls, value):
+        """Enforces that session_id is a valid UUID if provided."""
+        if value is None:
+            return value
+        try:
+            uuid.UUID(value)
+            return value
+        except ValueError as e:
+            raise ValueError("session_id must be a valid UUID string.") from e
 
     @field_validator("document_id")
     @classmethod
@@ -130,6 +148,36 @@ async def query_document(
     user_id = current_user["id"]
     target_ids = body.resolved_document_ids
 
+    # Validate session_id if provided
+    session_id = body.session_id
+    history_messages = []
+    if session_id is not None:
+        session = ChatDatabaseManager.get_session_by_id(session_id)
+        if not session:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Session with ID '{session_id}' not found."
+            )
+        if session["user_id"] != user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Forbidden: You do not own or have permission to access this chat session."
+            )
+        history_messages = ChatDatabaseManager.get_messages_by_session(
+            session_id, user_id)
+
+    # Perform query condensation using last 10 messages (5 turns)
+    recent_history = history_messages[-10:]
+    formatted_history = [
+        {"role": msg["role"], "content": msg["content"]}
+        for msg in recent_history
+    ]
+    if session_id is not None:
+        rewritten_question = qa_pipeline.condense_query(
+            formatted_history, body.question)
+    else:
+        rewritten_question = body.question
+
     # 1. Enforce strict ownership boundaries for every requested document ID
     for doc_id in target_ids:
         # Find if the document exists for ANY user
@@ -163,7 +211,7 @@ async def query_document(
                 document_id=doc_id,
                 top_k=candidate_k
             )
-            chunks = base_retriever.invoke(body.question)
+            chunks = base_retriever.invoke(rewritten_question)
             pooled_chunks.extend(chunks)
     except (VectorStoreError, RerankerError) as e:
         raise HTTPException(
@@ -187,7 +235,7 @@ async def query_document(
         ranker = RerankManager.get_ranker()
         compressor = FlashrankRerank(client=ranker, top_n=body.top_k)
         matching_chunks = compressor.compress_documents(
-            deduped_chunks, body.question)
+            deduped_chunks, rewritten_question)
     except RerankerError as e:
         raise HTTPException(
             status_code=500,
@@ -205,7 +253,7 @@ async def query_document(
     start_gen = time.perf_counter()
     try:
         payload = qa_pipeline.generate_answer(
-            query=body.question,
+            query=rewritten_question,
             retrieved_docs=matching_chunks
         )
     except GroqConnectionError as e:
@@ -220,6 +268,35 @@ async def query_document(
             detail=f"LLM generative inference failure: {str(e)}"
         )
     generation_ms = (time.perf_counter() - start_gen) * 1000
+
+    # 6. Save to session history if session is active
+    if session_id is not None:
+        # Generate and update session title on first turn
+        if len(history_messages) == 0:
+            new_title = qa_pipeline.generate_session_title(body.question)
+            ChatDatabaseManager.update_session_title(
+                session_id, user_id, new_title)
+
+        # Save user message (with raw question)
+        user_msg_id = str(uuid.uuid4())
+        ChatDatabaseManager.create_message(
+            message_id=user_msg_id,
+            session_id=session_id,
+            role="user",
+            content=body.question,
+            metadata=None
+        )
+
+        # Save assistant message
+        citations_serialized = json.dumps(payload.get("citations", []))
+        assistant_msg_id = str(uuid.uuid4())
+        ChatDatabaseManager.create_message(
+            message_id=assistant_msg_id,
+            session_id=session_id,
+            role="assistant",
+            content=payload.get("answer", ""),
+            metadata=citations_serialized
+        )
 
     total_ms = retrieval_ms + reranking_ms + generation_ms
     request.state.latency_breakdown = {
@@ -264,6 +341,42 @@ async def query_document_stream(
     user_id = current_user["id"]
     target_ids = body.resolved_document_ids
 
+    # Validate session_id if provided
+    session_id = body.session_id
+    history_messages = []
+    if session_id is not None:
+        session = ChatDatabaseManager.get_session_by_id(session_id)
+        if not session:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Session with ID '{session_id}' not found."
+            )
+        if session["user_id"] != user_id:
+            raise HTTPException(
+                status_code=403,
+                detail="Forbidden: You do not own or have permission to access this chat session."
+            )
+        history_messages = ChatDatabaseManager.get_messages_by_session(
+            session_id, user_id)
+
+    # Perform query condensation using last 10 messages (5 turns)
+    recent_history = history_messages[-10:]
+    formatted_history = [
+        {"role": msg["role"], "content": msg["content"]}
+        for msg in recent_history
+    ]
+    if session_id is not None:
+        rewritten_question = qa_pipeline.condense_query(
+            formatted_history, body.question)
+    else:
+        rewritten_question = body.question
+
+    # Generate and update session title on first turn
+    if session_id is not None and len(history_messages) == 0:
+        new_title = qa_pipeline.generate_session_title(body.question)
+        ChatDatabaseManager.update_session_title(
+            session_id, user_id, new_title)
+
     # 1. Enforce strict ownership boundaries for every requested document ID
     for doc_id in target_ids:
         global_matches = list(
@@ -295,7 +408,7 @@ async def query_document_stream(
                 document_id=doc_id,
                 top_k=candidate_k
             )
-            chunks = base_retriever.invoke(body.question)
+            chunks = base_retriever.invoke(rewritten_question)
             pooled_chunks.extend(chunks)
     except (VectorStoreError, RerankerError) as e:
         raise HTTPException(
@@ -319,7 +432,7 @@ async def query_document_stream(
         ranker = RerankManager.get_ranker()
         compressor = FlashrankRerank(client=ranker, top_n=body.top_k)
         matching_chunks = compressor.compress_documents(
-            deduped_chunks, body.question)
+            deduped_chunks, rewritten_question)
     except RerankerError as e:
         raise HTTPException(
             status_code=500,
@@ -359,12 +472,16 @@ async def query_document_stream(
 
         # Stream LLM tokens
         start_gen = time.perf_counter()
+        success = False
+        tokens_accumulated = []
         try:
             async for token in qa_pipeline.generate_answer_stream(
-                query=body.question,
+                query=rewritten_question,
                 retrieved_docs=matching_chunks
             ):
+                tokens_accumulated.append(token)
                 yield f"data: {json.dumps({'token': token})}\n\n"
+            success = True
         except (GroqConnectionError, InferenceError) as e:
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
             return
@@ -375,6 +492,34 @@ async def query_document_stream(
                 "generation_ms": round(generation_ms, 2),
                 "total_ms": round(total_ms, 2)
             })
+
+            if session_id is not None and success:
+                try:
+                    # Save user message
+                    user_msg_id = str(uuid.uuid4())
+                    ChatDatabaseManager.create_message(
+                        message_id=user_msg_id,
+                        session_id=session_id,
+                        role="user",
+                        content=body.question,
+                        metadata=None
+                    )
+
+                    # Save assistant message
+                    assistant_answer = "".join(tokens_accumulated)
+                    citations_serialized = json.dumps(citations)
+                    assistant_msg_id = str(uuid.uuid4())
+                    ChatDatabaseManager.create_message(
+                        message_id=assistant_msg_id,
+                        session_id=session_id,
+                        role="assistant",
+                        content=assistant_answer,
+                        metadata=citations_serialized
+                    )
+                except Exception as db_err:
+                    logging.getLogger("app.exception").error(
+                        f"Failed to persist chat messages inside stream generator: {str(db_err)}"
+                    )
 
         # Terminal event
         yield "data: [DONE]\n\n"
