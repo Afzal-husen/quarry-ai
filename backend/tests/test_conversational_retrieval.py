@@ -1,3 +1,4 @@
+# Force IDE type checker re-analysis of imports
 import os
 import sys
 from unittest.mock import MagicMock, patch
