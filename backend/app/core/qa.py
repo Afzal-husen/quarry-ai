@@ -1,4 +1,5 @@
 import os
+import logging
 import threading
 from typing import Any, Dict, List, Optional, Sequence
 from pydantic import SecretStr
@@ -182,3 +183,47 @@ class QAPipeline:
         except Exception as e:
             raise InferenceError(
                 f"Groq streaming inference failed: {str(e)}") from e
+
+    def condense_query(self, chat_history: List[Dict[str, Any]], question: str) -> str:
+        """Rewrites a follow-up user query into a standalone query using the chat history context.
+
+        Args:
+            chat_history: A list of dicts with keys "role" and "content" representing past turns.
+            question: The latest user question.
+
+        Returns:
+            The standalone rewritten question.
+        """
+        if not chat_history:
+            return question
+
+        try:
+            model = GroqConnectionManager.get_chat_model()
+            
+            # Map database messages to LangChain prompt roles
+            messages = [("system", (
+                "Given the following chat history and a follow-up question, "
+                "rephrase the follow-up question to be a standalone question, "
+                "in its original language, that can be answered independently of the chat history.\n"
+                "Do NOT answer the question. Just rephrase it as a search query.\n"
+                "If the follow-up question is already a standalone question or does not reference "
+                "prior context, return the follow-up question exactly as is."
+            ))]
+            
+            for msg in chat_history:
+                role = "human" if msg["role"] == "user" else "ai"
+                messages.append((role, msg["content"]))
+                
+            messages.append(("human", "{question}"))
+            
+            prompt = ChatPromptTemplate.from_messages(messages)
+            chain = prompt | model | StrOutputParser()
+            
+            condensed = chain.invoke({"question": question})
+            return condensed.strip()
+        except Exception as e:
+            # Fallback to the original question if inference fails to keep the system resilient
+            logging.getLogger("app.exception").warning(
+                f"Query condensation failed: {str(e)}. Falling back to raw user query."
+            )
+            return question
