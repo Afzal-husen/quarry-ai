@@ -19,7 +19,7 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 ### 🔄 v1.5 Q&A History & Conversational Memory (Phases 20-22) — ACTIVE
 
-- [ ] **Phase 20: Chat Session Management & Database Storage**
+- [x] **Phase 20: Chat Session Management & Database Storage** (1/1 plan) — completed 2026-06-25
   - Goal: Implement SQLite tables for `sessions` and `messages` in `users.db` and expose REST CRUD endpoints.
   - Requirements: MEM-01, MEM-02
   - Success Criteria:
@@ -59,8 +59,8 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 20. Chat Session Management & Database Storage | v1.5 | 0/1 | Active | |
-| 21. Query Condensation & Conversational Retrieval | v1.5 | 0/1 | Planned | |
+| 20. Chat Session Management & Database Storage | v1.5 | 1/1 | Complete | 2026-06-25 |
+| 21. Query Condensation & Conversational Retrieval | v1.5 | 0/1 | Active | |
 | 22. Conversational Endpoints & SSE Streaming | v1.5 | 0/1 | Planned | |
 
 ---
