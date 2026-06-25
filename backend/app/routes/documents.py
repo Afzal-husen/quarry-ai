@@ -248,9 +248,34 @@ async def reindex_document(
     document_id: str,
     chunk_size: Optional[int] = Query(None, description="Character size of each split text block"),
     chunk_overlap: Optional[int] = Query(None, description="Character overlap between consecutive chunks"),
+    chunking_strategy: Optional[str] = Query("character", description="Chunking strategy ('character' or 'semantic')"),
+    semantic_threshold_type: Optional[str] = Query("percentile", description="Semantic similarity threshold strategy ('percentile', 'standard_deviation', or 'absolute')"),
+    semantic_threshold: Optional[float] = Query(None, description="Custom similarity threshold value"),
     current_user: dict = Depends(get_current_user)
 ):
     """Reuses the existing raw upload file on disk to re-run the parse -> chunk -> embed -> index pipeline."""
+    # Validate strategy and threshold parameters
+    if chunking_strategy not in ("character", "semantic"):
+        raise HTTPException(
+            status_code=422,
+            detail="chunking_strategy must be either 'character' or 'semantic'."
+        )
+    if semantic_threshold_type not in ("percentile", "standard_deviation", "absolute"):
+        raise HTTPException(
+            status_code=422,
+            detail="semantic_threshold_type must be 'percentile', 'standard_deviation', or 'absolute'."
+        )
+    if semantic_threshold is not None:
+        if semantic_threshold_type == "percentile" and not (0 <= semantic_threshold <= 100):
+            raise HTTPException(
+                status_code=422,
+                detail="Percentile threshold must be between 0 and 100."
+            )
+        if semantic_threshold_type in ("standard_deviation", "absolute") and semantic_threshold <= 0:
+            raise HTTPException(
+                status_code=422,
+                detail="Threshold value must be greater than 0."
+            )
     try:
         uuid.UUID(document_id)
     except ValueError:
@@ -346,12 +371,15 @@ async def reindex_document(
         split_docs = chunker.split_documents(
             documents,
             chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap
+            chunk_overlap=chunk_overlap,
+            chunking_strategy=chunking_strategy,
+            semantic_threshold_type=semantic_threshold_type,
+            semantic_threshold=semantic_threshold
         )
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"An error occurred during character splitting: {str(e)}"
+            detail=f"An error occurred during splitting: {str(e)}"
         ) from e
 
     try:
@@ -359,7 +387,8 @@ async def reindex_document(
             document_id=document_id,
             source_filename=original_filename,
             chunks=split_docs,
-            output_dir=CHUNKS_DIR / user_id
+            output_dir=CHUNKS_DIR / user_id,
+            chunking_strategy=chunking_strategy
         )
     except Exception as e:
         raise HTTPException(

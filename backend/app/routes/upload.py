@@ -61,7 +61,10 @@ def run_ingestion_job(
     original_filename: str,
     user_id: str,
     chunk_size: Optional[int],
-    chunk_overlap: Optional[int]
+    chunk_overlap: Optional[int],
+    chunking_strategy: Optional[str] = "character",
+    semantic_threshold_type: Optional[str] = "percentile",
+    semantic_threshold: Optional[float] = None
 ):
     """Synchronously executes parsing, chunking, and indexing in a background threadpool thread."""
     with jobs_lock:
@@ -76,7 +79,10 @@ def run_ingestion_job(
         split_docs = chunker.split_documents(
             documents,
             chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap
+            chunk_overlap=chunk_overlap,
+            chunking_strategy=chunking_strategy,
+            semantic_threshold_type=semantic_threshold_type,
+            semantic_threshold=semantic_threshold
         )
 
         # 3. Serialize Chunks and Save JSON Metadata locally
@@ -84,7 +90,8 @@ def run_ingestion_job(
             document_id=document_id,
             source_filename=original_filename,
             chunks=split_docs,
-            output_dir=CHUNKS_DIR / user_id
+            output_dir=CHUNKS_DIR / user_id,
+            chunking_strategy=chunking_strategy
         )
 
         # 4. Index chunks into isolated Chroma vector store
@@ -141,7 +148,13 @@ async def upload_file(
     chunk_size: Optional[int] = Query(
         None, description="Character size of each split text block"),
     chunk_overlap: Optional[int] = Query(
-        None, description="Character overlap between consecutive chunks"),
+        None, description="Character overlap override"),
+    chunking_strategy: Optional[str] = Query(
+        "character", description="Chunking strategy ('character' or 'semantic')"),
+    semantic_threshold_type: Optional[str] = Query(
+        "percentile", description="Semantic similarity threshold strategy ('percentile', 'standard_deviation', or 'absolute')"),
+    semantic_threshold: Optional[float] = Query(
+        None, description="Custom similarity threshold value"),
     current_user: dict = Depends(get_current_user)
 ):
     """Uploads a PDF, DOC, or DOCX document, and dispatches the parsing and vector indexing to the background.
@@ -156,6 +169,29 @@ async def upload_file(
     Returns:
         HTTP 202 status code and the generated job ID.
     """
+    # Validate strategy and threshold parameters
+    if chunking_strategy not in ("character", "semantic"):
+        raise HTTPException(
+            status_code=422,
+            detail="chunking_strategy must be either 'character' or 'semantic'."
+        )
+    if semantic_threshold_type not in ("percentile", "standard_deviation", "absolute"):
+        raise HTTPException(
+            status_code=422,
+            detail="semantic_threshold_type must be 'percentile', 'standard_deviation', or 'absolute'."
+        )
+    if semantic_threshold is not None:
+        if semantic_threshold_type == "percentile" and not (0 <= semantic_threshold <= 100):
+            raise HTTPException(
+                status_code=422,
+                detail="Percentile threshold must be between 0 and 100."
+            )
+        if semantic_threshold_type in ("standard_deviation", "absolute") and semantic_threshold <= 0:
+            raise HTTPException(
+                status_code=422,
+                detail="Threshold value must be greater than 0."
+            )
+
     # 1. Validate File Extension
     original_filename = file.filename or "unknown"
     suffix = Path(original_filename).suffix.lower()
@@ -239,7 +275,10 @@ async def upload_file(
         original_filename,
         user_id,
         chunk_size,
-        chunk_overlap
+        chunk_overlap,
+        chunking_strategy,
+        semantic_threshold_type,
+        semantic_threshold
     )
 
     # 7. Return 202 Accepted immediately
