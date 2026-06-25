@@ -8,9 +8,9 @@ A Python-based REST API that enables Retrieval-Augmented Generation (RAG) over u
 
 Enable seamless, low-latency document parsing and precise Q&A retrieval via a programmatic REST API using local embeddings and high-speed cloud LLM inference.
 
-## Current Milestone: Planning Next Milestone (v1.5)
+## Current Milestone: v1.5 Q&A History & Conversational Memory
 
-**Goal:** Evolve requirements and plan features for the next iteration of the RAG REST API.
+**Goal:** Turn the stateless Q&A endpoints into a conversational chat session by persisting message histories, condensing follow-up questions, and managing sessions.
 
 ## Requirements
 
@@ -47,7 +47,12 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ### Active
 
-*(None - planning next milestone)*
+- [ ] Chat Session CRUD endpoints (`POST /sessions`, `GET /sessions`, `GET /sessions/{session_id}`, `DELETE /sessions/{session_id}`) (MEM-01).
+- [ ] SQLite persistence mapping for sessions and messages under the `users.db` structure (MEM-02).
+- [ ] LLM-based follow-up query condensation chain (MEM-03).
+- [ ] Incorporate session history in `POST /query` conversational answers and citations (MEM-04).
+- [ ] Incorporate session history in `POST /query/stream` conversational SSE output (MEM-05).
+- [ ] Dynamic title generation for chat sessions after the first question (MEM-06).
 
 ### Out of Scope
 

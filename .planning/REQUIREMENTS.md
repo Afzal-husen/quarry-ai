@@ -1,0 +1,61 @@
+# Requirements: Document RAG REST API — v1.5
+
+**Milestone:** v1.5 Q&A History & Conversational Memory
+**Status:** Active
+**Last updated:** 2026-06-25
+
+---
+
+## v1.5 Requirements
+
+### Session Management
+
+- [ ] **MEM-01**: User can create, list, retrieve, and delete chat sessions.
+  - `POST /sessions`: Create a new chat session with a system-generated or user-provided title.
+  - `GET /sessions`: List all chat sessions for the authenticated user (supports limit/offset pagination).
+  - `GET /sessions/{session_id}`: Retrieve session details and its chronological list of message turns (user query + assistant response).
+  - `DELETE /sessions/{session_id}`: Delete a session and purge all its associated messages from the database.
+
+### Database Persistence
+
+- [ ] **MEM-02**: Database storage for chat history using SQLite.
+  - Create `chat_sessions` and `chat_messages` tables in the existing SQLite database (`users.db`).
+  - Enforce foreign key constraints (`user_id` mapping to `users.id`, and `session_id` mapping to `chat_sessions.id` with CASCADE deletion).
+  - Ensure all database accesses are thread-safe and isolated by `user_id`.
+
+### Conversational Retrieval & Condensation
+
+- [ ] **MEM-03**: LLM-based query condensation.
+  - Given a user's new query and the recent message history of the session, use an LLM chain to rewrite the query into a standalone, context-independent search query.
+  - If the user's query is the first message in the session, skip query condensation and use the query directly.
+  - Use the standalone query for vector store hybrid-retrieval and reranking.
+
+### Conversational Query Endpoint
+
+- [ ] **MEM-04**: Conversational retrieval in `/query` endpoint.
+  - Accept an optional `session_id` field in the `POST /query` request body.
+  - Retrieve recent chat history if `session_id` is provided.
+  - Generate the answer based on the retrieved documents using ChatGroq.
+  - Append both the user's raw query and the final generated assistant answer to the session's message history in the database.
+  - Ensure citations map correctly to the relevant sources.
+
+- [ ] **MEM-05**: Conversational retrieval in `/query/stream` endpoint.
+  - Accept `session_id` in the `POST /query/stream` request body.
+  - Perform the same query condensation and retrieval pipeline.
+  - Stream the answer tokens to the client via SSE.
+  - Capture the complete assistant text as it streams and save it to the database message history upon completion of the stream.
+
+### Dynamic Session Title Generation
+
+- [ ] **MEM-06**: Dynamic title generation.
+  - Automatically generate a brief, descriptive title for a new session based on the first question asked (using a fast LLM call) and update the session title in the database.
+
+---
+
+## Traceability
+
+| REQ-ID | Phase |
+|--------|-------|
+| MEM-01, MEM-02 | Phase 20: Chat Session Management & Database Storage |
+| MEM-03 | Phase 21: Query Condensation & Conversational Retrieval |
+| MEM-04, MEM-05, MEM-06 | Phase 22: Conversational Query Endpoints & SSE Streaming |

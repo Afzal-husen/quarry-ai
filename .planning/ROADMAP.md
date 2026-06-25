@@ -8,6 +8,7 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 ## Milestones
 
+- 🔄 **v1.5 Q&A History & Conversational Memory** — Phases 20-22 (active)
 - ✅ **v1.4 Production Readiness & Full Document Lifecycle** — Phases 12-19 (shipped 2026-06-25): [v1.4 ROADMAP](file:///.planning/milestones/v1.4-ROADMAP.md)
 - ✅ **v1.1 LangChain & Clean Code Standards** — Phases 6-7 (shipped 2026-06-18): [v1.1 ROADMAP](file:///.planning/milestones/v1.1-ROADMAP.md)
 - ✅ **v1.0 MVP Core RAG Pipeline** — Phases 1-5 (shipped 2026-06-18): [v1.0 ROADMAP](file:///.planning/milestones/v1.0-ROADMAP.md)
@@ -15,6 +16,28 @@ This roadmap details completed milestones and future plans for the Document RAG 
 ---
 
 ## Phases
+
+### 🔄 v1.5 Q&A History & Conversational Memory (Phases 20-22) — ACTIVE
+
+- [ ] **Phase 20: Chat Session Management & Database Storage**
+  - Goal: Implement SQLite tables for `sessions` and `messages` in `users.db` and expose REST CRUD endpoints.
+  - Requirements: MEM-01, MEM-02
+  - Success Criteria:
+    1. Database tables initialized on startup with proper schema and cascade deletes.
+    2. Endpoints `POST /sessions`, `GET /sessions` (paginated), `GET /sessions/{session_id}`, and `DELETE /sessions/{session_id}` fully functional with user-ownership and authentication.
+- [ ] **Phase 21: Query Condensation & Conversational Retrieval**
+  - Goal: Implement query condensation chain using LLM to rewrite user query based on past message history.
+  - Requirements: MEM-03
+  - Success Criteria:
+    1. LangChain LLM chain created to successfully synthesize a standalone query from a conversational follow-up query and history.
+    2. Fallback logic uses the user query directly for the first session turn.
+- [ ] **Phase 22: Conversational endpoints (`/query` & `/query/stream`)**
+  - Goal: Update endpoints to accept `session_id`, log messages, generate session titles, and support streaming with memory.
+  - Requirements: MEM-04, MEM-05, MEM-06
+  - Success Criteria:
+    1. `POST /query` and `POST /query/stream` accept `session_id`.
+    2. LLM answers are recorded chronologically in the SQLite message history.
+    3. Custom title generation dynamically updates session title after the first user query.
 
 <details>
 <summary>✅ v1.4 Production Readiness & Full Document Lifecycle (Phases 12-19) — SHIPPED 2026-06-25</summary>
@@ -36,15 +59,10 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 12. Document Lifecycle Management | v1.4 | 1/1 | Complete | 2026-06-22 |
-| 13. Async Background Ingestion | v1.4 | 1/1 | Complete | 2026-06-22 |
-| 14. Chroma Connection Caching | v1.4 | 1/1 | Complete | 2026-06-23 |
-| 15. Multi-document Q&A | v1.4 | 1/1 | Complete | 2026-06-23 |
-| 16. Streaming LLM Responses | v1.4 | 1/1 | Complete | 2026-06-24 |
-| 17. API Quality & DX | v1.4 | 1/1 | Complete | 2026-06-24 |
-| 18. Observability & Structured Logging | v1.4 | 1/1 | Complete | 2026-06-24 |
-| 19. Advanced Chunking Strategies | v1.4 | 1/1 | Complete | 2026-06-25 |
+| 20. Chat Session Management & Database Storage | v1.5 | 0/1 | Active | |
+| 21. Query Condensation & Conversational Retrieval | v1.5 | 0/1 | Planned | |
+| 22. Conversational Endpoints & SSE Streaming | v1.5 | 0/1 | Planned | |
 
 ---
 
-*Roadmap updated: 2026-06-25 after v1.4 milestone*
+*Roadmap updated: 2026-06-25 after v1.4 milestone close-out*
