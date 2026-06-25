@@ -5,7 +5,7 @@ import shutil
 import threading
 from collections import OrderedDict
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
@@ -404,7 +404,7 @@ class VectorStoreManager:
             raise VectorStoreError(
                 f"Failed to construct hybrid EnsembleRetriever: {str(e)}") from e
 
-    def resolve_parent_documents(self, user_id: str, documents: List[Document]) -> List[Document]:
+    def resolve_parent_documents(self, user_id: str, documents: Sequence[Document]) -> List[Document]:
         """Resolves retrieved child chunks to their corresponding parent chunks."""
         resolved_documents = []
         loaded_payloads = {}
