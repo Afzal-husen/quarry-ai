@@ -195,6 +195,12 @@ async def query_document(
         )
     reranking_ms = (time.perf_counter() - start_rerank) * 1000
 
+    # Resolve parent documents from child chunks if Parent-Document Retriever is active
+    matching_chunks = vector_manager.resolve_parent_documents(
+        user_id=user_id,
+        documents=matching_chunks
+    )
+
     # 5. Generate strict grounded response via ChatGroq
     start_gen = time.perf_counter()
     try:
@@ -320,6 +326,12 @@ async def query_document_stream(
             detail=f"Reranking failed: {str(e)}"
         )
     reranking_ms = (time.perf_counter() - start_rerank) * 1000
+
+    # Resolve parent documents from child chunks if Parent-Document Retriever is active
+    matching_chunks = vector_manager.resolve_parent_documents(
+        user_id=user_id,
+        documents=matching_chunks
+    )
 
     # 5. Build citation metadata — emitted as the first SSE event before streaming begins
     citations = [

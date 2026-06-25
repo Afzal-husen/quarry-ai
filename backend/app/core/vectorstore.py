@@ -179,6 +179,7 @@ class VectorStoreManager:
         for chunk in chunks_list:
             metadata: Dict[str, Any] = {
                 "chunk_id": chunk["chunk_id"],
+                "parent_id": chunk.get("parent_id"),
                 "page_index": chunk["page_index"],
                 "source_filename": source_filename,
                 "document_id": document_id
@@ -351,6 +352,7 @@ class VectorStoreManager:
         for chunk in chunks_list:
             metadata: Dict[str, Any] = {
                 "chunk_id": chunk["chunk_id"],
+                "parent_id": chunk.get("parent_id"),
                 "page_index": chunk["page_index"],
                 "source_filename": payload.get("source_filename", "unknown"),
                 "document_id": document_id
@@ -392,3 +394,45 @@ class VectorStoreManager:
             return ensemble_retriever
         except Exception as e:
             raise VectorStoreError(f"Failed to construct hybrid EnsembleRetriever: {str(e)}") from e
+
+    def resolve_parent_documents(self, user_id: str, documents: List[Document]) -> List[Document]:
+        """Resolves retrieved child chunks to their corresponding parent chunks."""
+        resolved_documents = []
+        loaded_payloads = {}
+
+        for doc in documents:
+            doc_id = doc.metadata.get("document_id")
+            parent_id = doc.metadata.get("parent_id")
+
+            if not doc_id or not parent_id:
+                resolved_documents.append(doc)
+                continue
+
+            # Load from cache or read from disk
+            if doc_id not in loaded_payloads:
+                chunks_file_path = self.chunks_dir / user_id / f"{doc_id}.json"
+                if not chunks_file_path.exists():
+                    loaded_payloads[doc_id] = {}
+                else:
+                    try:
+                        with open(chunks_file_path, "r", encoding="utf-8") as f:
+                            payload = json.load(f)
+                            parents_list = payload.get("parents", [])
+                            loaded_payloads[doc_id] = {p["parent_id"]: p["text"] for p in parents_list}
+                    except Exception:
+                        loaded_payloads[doc_id] = {}
+
+            parent_text = loaded_payloads[doc_id].get(parent_id)
+            if parent_text:
+                resolved_doc = Document(
+                    page_content=parent_text,
+                    metadata={
+                        **doc.metadata,
+                        "child_text": doc.page_content
+                    }
+                )
+                resolved_documents.append(resolved_doc)
+            else:
+                resolved_documents.append(doc)
+
+        return resolved_documents
