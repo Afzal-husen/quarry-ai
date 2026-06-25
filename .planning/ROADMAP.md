@@ -17,7 +17,7 @@ This roadmap delivers production readiness across 7 feature areas: document life
 - [x] **Phase 16: Streaming LLM Responses** — Stream answer tokens via SSE using the same auth + hybrid retrieval + reranking pipeline. (completed 2026-06-24)
 - [x] **Phase 17: API Quality & DX** — Rate limiting, pagination, standardized error schema, and OpenAPI polish. (completed 2026-06-24)
 - [x] **Phase 18: Observability & Structured Logging** — Structured JSON request logs, phased query latency breakdown, and error tracebacks. (completed 2026-06-24)
-- [ ] **Phase 19: Advanced Chunking Strategies** — Semantic chunking, parent-document retriever, and configurable sliding window overlap.
+- [x] **Phase 19: Advanced Chunking Strategies** — Semantic chunking, parent-document retriever, and configurable sliding window overlap. (completed 2026-06-25)
 
 ---
 
@@ -171,7 +171,7 @@ This roadmap delivers production readiness across 7 feature areas: document life
 
 **Plans**: 1 plan
 
-- [ ] 19-01: Implement semantic chunker, parent-document retriever, configurable overlap parameter, and update upload route schema.
+- [x] 19-01: Implement semantic chunker, parent-document retriever, configurable overlap parameter, and update upload route schema. (completed 2026-06-25)
 
 ---
 
@@ -188,7 +188,7 @@ This roadmap delivers production readiness across 7 feature areas: document life
 | 16. Streaming LLM Responses | STREAM-01, STREAM-02 | 1/1 | Complete ✅ | 2026-06-24 |
 | 17. API Quality & DX | API-01, API-02, API-03, API-04 | 1/1 | Complete ✅ | 2026-06-24 |
 | 18. Observability & Structured Logging | OBS-01, OBS-02, OBS-03 | 1/1 | Complete ✅ | 2026-06-24 |
-| 19. Advanced Chunking Strategies | CHUNK-01, CHUNK-02, CHUNK-03 | 0/1 | Pending |
+| 19. Advanced Chunking Strategies | CHUNK-01, CHUNK-02, CHUNK-03 | 1/1 | Complete ✅ | 2026-06-25 |
 
 ---
 

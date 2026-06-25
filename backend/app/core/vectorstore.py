@@ -48,7 +48,8 @@ class EmbeddingsManager:
             with cls._lock:
                 if cls._instance is None:
                     # Retrieve the embedding model from environment, defaulting to standard MiniLM
-                    model_name = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+                    model_name = os.getenv(
+                        "EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
                     try:
                         # Load offline-safe Hugging Face embeddings via LangChain
                         cls._instance = HuggingFaceEmbeddings(
@@ -127,13 +128,13 @@ class ChromaConnectionCache:
         """Helper to call close() on Chroma's internal PersistentClient."""
         client = getattr(vectorstore, "_client", None)
         if client:
-            close_fn = getattr(client, "_close", None) or getattr(client, "close", None)
+            close_fn = getattr(client, "_close", None) or getattr(
+                client, "close", None)
             if close_fn and callable(close_fn):
                 try:
                     close_fn()
                 except Exception:
                     pass
-
 
 
 class VectorStoreManager:
@@ -161,18 +162,21 @@ class VectorStoreManager:
         """
         chunks_file_path = self.chunks_dir / user_id / f"{document_id}.json"
         if not chunks_file_path.exists():
-            raise VectorStoreError(f"Ingested chunks metadata file not found at {chunks_file_path}")
+            raise VectorStoreError(
+                f"Ingested chunks metadata file not found at {chunks_file_path}")
 
         # 1. Load serialized JSON chunks
         try:
             with open(chunks_file_path, "r", encoding="utf-8") as f:
                 payload = json.load(f)
         except Exception as e:
-            raise VectorStoreError(f"Failed to read chunks metadata file: {str(e)}") from e
+            raise VectorStoreError(
+                f"Failed to read chunks metadata file: {str(e)}") from e
 
         chunks_list = payload.get("chunks", [])
         if not chunks_list:
-            raise VectorStoreError("Metadata payload contains empty chunks list.")
+            raise VectorStoreError(
+                "Metadata payload contains empty chunks list.")
 
         # 2. Convert raw chunk dicts into standard LangChain Document objects
         documents: List[Document] = []
@@ -341,11 +345,13 @@ class VectorStoreManager:
             with open(chunks_file_path, "r", encoding="utf-8") as f:
                 payload = json.load(f)
         except Exception as e:
-            raise VectorStoreError(f"Failed to read chunks metadata file: {str(e)}") from e
+            raise VectorStoreError(
+                f"Failed to read chunks metadata file: {str(e)}") from e
 
         chunks_list = payload.get("chunks", [])
         if not chunks_list:
-            raise VectorStoreError("Metadata payload contains empty chunks list.")
+            raise VectorStoreError(
+                "Metadata payload contains empty chunks list.")
 
         # 3. Convert raw chunk dicts into standard LangChain Document objects
         documents: List[Document] = []
@@ -372,10 +378,12 @@ class VectorStoreManager:
             )
             bm25_retriever.k = top_k
         except Exception as e:
-            raise VectorStoreError(f"Failed to initialize BM25 retriever dynamically: {str(e)}") from e
+            raise VectorStoreError(
+                f"Failed to initialize BM25 retriever dynamically: {str(e)}") from e
 
         # 6. Initialize vector retriever
-        vector_retriever = self.get_retriever(user_id=user_id, document_id=document_id, top_k=top_k)
+        vector_retriever = self.get_retriever(
+            user_id=user_id, document_id=document_id, top_k=top_k)
 
         # 7. Load weights from environment configurations with balanced default fallbacks
         try:
@@ -393,7 +401,8 @@ class VectorStoreManager:
             )
             return ensemble_retriever
         except Exception as e:
-            raise VectorStoreError(f"Failed to construct hybrid EnsembleRetriever: {str(e)}") from e
+            raise VectorStoreError(
+                f"Failed to construct hybrid EnsembleRetriever: {str(e)}") from e
 
     def resolve_parent_documents(self, user_id: str, documents: List[Document]) -> List[Document]:
         """Resolves retrieved child chunks to their corresponding parent chunks."""
@@ -418,7 +427,8 @@ class VectorStoreManager:
                         with open(chunks_file_path, "r", encoding="utf-8") as f:
                             payload = json.load(f)
                             parents_list = payload.get("parents", [])
-                            loaded_payloads[doc_id] = {p["parent_id"]: p["text"] for p in parents_list}
+                            loaded_payloads[doc_id] = {
+                                p["parent_id"]: p["text"] for p in parents_list}
                     except Exception:
                         loaded_payloads[doc_id] = {}
 
