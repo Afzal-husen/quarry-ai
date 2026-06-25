@@ -25,7 +25,7 @@ This roadmap details completed milestones and future plans for the Document RAG 
   - Success Criteria:
     1. Database tables initialized on startup with proper schema and cascade deletes.
     2. Endpoints `POST /sessions`, `GET /sessions` (paginated), `GET /sessions/{session_id}`, and `DELETE /sessions/{session_id}` fully functional with user-ownership and authentication.
-- [ ] **Phase 21: Query Condensation & Conversational Retrieval**
+- [x] **Phase 21: Query Condensation & Conversational Retrieval** (1/1 plan) — completed 2026-06-25
   - Goal: Implement query condensation chain using LLM to rewrite user query based on past message history.
   - Requirements: MEM-03
   - Success Criteria:
@@ -60,8 +60,8 @@ This roadmap details completed milestones and future plans for the Document RAG 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 20. Chat Session Management & Database Storage | v1.5 | 1/1 | Complete | 2026-06-25 |
-| 21. Query Condensation & Conversational Retrieval | v1.5 | 0/1 | Active | |
-| 22. Conversational Endpoints & SSE Streaming | v1.5 | 0/1 | Planned | |
+| 21. Query Condensation & Conversational Retrieval | v1.5 | 1/1 | Complete | 2026-06-25 |
+| 22. Conversational Endpoints & SSE Streaming | v1.5 | 0/1 | Active | |
 
 ---
 
