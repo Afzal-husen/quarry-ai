@@ -10,6 +10,7 @@ from app.routes.upload import router as upload_router
 from app.routes.query import router as query_router
 from app.routes.auth import router as auth_router
 from app.routes.documents import router as documents_router
+from app.routes.sessions import router as sessions_router
 from app.core.vectorstore import ChromaConnectionCache
 
 import logging
@@ -203,6 +204,9 @@ app.include_router(query_router, tags=["Document Q&A"])
 
 # Register documents lifecycle routes
 app.include_router(documents_router, prefix="/documents", tags=["Documents"])
+
+# Register conversational sessions routes
+app.include_router(sessions_router, prefix="/sessions", tags=["Conversational Sessions"])
 
 
 @app.get("/", include_in_schema=False)
