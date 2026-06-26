@@ -1,4 +1,12 @@
-import os
+from contextlib import asynccontextmanager
+
+from fastapi.responses import JSONResponse
+from fastapi import Request, HTTPException
+from fastapi.exceptions import RequestValidationError
+from app.core.limiter import limiter
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -35,35 +43,40 @@ BASE_DIR = Path(__file__).resolve().parent
 (BASE_DIR / "data" / "chunks").mkdir(parents=True, exist_ok=True)
 (BASE_DIR / "data" / "vectorstore").mkdir(parents=True, exist_ok=True)
 
-from slowapi.errors import RateLimitExceeded
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.middleware import SlowAPIMiddleware
-from app.core.limiter import limiter
-from fastapi.exceptions import RequestValidationError
-from fastapi import Request, HTTPException
-from fastapi.responses import JSONResponse
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage application lifespan: startup and shutdown hooks."""
+    # Startup: nothing additional needed beyond module-level initialization
+    yield
+    # Shutdown: cleanly close all open cached Chroma client connections
+    ChromaConnectionCache.clear()
+
 
 app = FastAPI(
     title="Document RAG REST API",
     description="REST API enabling Retrieval-Augmented Generation (RAG) over uploaded PDF and DOCX files.",
-    version="0.1.0"
+    version="0.1.0",
+    lifespan=lifespan,
 )
+
 
 class StructuredLoggingMiddleware(BaseHTTPMiddleware):
     """FastAPI Middleware to intercept requests and log details as JSON."""
+
     async def dispatch(self, request: Request, call_next):
         start_time = time.perf_counter()
-        
+
         # Initialize default request state variables to prevent AttributeErrors
         request.state.user_id = None
         request.state.latency_breakdown = None
-        
+
         response = await call_next(request)
-        
+
         def log_request(duration_ms: float):
             user_id = getattr(request.state, "user_id", None)
             latency = getattr(request.state, "latency_breakdown", None)
-            
+
             log_payload = {
                 "method": request.method,
                 "path": request.url.path,
@@ -74,12 +87,13 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
             }
             if latency:
                 log_payload["latency_breakdown"] = latency
-                
-            logging.getLogger("app.request").info("Request completed", extra=log_payload)
+
+            logging.getLogger("app.request").info(
+                "Request completed", extra=log_payload)
 
         if isinstance(response, StreamingResponse):
             original_iterator = response.body_iterator
-            
+
             async def wrapped_iterator():
                 try:
                     async for chunk in original_iterator:
@@ -87,7 +101,7 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
                 finally:
                     duration_ms = (time.perf_counter() - start_time) * 1000
                     log_request(duration_ms)
-                    
+
             response.body_iterator = wrapped_iterator()
             return response
         else:
@@ -95,12 +109,15 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
             log_request(duration_ms)
             return response
 
+
 # Set up rate limiter state and middleware
 app.state.limiter = limiter
 app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(StructuredLoggingMiddleware)
 
 # Register custom exception handlers for standardized error format
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     errors = exc.errors()
@@ -117,13 +134,13 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     first_err = errors[0]
     loc = first_err.get("loc", [])
     field = loc[-1] if len(loc) > 0 else None
-    
+
     details = []
     for err in errors:
         msg = err.get("msg", "")
         field_loc = " -> ".join(str(l) for l in err.get("loc", []))
         details.append(f"{field_loc}: {msg}")
-    
+
     return JSONResponse(
         status_code=422,
         content={
@@ -132,6 +149,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "field": str(field) if field else None
         }
     )
+
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
@@ -144,7 +162,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         500: "INTERNAL_SERVER_ERROR"
     }
     code = code_map.get(exc.status_code, "BAD_REQUEST")
-    
+
     headers = getattr(exc, "headers", None)
     return JSONResponse(
         status_code=exc.status_code,
@@ -155,6 +173,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         },
         headers=headers
     )
+
 
 @app.exception_handler(RateLimitExceeded)
 async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
@@ -170,6 +189,7 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
         },
         headers=headers
     )
+
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
@@ -206,7 +226,8 @@ app.include_router(query_router, tags=["Document Q&A"])
 app.include_router(documents_router, prefix="/documents", tags=["Documents"])
 
 # Register conversational sessions routes
-app.include_router(sessions_router, prefix="/sessions", tags=["Conversational Sessions"])
+app.include_router(sessions_router, prefix="/sessions",
+                   tags=["Conversational Sessions"])
 
 
 @app.get("/", include_in_schema=False)
@@ -219,12 +240,6 @@ async def root_redirect():
 async def health_check():
     """Lightweight health check returning static ok status."""
     return {"status": "ok"}
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanly close all open cached Chroma client connections on application exit."""
-    ChromaConnectionCache.clear()
 
 
 
