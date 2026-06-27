@@ -110,7 +110,11 @@ export default function DashboardShell({ initialDocuments, username }: Dashboard
         // Filter out completed and failed jobs from active tracking
         const remainingJobs = updatedJobs.filter(j => j.status !== 'complete' && j.status !== 'failed');
         setActiveJobs(remainingJobs);
-        localStorage.setItem('document_rag_active_jobs', JSON.stringify(remainingJobs));
+        try {
+          localStorage.setItem('document_rag_active_jobs', JSON.stringify(remainingJobs));
+        } catch (err) {
+          console.warn('LocalStorage writing is blocked by browser policies.', err);
+        }
         
         // Refresh the document registry to load new chunks
         await refreshDocuments();
@@ -142,7 +146,11 @@ export default function DashboardShell({ initialDocuments, username }: Dashboard
     const newJob: ActiveJob = { job_id: jobId, filename, status: 'pending' };
     const updatedJobs = [...activeJobs, newJob];
     setActiveJobs(updatedJobs);
-    localStorage.setItem('document_rag_active_jobs', JSON.stringify(updatedJobs));
+    try {
+      localStorage.setItem('document_rag_active_jobs', JSON.stringify(updatedJobs));
+    } catch (err) {
+      console.warn('LocalStorage writing is blocked by browser policies.', err);
+    }
     setToast({ type: 'success', message: `Started upload of "${filename}"` });
   };
 

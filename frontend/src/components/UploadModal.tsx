@@ -97,12 +97,15 @@ export default function UploadModal({ isOpen, onClose, onUploadStarted }: Upload
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div 
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="upload-modal-title"
         className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-zinc-800 px-6 py-4">
-          <h3 className="text-lg font-semibold text-zinc-50 flex items-center gap-2">
+          <h3 id="upload-modal-title" className="text-lg font-semibold text-zinc-50 flex items-center gap-2">
             <Upload className="w-5 h-5 text-indigo-500" />
             Upload Document
           </h3>
