@@ -14,10 +14,10 @@
 | Option | Description | Selected |
 |--------|-------------|----------|
 | Next.js Pages with Client-side AuthContext | Client-only state redirection using localStorage | |
-| Cookie-Based SSR Redirections | Store token in cookies to enable server-side checks and Next.js middleware redirections | ✓ |
+| Cookie-Based SSR Redirections | Store token in cookies to enable server-side checks and Next.js proxy redirections | ✓ |
 
 **User's choice:** Cookie-Based SSR Redirections (via custom write-in)
-**Notes:** Decided to align with Next.js best practices by storing JWT tokens in cookies so server components and middleware can read them during SSR.
+**Notes:** Decided to align with Next.js best practices by storing JWT tokens in cookies so server components and proxy can read them during SSR.
 
 ---
 
@@ -26,9 +26,9 @@
 | Option | Description | Selected |
 |--------|-------------|----------|
 | Client-side AuthGuard Wrapper | React component check in `useEffect` with layout loading indicators | |
-| Next.js Middleware route guard | Server-side `middleware.ts` reading token cookies and redirecting immediately | ✓ |
+| Next.js Proxy route guard | Server-side `proxy.ts` reading token cookies and redirecting immediately | ✓ |
 
-**User's choice:** Next.js Middleware route guard
+**User's choice:** Next.js Proxy route guard
 **Notes:** Handled server-side to avoid flash of unauthenticated page content.
 
 ---

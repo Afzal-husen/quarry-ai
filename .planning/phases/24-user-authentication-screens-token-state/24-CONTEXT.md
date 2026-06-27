@@ -6,7 +6,7 @@
 <domain>
 ## Phase Boundary
 
-Create the user signup page (`/register`), login page (`/login`), and set up the secure routing context using Next.js best practices (SSR & Middleware).
+Create the user signup page (`/register`), login page (`/login`), and set up the secure routing context using Next.js best practices (SSR & Proxy).
 
 </domain>
 
@@ -16,11 +16,11 @@ Create the user signup page (`/register`), login page (`/login`), and set up the
 ### Cookie-Based Auth Storage
 - **D-01:** Store the JWT access token in a client-accessible cookie (`token`) upon successful signup or login. This allows Next.js React Server Components (RSC) to read the token during SSR.
 
-### Next.js Middleware Route Guarding
-- **D-02:** Implement a standard Next.js `middleware.ts` at the `/frontend` source root to guard the dashboard (`/`) and future `/chat` paths. If the `token` cookie is missing, redirect the user immediately to `/login` server-side to avoid layout flashes.
+### Next.js Proxy Route Guarding
+- **D-02:** Implement a standard Next.js `proxy.ts` at the `/frontend` source root to guard the dashboard (`/`) and future `/chat` paths. If the `token` cookie is missing, redirect the user immediately to `/login` server-side to avoid layout flashes.
 - **D-03:** Protect the `/login` and `/register` routes from authenticated users, redirecting them back to `/` if they already possess a valid token cookie.
 
-### AuthContext Middleware & Hooks
+### AuthContext & Hooks
 - **D-04:** Provide a client-side `AuthProvider` context in the frontend to manage login/signup state transitions, save tokens, and expose authentication status to client components.
 
 ### Input Validation
