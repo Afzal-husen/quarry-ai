@@ -198,6 +198,12 @@ export default function DashboardShell({ initialDocuments, username }: Dashboard
             <span className="text-sm text-zinc-400">
               Signed in as: <strong className="text-zinc-200">{username}</strong>
             </span>
+            <a
+              href="/chat"
+              className="py-1.5 px-3 rounded-lg text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-500 transition-colors flex items-center gap-1.5 focus:outline-none"
+            >
+              Go to Chat
+            </a>
             <form action={logoutAction}>
               <button
                 type="submit"
