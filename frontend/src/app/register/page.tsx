@@ -1,47 +1,13 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useActionState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import { signupAction } from '../actions/auth';
 
 export default function RegisterPage() {
-  const { signup, error: authError, clearError } = useAuth();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [state, formAction, isPending] = useActionState(signupAction, null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setValidationError(null);
-    clearError();
-
-    // Client-side validations
-    if (username.trim().length < 3) {
-      setValidationError('Username must be at least 3 characters.');
-      return;
-    }
-    if (password.length < 6) {
-      setValidationError('Password must be at least 6 characters.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setValidationError('Passwords do not match.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await signup(username, password);
-    } catch {
-      // Error handled by AuthContext
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const activeError = validationError || authError;
+  const activeError = state?.error;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-6 py-12">
@@ -62,7 +28,7 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" action={formAction}>
             <div className="space-y-2">
               <label htmlFor="username" className="block text-xs font-medium text-zinc-300 uppercase tracking-wider">
                 Username
@@ -72,9 +38,7 @@ export default function RegisterPage() {
                 name="username"
                 type="text"
                 required
-                disabled={loading}
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                disabled={isPending}
                 className="block w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
                 placeholder="Choose username"
               />
@@ -89,9 +53,7 @@ export default function RegisterPage() {
                 name="password"
                 type="password"
                 required
-                disabled={loading}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                disabled={isPending}
                 className="block w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
                 placeholder="Minimum 6 characters"
               />
@@ -106,9 +68,7 @@ export default function RegisterPage() {
                 name="confirmPassword"
                 type="password"
                 required
-                disabled={loading}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={isPending}
                 className="block w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
                 placeholder="Re-enter password"
               />
@@ -116,10 +76,10 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={isPending}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {isPending ? 'Creating Account...' : 'Create Account'}
             </button>
           </form>
 

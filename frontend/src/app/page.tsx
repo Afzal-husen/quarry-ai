@@ -1,10 +1,10 @@
-"use client";
-
 import React from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { cookies } from 'next/headers';
+import { logoutAction } from './actions/auth';
 
-export default function Home() {
-  const { user, logout } = useAuth();
+export default async function Home() {
+  const cookieStore = await cookies();
+  const username = cookieStore.get('username')?.value || 'User';
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-950 text-zinc-100 font-sans">
@@ -15,14 +15,16 @@ export default function Home() {
           </h1>
           <div className="flex items-center gap-4">
             <span className="text-sm text-zinc-400">
-              Signed in as: <strong className="text-zinc-200">{user?.username || 'User'}</strong>
+              Signed in as: <strong className="text-zinc-200">{username}</strong>
             </span>
-            <button
-              onClick={logout}
-              className="py-1.5 px-3 rounded-lg text-xs font-medium text-white bg-red-600 hover:bg-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-950 focus:ring-red-500"
-            >
-              Sign Out
-            </button>
+            <form action={logoutAction}>
+              <button
+                type="submit"
+                className="py-1.5 px-3 rounded-lg text-xs font-medium text-white bg-red-600 hover:bg-red-500 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-950 focus:ring-red-500"
+              >
+                Sign Out
+              </button>
+            </form>
           </div>
         </div>
       </header>
