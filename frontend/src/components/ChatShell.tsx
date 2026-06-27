@@ -137,27 +137,67 @@ export default function ChatShell({ username }: ChatShellProps) {
       const res = await apiGet('/documents');
       if (res && res.items) {
         setDocuments(res.items);
-        
-        // Default select the first document if none are selected currently
-        if (res.items.length > 0 && selectedDocIds.length === 0) {
-          setSelectedDocIds([res.items[0].document_id]);
-        }
       }
     } catch (err: any) {
       console.error('Failed to load documents registry:', err);
     }
-  }, [selectedDocIds]);
+  }, []);
 
   useEffect(() => {
     fetchSessions();
     fetchDocuments();
   }, [fetchSessions, fetchDocuments]);
 
-  // Load message logs of the active session
+  // Restore active session ID on mount
+  useEffect(() => {
+    const savedSessionId = localStorage.getItem('document_rag_active_session_id');
+    if (savedSessionId) {
+      setActiveSessionId(savedSessionId);
+    }
+  }, []);
+
+  // Save active session ID on changes
+  useEffect(() => {
+    if (activeSessionId) {
+      try {
+        localStorage.setItem('document_rag_active_session_id', activeSessionId);
+      } catch (err) {
+        console.warn('Failed to save active session ID:', err);
+      }
+    } else {
+      try {
+        localStorage.removeItem('document_rag_active_session_id');
+      } catch (err) {
+        console.warn('Failed to remove active session ID:', err);
+      }
+    }
+  }, [activeSessionId]);
+
+  // Load message logs and selected documents of the active session
   useEffect(() => {
     if (!activeSessionId) {
       setMessages([]);
       return;
+    }
+
+    // Restore selected documents context from localStorage
+    const savedDocIds = localStorage.getItem(`document_rag_session_docs_${activeSessionId}`);
+    if (savedDocIds) {
+      try {
+        setSelectedDocIds(JSON.parse(savedDocIds));
+      } catch (err) {
+        console.warn('Failed to parse saved document context:', err);
+        if (documents.length > 0) {
+          setSelectedDocIds([documents[0].document_id]);
+        }
+      }
+    } else {
+      // Default to the first available document if no config exists
+      if (documents.length > 0) {
+        setSelectedDocIds([documents[0].document_id]);
+      } else {
+        setSelectedDocIds([]);
+      }
     }
 
     const loadMessages = async () => {
@@ -178,7 +218,7 @@ export default function ChatShell({ username }: ChatShellProps) {
     };
 
     loadMessages();
-  }, [activeSessionId]);
+  }, [activeSessionId, documents]);
 
   // Handle New Chat clicks with ingestion validations
   const handleNewChatClick = async () => {
@@ -207,6 +247,11 @@ export default function ChatShell({ username }: ChatShellProps) {
     try {
       const res = await apiPost('/sessions', { title: 'New Chat' });
       if (res && res.id) {
+        try {
+          localStorage.setItem(`document_rag_session_docs_${res.id}`, JSON.stringify(tempSelectedDocIds));
+        } catch (err) {
+          console.warn('Failed to save document context:', err);
+        }
         setSelectedDocIds(tempSelectedDocIds);
         setActiveSessionId(res.id);
         setIsContextModalOpen(false);
@@ -225,6 +270,9 @@ export default function ChatShell({ username }: ChatShellProps) {
 
     try {
       await apiDelete(`/sessions/${sessionId}`);
+      try {
+        localStorage.removeItem(`document_rag_session_docs_${sessionId}`);
+      } catch {}
       if (activeSessionId === sessionId) {
         setActiveSessionId(null);
       }
@@ -511,10 +559,19 @@ export default function ChatShell({ username }: ChatShellProps) {
                                 className="rounded border-zinc-800 bg-zinc-950 text-indigo-600 focus:ring-0 focus:ring-offset-0 w-3.5 h-3.5"
                                 checked={isChecked}
                                 onChange={() => {
+                                  let newSelection;
                                   if (isChecked) {
-                                    setSelectedDocIds(selectedDocIds.filter(id => id !== doc.document_id));
+                                    newSelection = selectedDocIds.filter(id => id !== doc.document_id);
                                   } else {
-                                    setSelectedDocIds([...selectedDocIds, doc.document_id]);
+                                    newSelection = [...selectedDocIds, doc.document_id];
+                                  }
+                                  setSelectedDocIds(newSelection);
+                                  if (activeSessionId) {
+                                    try {
+                                      localStorage.setItem(`document_rag_session_docs_${activeSessionId}`, JSON.stringify(newSelection));
+                                    } catch (err) {
+                                      console.warn('Failed to save document context:', err);
+                                    }
                                   }
                                 }}
                               />
