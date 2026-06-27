@@ -1,5 +1,15 @@
 # Milestones
 
+## v1.5 Q&A History & Conversational Memory (Shipped: 2026-06-27)
+
+**Phases completed:** 5 phases, 5 plans, 4 tasks
+
+**Key accomplishments:**
+
+- Local CPU-based FlashRank cross-encoder re-ranking integrated into the retrieval pipeline with a thread-safe singleton cache and metadata preservation.
+
+---
+
 ## v1.4 Production Readiness & Full Document Lifecycle (Shipped: 2026-06-25)
 
 **Phases completed:** 8 phases, 8 plans, 0 tasks
