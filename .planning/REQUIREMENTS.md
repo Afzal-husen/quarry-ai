@@ -13,6 +13,7 @@
 ### Advanced Retrieval (Query Expansion & RRF)
 - **REQ-RAG-04 (Query Rewriter/Expansion Step)**: Integrate a query rewrite step in `QAPipeline`. Given a user question and history, use the LLM to generate 3 alternative query variations representing the search intent.
 - **REQ-RAG-05 (Multi-Query Retrieval & Fusion)**: Execute dense embedding and lexical BM25 retrieval for all query variations, pool retrieved documents, apply Reciprocal Rank Fusion (RRF) to merge ranks, and re-rank the top-scoring candidates using FlashRank.
+- **REQ-RAG-06 (General Knowledge Fallback & Disclaimer)**: If no relevant document context is found or retrieved, rather than failing, allow the LLM to answer using general knowledge but require it to include a clear disclaimer stating: `"Disclaimer: This information was not found in your uploaded documents and is generated using general AI knowledge."`
 
 ## Traceability
 
@@ -23,3 +24,4 @@
 | REQ-RAG-03  | Phase 27 | Pending |
 | REQ-RAG-04  | Phase 27 | Pending |
 | REQ-RAG-05  | Phase 27 | Pending |
+| REQ-RAG-06  | Phase 27 | Pending |

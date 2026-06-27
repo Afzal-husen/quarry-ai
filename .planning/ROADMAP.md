@@ -22,12 +22,12 @@ This roadmap details completed milestones and future plans for the Document RAG 
 ### Phase 27: LLM Response & Retrieval Enhancements
 
 **Goal**: Refine LLM system grounding prompts and implement multi-query retrieval expansion using RRF.
-**Requirements**: REQ-RAG-01, REQ-RAG-02, REQ-RAG-03, REQ-RAG-04, REQ-RAG-05
+**Requirements**: REQ-RAG-01, REQ-RAG-02, REQ-RAG-03, REQ-RAG-04, REQ-RAG-05, REQ-RAG-06
 **Depends on**: Phase 22
 
 **Success Criteria**:
 
-1. The LLM response includes inline citation markings (`[1]`, `[2]`) in both sync and stream modes.
+1. The LLM response includes inline citation markings (`[1]`, `[2]`) in both sync and stream modes, and falls back to general-knowledge answers with standard disclaimers if no relevant document context is found.
 2. Alternative queries are correctly generated using ChatGroq.
 3. Multi-query search retrieves documents for all queries, fuses them using Reciprocal Rank Fusion (RRF), and re-ranks using FlashRank.
 4. Unit and E2E integration tests are updated to assert LLM query expansions and pass cleanly.
