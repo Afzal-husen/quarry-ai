@@ -1,23 +1,37 @@
-# Technical Research: Features for Advanced Retrieval Accuracy
+# Feature Research
 
-**Date:** 2026-06-19
-**Milestone:** v1.3
+**Domain:** Web Frontend Client for Document RAG REST API
+**Researched:** 2026-06-27
+**Confidence:** HIGH
 
-## 1. Hybrid Search (Lexical + Semantic)
-- **Problem:** Dense vector embeddings (semantic) sometimes fail on exact keyword lookups, jargon, or codes (e.g. searching for a specific serial number or function name). Lexical search (BM25) is excellent for exact match keywords but lacks semantic understanding.
-- **Feature Behavior:**
-  - Build a BM25 index on the same ingested text chunks.
-  - Retrieve top `K` candidates from BM25.
-  - Retrieve top `K` candidates from Chroma vector store.
-  - Combine results using Reciprocal Rank Fusion (RRF) via `EnsembleRetriever`.
+## Expected Features
 
-## 2. Candidate Re-ranking (Reranking)
-- **Problem:** Hybrid search can return matches that contain keywords or semantic similarities but aren't actually relevant to answering the specific question. Feeding all candidates to the LLM increases token usage and risks "lost in the middle" phenomena.
-- **Feature Behavior:**
-  - Retrieve top `N` candidates (e.g. 10 or 15) using the hybrid search.
-  - Pass the question and candidate documents through the local CrossEncoder/Reranker.
-  - The reranker computes a relevancy score for each document context *conditioned* on the query.
-  - Return the top `K` (e.g., 3) highest-scoring documents to the LLM prompt context.
+### 1. User Authentication (Auth)
+- **Register Screen**: Simple signup with username and password.
+- **Login Screen**: Secure signin returning JWT access token.
+- **Token Manager**: Stores token in `localStorage`, handles authentication state across page reloads, and redirects unauthenticated users to `/login`.
 
----
-*Research focus: Features*
+### 2. Document Management (Dashboard)
+- **Dashboard Hub**: Displays system health status, summary statistics (total documents, active sessions), and upload tools.
+- **Upload Modal / Area**: Drag-and-drop zone with loading bars supporting PDF and DOCX formats.
+- **Background Status Polling**: Polls the `/documents` statuses periodically (e.g. every 2-3 seconds) to show real-time processing indicators (processing, complete, error).
+- **Document List & Multi-Select**: Display of all uploaded documents with multi-selection checkboxes. Selecting document contexts is mandatory before starting chats.
+- **Document Delete**: Button next to each document to delete it and automatically clean up associated vector store references.
+
+### 3. Session Management (Sidebar)
+- **Session List**: Sidebar listing all chat sessions belonging to the user.
+- **New Chat Button**: Instantiates a new session in the database and adds it to the list.
+- **Title Updates**: Shows dynamically updated session titles generated on the backend from the first conversation turn.
+- **Session Delete**: Sidebar action to remove a chat session and purge message logs.
+
+### 4. Interactive Conversational Chat (Main Panel)
+- **Message List**: Scrollable area displaying conversational user and assistant turns.
+- **SSE Token Streaming**: Appends assistant tokens in real-time as they stream from the server.
+- **Auto-Scrolling**: Keeps focus on the latest generated tokens during active streaming.
+- **Citations & Grounding UI**: Displays interactive tooltip citations next to generated claims, hovering shows the file source name and matching pages.
+- **Chat State Guard**: Blocks inputs if no documents are uploaded or selected as context.
+
+## Deferred Features (Future Milestones)
+- **Session Page Limits**: Client-side pagination or loading limits for long message histories.
+- **Token Expiry Refreshes**: Automatically fetch a new JWT token using refresh tokens.
+- **Export Transcripts**: Downloader for session history (PDF/TXT formats).
