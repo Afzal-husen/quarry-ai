@@ -127,7 +127,7 @@ This roadmap details completed milestones and future plans for the Document RAG 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 23. Next.js Bootstrap & API Client Layer | v2.0 | 0/1 | Complete    | 2026-06-27 |
-| 24. User Authentication Screens & Token State | v2.0 | 0/1 | Planned | |
+| 24. User Authentication Screens & Token State | v2.0 | 0/1 | Complete    | 2026-06-27 |
 | 25. Dashboard & Document Ingestion Panel | v2.0 | 0/1 | Planned | |
 | 26. Chat Interface & SSE Streaming | v2.0 | 0/1 | Planned | |
 
