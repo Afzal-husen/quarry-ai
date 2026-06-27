@@ -8,9 +8,20 @@ A Python-based REST API that enables Retrieval-Augmented Generation (RAG) over u
 
 Enable seamless, low-latency document parsing and precise Q&A retrieval via a programmatic REST API using local embeddings and high-speed cloud LLM inference.
 
-## Current Milestone: v1.5 Q&A History & Conversational Memory
+## Current Milestone: v2.0 Web Frontend Integration
 
-**Goal:** Turn the stateless Q&A endpoints into a conversational chat session by persisting message histories, condensing follow-up questions, and managing sessions.
+**Goal:** Create a modern Next.js client application that interfaces with the Document RAG REST API to provide a premium user experience for authentication, document management, and conversational Q&A.
+
+**Target features:**
+- Next.js project setup using React, TypeScript, and TailwindCSS in a `/frontend` directory.
+- User authentication screens (Register, Login) with local JWT access token persistence.
+- Main dashboard screen displaying initial stub content.
+- Sidebar navigation with a "New Chat" button and a list of active chat sessions.
+- Conditional modal flow on chat start:
+  - If no documents are uploaded, present a file upload modal.
+  - If documents exist, present a multi-select document list modal (default-selecting the first document) to specify the chat context.
+  - Disable chatting if no documents exist or are selected.
+- Interactive conversational chat window supporting token-by-token SSE streaming, source citation tooltips, and dynamic session title updates.
 
 ## Requirements
 
@@ -44,15 +55,21 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 - ✓ API Quality & DX: Configurable per-user rate limits, pagination listings, standardized errors, and OpenAPI metadata (`API-01`, `API-02`, `API-03`, `API-04`). (v1.4)
 - ✓ Structured Observability: Emit 12-factor JSON logs, capture sub-phase latencies, and format tracebacks on uncaught exceptions (`OBS-01`, `OBS-02`, `OBS-03`). (v1.4)
 - ✓ Advanced Chunking: Semantic sentence boundary splitting and query-time parent swapping retrieval (`CHUNK-01`, `CHUNK-02`, `CHUNK-03`). (v1.4)
+- ✓ Chat Session CRUD endpoints (`POST /sessions`, `GET /sessions`, `GET /sessions/{session_id}`, `DELETE /sessions/{session_id}`) (MEM-01) — v1.5
+- ✓ SQLite persistence mapping for sessions and messages under the `users.db` structure (MEM-02) — v1.5
+- ✓ LLM-based follow-up query condensation chain (MEM-03) — v1.5
+- ✓ Incorporate session history in `POST /query` conversational answers and citations (MEM-04) — v1.5
+- ✓ Incorporate session history in `POST /query/stream` conversational SSE output (MEM-05) — v1.5
+- ✓ Dynamic title generation for chat sessions after the first question (MEM-06) — v1.5
 
 ### Active
 
-- [ ] Chat Session CRUD endpoints (`POST /sessions`, `GET /sessions`, `GET /sessions/{session_id}`, `DELETE /sessions/{session_id}`) (MEM-01).
-- [ ] SQLite persistence mapping for sessions and messages under the `users.db` structure (MEM-02).
-- [ ] LLM-based follow-up query condensation chain (MEM-03).
-- [ ] Incorporate session history in `POST /query` conversational answers and citations (MEM-04).
-- [ ] Incorporate session history in `POST /query/stream` conversational SSE output (MEM-05).
-- [ ] Dynamic title generation for chat sessions after the first question (MEM-06).
+- [ ] Setup Next.js with React 19, TypeScript, and TailwindCSS in a `/frontend` directory.
+- [ ] User authentication flow interface (Registration, Login, Token storage).
+- [ ] Dashboard screen displaying stub content.
+- [ ] Sidebar navigation showing chat session list and a "New Chat" button.
+- [ ] Conditional file upload and multi-select document modal flow on chat start.
+- [ ] Conversational chat interface with SSE streaming support, source citations, and dynamic titles.
 
 ### Out of Scope
 
@@ -94,4 +111,4 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 This document evolves at phase transitions and milestone boundaries.
 
 ---
-*Last updated: 2026-06-25 — Milestone v1.4 completed*
+*Last updated: 2026-06-27 — Milestone v1.5 completed*
