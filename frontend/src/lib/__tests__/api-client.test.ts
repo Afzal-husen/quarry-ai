@@ -2,12 +2,17 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { apiGet, apiPost, APIError } from '../api-client';
+import { getTokenAction, deleteTokenAction } from '../../app/actions/cookies';
+
+vi.mock('../../app/actions/cookies', () => ({
+  getTokenAction: vi.fn(),
+  deleteTokenAction: vi.fn(),
+}));
 
 describe('API Client Layer', () => {
   const mockFetch = vi.fn();
   
   beforeEach(() => {
-    document.cookie = '';
     vi.stubGlobal('fetch', mockFetch);
     vi.stubGlobal('window', {
       location: {
@@ -26,6 +31,7 @@ describe('API Client Layer', () => {
   });
 
   it('should resolve base url to localhost:8000 and parse JSON response', async () => {
+    vi.mocked(getTokenAction).mockResolvedValueOnce(null);
     mockFetch.mockResolvedValueOnce({
       status: 200,
       ok: true,
@@ -43,7 +49,7 @@ describe('API Client Layer', () => {
   });
 
   it('should automatically append Authorization header if token exists in cookies', async () => {
-    document.cookie = 'token=mocked-token-456';
+    vi.mocked(getTokenAction).mockResolvedValueOnce('mocked-token-456');
     mockFetch.mockResolvedValueOnce({
       status: 200,
       ok: true,
@@ -59,6 +65,7 @@ describe('API Client Layer', () => {
   });
 
   it('should serialize custom JSON body for POST requests', async () => {
+    vi.mocked(getTokenAction).mockResolvedValueOnce(null);
     mockFetch.mockResolvedValueOnce({
       status: 200,
       ok: true,
@@ -76,6 +83,7 @@ describe('API Client Layer', () => {
   });
 
   it('should throw APIError when response is not ok and expose detail field', async () => {
+    vi.mocked(getTokenAction).mockResolvedValueOnce(null);
     mockFetch.mockResolvedValueOnce({
       status: 400,
       ok: false,
@@ -96,7 +104,7 @@ describe('API Client Layer', () => {
   });
 
   it('should clean up token cookie and redirect to /login on 401 response status code', async () => {
-    document.cookie = 'token=expired-token-789';
+    vi.mocked(getTokenAction).mockResolvedValueOnce('expired-token-789');
     mockFetch.mockResolvedValueOnce({
       status: 401,
       ok: false,
@@ -106,7 +114,7 @@ describe('API Client Layer', () => {
 
     await expect(apiGet('/private-route')).rejects.toThrowError(APIError);
 
-    expect(document.cookie).not.toContain('expired-token-789');
+    expect(deleteTokenAction).toHaveBeenCalled();
     expect(localStorage.removeItem).toHaveBeenCalledWith('user');
     expect(window.location.href).toBe('/login');
   });
