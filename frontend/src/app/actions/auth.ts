@@ -37,11 +37,11 @@ export async function loginAction(prevState: any, formData: FormData) {
     const data = await res.json();
     const cookieStore = await cookies();
     
-    // Set standard session cookie
     cookieStore.set('token', data.access_token, {
       path: '/',
       maxAge: 7 * 24 * 60 * 60,
       sameSite: 'lax',
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
     });
     
@@ -110,6 +110,7 @@ export async function signupAction(prevState: any, formData: FormData) {
       path: '/',
       maxAge: 7 * 24 * 60 * 60,
       sameSite: 'lax',
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
     });
     
