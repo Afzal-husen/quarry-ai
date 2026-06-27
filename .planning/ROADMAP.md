@@ -27,7 +27,7 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 **Success Criteria**:
 
-1. The LLM response includes inline citation markings (`[1]`, `[2]`) in both sync and stream modes, and falls back to general-knowledge answers with standard disclaimers if no relevant document context is found.
+1. The LLM response includes inline citation markings (`[1]`, `[2]`) in both sync and stream modes, falls back to general-knowledge answers with standard disclaimers if no relevant document context is found, and responds to generic greetings naturally in a helpful tone without a disclaimer.
 2. Alternative queries are correctly generated using ChatGroq.
 3. Multi-query search retrieves documents for all queries, fuses them using Reciprocal Rank Fusion (RRF), and re-ranks using FlashRank.
 4. Unit and E2E integration tests are updated to assert LLM query expansions and pass cleanly.
