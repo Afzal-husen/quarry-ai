@@ -122,7 +122,8 @@ def run_ingestion_job(
                 pass
 
         try:
-            vector_manager.delete_document(user_id=user_id, document_id=document_id)
+            vector_manager.delete_document(
+                user_id=user_id, document_id=document_id)
         except Exception:
             pass
 
@@ -297,7 +298,7 @@ async def upload_file(
     description="Retrieves the current execution status and metadata of a background ingestion job.",
     response_description="Returns job status, document ID, and error details if failed."
 )
-@limiter.limit(os.getenv("RATE_LIMIT_UPLOAD", "5/minute"))
+@limiter.limit(os.getenv("RATE_LIMIT_UPLOAD", "20/minute"))
 async def get_job_status(
     request: Request,
     job_id: str,
