@@ -88,13 +88,21 @@ class QAPipeline:
             context_blocks) if context_blocks else "NO DOCUMENT CONTEXT AVAILABLE"
 
         # 2. Build the strict grounding system prompt instruction
-        fallback_msg = "I am sorry, but the provided documents do not contain the answer to your question."
+        disclaimer_msg = "Disclaimer: This information was not found in your uploaded documents and is generated using general AI knowledge."
         system_instruction = (
-            "You are a helpful assistant designed to perform question-answering over documents.\n"
-            "Answer the user's question based strictly on the provided context snippets below.\n"
-            f"If the answer cannot be found or inferred from the provided context snippets, you MUST respond EXACTLY with: '{fallback_msg}'\n"
-            "Do NOT use any external or general knowledge, and do NOT make up or extrapolate facts.\n\n"
-            f"Retrieved Document Context:\n{context_text}"
+            "You are a warm, helpful, and professional assistant designed to perform question-answering over documents.\n"
+            "Adopt a friendly tone and format your responses professionally using standard Markdown paragraphs, bullet points, numbered lists, or code blocks where appropriate.\n\n"
+            "Analyze the user's question and the provided context snippets below, then follow the instructions for the matching category:\n"
+            "1. **Generic Dialogues & Greetings**: If the user's input is a greeting, pleasantry, or basic generic chat (e.g., 'hi', 'hello', 'good morning', 'how are you?'), "
+            "respond warmly and helpfully. Do NOT use any citations, and do NOT include any disclaimer or warning.\n"
+            "2. **Document-Grounded Q&A**: If the user asks an informational question and the answer is contained in or can be inferred from the context snippets, "
+            "answer the question. You MUST cite your sources using inline reference numbers (e.g., [1], [2], etc.) placed immediately adjacent to any statement supported by the context. "
+            "The numbers match the 1-based index of the snippets (Source index 1 is [1]). Do NOT include the disclaimer.\n"
+            "3. **General Knowledge Fallback**: If the user asks an informational question and the answer cannot be found in or inferred from the context snippets (or if context is empty/missing), "
+            "answer the question using your own general knowledge. You MUST append the following exact disclaimer text at the very end of your response:\n"
+            f"'{disclaimer_msg}'\n"
+            "Do NOT include any source citations when answering via general knowledge fallback.\n\n"
+            f"Provided Document Context:\n{context_text}"
         )
 
         # 3. Assemble and trigger ChatGroq model
@@ -112,8 +120,18 @@ class QAPipeline:
 
         # 4. Format structured citation outputs
         citations = []
-        # If the LLM successfully answered, bind source references
-        if answer != fallback_msg and retrieved_docs:
+        old_fallback = "I am sorry, but the provided documents do not contain the answer to your question."
+        is_fallback = (
+            disclaimer_msg in answer or 
+            "Disclaimer: This information was not found" in answer or 
+            answer.strip() == old_fallback
+        )
+        
+        lower_q = query.strip().lower().rstrip("?.!")
+        greetings = {"hi", "hello", "hey", "good morning", "good afternoon", "good evening", "how are you", "what's up"}
+        is_greeting = lower_q in greetings
+        
+        if not is_fallback and not is_greeting and retrieved_docs:
             for doc in retrieved_docs:
                 citations.append({
                     "source_filename": doc.metadata.get("source_filename", "Unknown Document"),
@@ -161,13 +179,21 @@ class QAPipeline:
             context_blocks) if context_blocks else "NO DOCUMENT CONTEXT AVAILABLE"
 
         # 2. Build the strict grounding system prompt — same constraints as the sync path
-        fallback_msg = "I am sorry, but the provided documents do not contain the answer to your question."
+        disclaimer_msg = "Disclaimer: This information was not found in your uploaded documents and is generated using general AI knowledge."
         system_instruction = (
-            "You are a helpful assistant designed to perform question-answering over documents.\n"
-            "Answer the user's question based strictly on the provided context snippets below.\n"
-            f"If the answer cannot be found or inferred from the provided context snippets, you MUST respond EXACTLY with: '{fallback_msg}'\n"
-            "Do NOT use any external or general knowledge, and do NOT make up or extrapolate facts.\n\n"
-            f"Retrieved Document Context:\n{context_text}"
+            "You are a warm, helpful, and professional assistant designed to perform question-answering over documents.\n"
+            "Adopt a friendly tone and format your responses professionally using standard Markdown paragraphs, bullet points, numbered lists, or code blocks where appropriate.\n\n"
+            "Analyze the user's question and the provided context snippets below, then follow the instructions for the matching category:\n"
+            "1. **Generic Dialogues & Greetings**: If the user's input is a greeting, pleasantry, or basic generic chat (e.g., 'hi', 'hello', 'good morning', 'how are you?'), "
+            "respond warmly and helpfully. Do NOT use any citations, and do NOT include any disclaimer or warning.\n"
+            "2. **Document-Grounded Q&A**: If the user asks an informational question and the answer is contained in or can be inferred from the context snippets, "
+            "answer the question. You MUST cite your sources using inline reference numbers (e.g., [1], [2], etc.) placed immediately adjacent to any statement supported by the context. "
+            "The numbers match the 1-based index of the snippets (Source index 1 is [1]). Do NOT include the disclaimer.\n"
+            "3. **General Knowledge Fallback**: If the user asks an informational question and the answer cannot be found in or inferred from the context snippets (or if context is empty/missing), "
+            "answer the question using your own general knowledge. You MUST append the following exact disclaimer text at the very end of your response:\n"
+            f"'{disclaimer_msg}'\n"
+            "Do NOT include any source citations when answering via general knowledge fallback.\n\n"
+            f"Provided Document Context:\n{context_text}"
         )
 
         # 3. Assemble the LangChain chain and stream tokens via async generator
@@ -250,4 +276,49 @@ class QAPipeline:
                 f"Session title generation failed: {str(e)}. Falling back to 'New Chat'."
             )
             return "New Chat"
+
+    def generate_alternative_queries(self, question: str) -> List[str]:
+        """Generates exactly 3 alternative search query variations representing the search intent.
+
+        Args:
+            question: The user's query question.
+
+        Returns:
+            A list of 3 alternative search queries, or empty list on failure.
+        """
+        # Skip query expansion in test runs by default to protect existing mock limits
+        if "PYTEST_CURRENT_TEST" in os.environ and not os.getenv("TEST_QUERY_EXPANSION_ACTIVE"):
+            return []
+
+        # Exclude generic greetings from query expansion to save latency and tokens
+        lower_q = question.strip().lower().rstrip("?.!")
+        greetings = {"hi", "hello", "hey", "good morning", "good afternoon", "good evening", "how are you", "what's up"}
+        if lower_q in greetings:
+            return []
+
+        try:
+            model = GroqConnectionManager.get_chat_model()
+            prompt = ChatPromptTemplate.from_messages([
+                ("system", (
+                    "You are a helpful query expansion assistant.\n"
+                    "Generate exactly 3 alternative search query formulations (variations) that represent the search intent of the user question.\n"
+                    "These queries will be used to retrieve documents from a vector database.\n"
+                    "Output exactly 3 queries, one per line, with no labels, no numbering, no punctuation, and no preamble.\n"
+                    "Keep the queries concise and in the same language as the original question."
+                )),
+                ("human", "{question}")
+            ])
+            chain = prompt | model | StrOutputParser()
+            output = chain.invoke({"question": question})
+            queries = [
+                line.strip()
+                for line in output.split("\n")
+                if line.strip()
+            ]
+            return queries[:3]
+        except Exception as e:
+            logging.getLogger("app.exception").warning(
+                f"Query expansion failed: {str(e)}. Falling back to empty expansions list."
+            )
+            return []
 

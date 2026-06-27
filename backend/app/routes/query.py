@@ -1,7 +1,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import uuid
 import time
 
@@ -30,6 +30,84 @@ router = APIRouter()
 # Initialize core orchestrators
 vector_manager = VectorStoreManager()
 qa_pipeline = QAPipeline()
+
+
+def retrieve_and_rerank_context(
+    user_id: str,
+    target_ids: List[str],
+    rewritten_question: str,
+    top_k: int
+) -> Tuple[List[Document], float, float]:
+    """Retrieves document context using multi-query expansion, Reciprocal Rank Fusion,
+    and FlashRank reranking.
+
+    Returns:
+        A tuple of (matching_chunks, retrieval_ms, reranking_ms).
+    """
+    # 1. Run query expansion
+    expanded_queries = qa_pipeline.generate_alternative_queries(rewritten_question)
+    all_queries = [rewritten_question] + expanded_queries
+
+    # 2. Per-document hybrid retrieval across all query variations
+    start_retrieval = time.perf_counter()
+    candidate_k = max(10, min(25, top_k * 3))
+    
+    rrf_scores = {}
+    try:
+        for query in all_queries:
+            for doc_id in target_ids:
+                base_retriever = vector_manager.get_hybrid_retriever(
+                    user_id=user_id,
+                    document_id=doc_id,
+                    top_k=candidate_k
+                )
+                chunks = base_retriever.invoke(query)
+                for idx, doc in enumerate(chunks):
+                    rank = idx + 1
+                    score = 1.0 / (60.0 + rank)
+                    
+                    # Deduplicate by text content and source block tracking keys
+                    chunk_id = doc.metadata.get("chunk_id", doc.metadata.get("parent_id", ""))
+                    key = (doc.page_content.strip(), chunk_id)
+                    if key not in rrf_scores:
+                        rrf_scores[key] = [doc, score]
+                    else:
+                        rrf_scores[key][1] += score
+    except (VectorStoreError, RerankerError) as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Local vector store retrieval failed: {str(e)}"
+        )
+    retrieval_ms = (time.perf_counter() - start_retrieval) * 1000
+
+    # 3. Sort by aggregated RRF score and slice to candidate_k
+    start_rerank = time.perf_counter()
+    sorted_rrf = sorted(rrf_scores.values(), key=lambda x: x[1], reverse=True)
+    deduped_chunks = [item[0] for item in sorted_rrf]
+
+    # 4. Rerank top RRF candidates using FlashRank down to top_k
+    if not deduped_chunks:
+        return [], retrieval_ms, 0.0
+
+    try:
+        ranker = RerankManager.get_ranker()
+        compressor = FlashrankRerank(client=ranker, top_n=top_k)
+        matching_chunks = compressor.compress_documents(
+            deduped_chunks[:candidate_k], rewritten_question)
+    except RerankerError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Reranking failed: {str(e)}"
+        )
+    reranking_ms = (time.perf_counter() - start_rerank) * 1000
+
+    # Resolve parent documents from child chunks if Parent-Document Retriever is active
+    matching_chunks = vector_manager.resolve_parent_documents(
+        user_id=user_id,
+        documents=matching_chunks
+    )
+
+    return matching_chunks, retrieval_ms, reranking_ms
 
 
 class QueryRequest(BaseModel):
@@ -199,54 +277,12 @@ async def query_document(
                 detail="Forbidden: You do not own or have permission to access this document."
             )
 
-    # 2. Per-document hybrid retrieval — pool chunks from all requested documents
-    start_retrieval = time.perf_counter()
-    candidate_k = max(10, min(25, body.top_k * 3))
-    pooled_chunks: List[Document] = []
-
-    try:
-        for doc_id in target_ids:
-            base_retriever = vector_manager.get_hybrid_retriever(
-                user_id=user_id,
-                document_id=doc_id,
-                top_k=candidate_k
-            )
-            chunks = base_retriever.invoke(rewritten_question)
-            pooled_chunks.extend(chunks)
-    except (VectorStoreError, RerankerError) as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Local vector store retrieval failed: {str(e)}"
-        )
-    retrieval_ms = (time.perf_counter() - start_retrieval) * 1000
-
-    # 3. Deduplicate pooled chunks by exact stripped text, preserving insertion order
-    start_rerank = time.perf_counter()
-    seen_texts = set()
-    deduped_chunks: List[Document] = []
-    for doc in pooled_chunks:
-        key = doc.page_content.strip()
-        if key not in seen_texts:
-            seen_texts.add(key)
-            deduped_chunks.append(doc)
-
-    # 4. Rerank deduplicated chunks with FlashRank and slice to top_k
-    try:
-        ranker = RerankManager.get_ranker()
-        compressor = FlashrankRerank(client=ranker, top_n=body.top_k)
-        matching_chunks = compressor.compress_documents(
-            deduped_chunks, rewritten_question)
-    except RerankerError as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Reranking failed: {str(e)}"
-        )
-    reranking_ms = (time.perf_counter() - start_rerank) * 1000
-
-    # Resolve parent documents from child chunks if Parent-Document Retriever is active
-    matching_chunks = vector_manager.resolve_parent_documents(
+    # 2. Retrieve document context using RRF multi-query expansion and FlashRank
+    matching_chunks, retrieval_ms, reranking_ms = retrieve_and_rerank_context(
         user_id=user_id,
-        documents=matching_chunks
+        target_ids=target_ids,
+        rewritten_question=rewritten_question,
+        top_k=body.top_k
     )
 
     # 5. Generate strict grounded response via ChatGroq
@@ -396,54 +432,12 @@ async def query_document_stream(
                 detail="Forbidden: You do not own or have permission to access this document."
             )
 
-    # 2. Per-document hybrid retrieval — pool chunks from all requested documents
-    start_retrieval = time.perf_counter()
-    candidate_k = max(10, min(25, body.top_k * 3))
-    pooled_chunks: List[Document] = []
-
-    try:
-        for doc_id in target_ids:
-            base_retriever = vector_manager.get_hybrid_retriever(
-                user_id=user_id,
-                document_id=doc_id,
-                top_k=candidate_k
-            )
-            chunks = base_retriever.invoke(rewritten_question)
-            pooled_chunks.extend(chunks)
-    except (VectorStoreError, RerankerError) as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Local vector store retrieval failed: {str(e)}"
-        )
-    retrieval_ms = (time.perf_counter() - start_retrieval) * 1000
-
-    # 3. Deduplicate pooled chunks by exact stripped text, preserving insertion order
-    start_rerank = time.perf_counter()
-    seen_texts = set()
-    deduped_chunks: List[Document] = []
-    for doc in pooled_chunks:
-        key = doc.page_content.strip()
-        if key not in seen_texts:
-            seen_texts.add(key)
-            deduped_chunks.append(doc)
-
-    # 4. Rerank deduplicated chunks with FlashRank and slice to top_k
-    try:
-        ranker = RerankManager.get_ranker()
-        compressor = FlashrankRerank(client=ranker, top_n=body.top_k)
-        matching_chunks = compressor.compress_documents(
-            deduped_chunks, rewritten_question)
-    except RerankerError as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Reranking failed: {str(e)}"
-        )
-    reranking_ms = (time.perf_counter() - start_rerank) * 1000
-
-    # Resolve parent documents from child chunks if Parent-Document Retriever is active
-    matching_chunks = vector_manager.resolve_parent_documents(
+    # 2. Retrieve document context using RRF multi-query expansion and FlashRank
+    matching_chunks, retrieval_ms, reranking_ms = retrieve_and_rerank_context(
         user_id=user_id,
-        documents=matching_chunks
+        target_ids=target_ids,
+        rewritten_question=rewritten_question,
+        top_k=body.top_k
     )
 
     # 5. Build citation metadata — emitted as the first SSE event before streaming begins
@@ -507,7 +501,14 @@ async def query_document_stream(
 
                     # Save assistant message
                     assistant_answer = "".join(tokens_accumulated)
-                    citations_serialized = json.dumps(citations)
+                    is_fallback = "Disclaimer: This information was not found" in assistant_answer
+                    is_greeting = not any(f"[{i+1}]" in assistant_answer for i in range(len(matching_chunks)))
+                    
+                    final_citations = []
+                    if not is_fallback and not is_greeting:
+                        final_citations = citations
+                        
+                    citations_serialized = json.dumps(final_citations)
                     assistant_msg_id = str(uuid.uuid4())
                     ChatDatabaseManager.create_message(
                         message_id=assistant_msg_id,
