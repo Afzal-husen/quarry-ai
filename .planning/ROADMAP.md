@@ -18,57 +18,91 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 ## Phases
 
-### 🔄 v2.0 Web Frontend Integration (Phases 23-26) — ACTIVE
+### Phase 23: Next.js Bootstrap & API Client Layer
 
-- [ ] **Phase 23: Next.js Bootstrap & API Client Layer** (0/1 plan)
-  - Goal: Set up the Next.js frontend framework base configuration and configure the api-client interceptor to communicate with the backend.
-  - Requirements: FE-CORE-01, FE-CORE-02
-  - Success Criteria:
-    1. Next.js App Router workspace is successfully initialized under `/frontend` with TypeScript and Tailwind CSS.
-    2. Tailwind CSS loads standard styling rules and local utility variables.
-    3. The `api-client.ts` custom fetch wrapper is implemented and correctly appends `Authorization: Bearer <token>` headers if a token is present in localStorage.
-    4. Non-authenticated client requests returning `401 Unauthorized` are successfully caught and trigger redirects to `/login`.
-- [ ] **Phase 24: User Authentication Screens & Token State** (0/1 plan)
-  - Goal: Create the user signup, login, and secure routing context.
-  - Requirements: FE-AUTH-01, FE-AUTH-02, FE-AUTH-03
-  - Success Criteria:
-    1. User signup page `/register` and login page `/login` render high-fidelity inputs and show validation error banners on submission failure.
-    2. Submitting valid login credentials successfully saves the JWT access token to `localStorage` and redirects the user to the main page.
-    3. A secure route wrapper checks login state and blocks access to `/` (dashboard) or `/chat` paths, redirecting unauthenticated traffic to `/login`.
-- [ ] **Phase 25: Dashboard & Document Ingestion Panel** (0/1 plan)
-  - Goal: Implement the landing view and document upload status polling tools.
-  - Requirements: FE-DOC-01, FE-DOC-02, FE-DOC-03, FE-DOC-04
-  - Success Criteria:
-    1. Dashboard view `/` renders summary stats cards with stub data and list of user documents.
-    2. Document UploadModal supports drag-and-drop file inputs, showing validation constraints and upload progress states.
-    3. Periodic polling queries backend `/documents` status every 3 seconds while documents are in `processing` state and stops once they reach terminal states.
-    4. Deleting a document calls the `/documents/{uuid}` DELETE endpoint and updates local dashboard states.
-- [ ] **Phase 26: Chat Interface & SSE Streaming** (0/1 plan)
-  - Goal: Implement the multi-turn conversational chat sidebar, conditional context select modal, dynamic titles, and citation views.
-  - Requirements: FE-CHAT-01, FE-CHAT-02, FE-CHAT-03, FE-CHAT-04, FE-CHAT-05, FE-CHAT-06
-  - Success Criteria:
-    1. Sidebar displays active user chat sessions list and includes a functioning "New Chat" button.
-    2. Starting a new chat triggers the document context modal logic:
-       - Shows the file upload modal if no documents exist.
-       - Displays document checklist (default-selecting the first document) for multi-select context if documents exist.
-       - Chat input is blocked if no documents are selected or exist.
-    3. Chat viewport displays human and assistant messages in custom message bubbles.
-    4. Real-time typewriter effect is rendered using browser ReadableStream body readers to append incoming SSE tokens chunk-by-chunk on `/query/stream` with smooth auto-scroll.
-    5. The sidebar chat title is dynamically updated in real-time when the first turn completes.
-    6. Citation indicators next to assistant statements render source filenames and pages on mouse hover.
+**Goal**: Set up the Next.js frontend framework base configuration and configure the api-client interceptor to communicate with the backend.
+**Requirements**: FE-CORE-01, FE-CORE-02
+
+**Success Criteria**:
+
+1. Next.js App Router workspace is successfully initialized under `/frontend` with TypeScript and Tailwind CSS.
+2. Tailwind CSS loads standard styling rules and local utility variables.
+3. The `api-client.ts` custom fetch wrapper is implemented and correctly appends `Authorization: Bearer <token>` headers if a token is present in localStorage.
+4. Non-authenticated client requests returning `401 Unauthorized` are successfully caught and trigger redirects to `/login`.
+
+**Plans**: 1 plan
+
+- [ ] 23-01: Initialize Next.js App Router project and implement `api-client.ts` custom fetch interceptor.
+
+---
+
+### Phase 24: User Authentication Screens & Token State
+
+**Goal**: Create the user signup, login, and secure routing context.
+**Requirements**: FE-AUTH-01, FE-AUTH-02, FE-AUTH-03
+**Depends on**: Phase 23
+
+**Success Criteria**:
+
+1. User signup page `/register` and login page `/login` render high-fidelity inputs and show validation error banners on submission failure.
+2. Submitting valid login credentials successfully saves the JWT access token to `localStorage` and redirects the user to the main page.
+3. A secure route wrapper checks login state and blocks access to `/` (dashboard) or `/chat` paths, redirecting unauthenticated traffic to `/login`.
+
+**Plans**: 1 plan
+
+- [ ] 24-01: Create registration and login pages and global AuthContext middleware guard.
+
+---
+
+### Phase 25: Dashboard & Document Ingestion Panel
+
+**Goal**: Implement the landing view and document upload status polling tools.
+**Requirements**: FE-DOC-01, FE-DOC-02, FE-DOC-03, FE-DOC-04
+**Depends on**: Phase 23
+
+**Success Criteria**:
+
+1. Dashboard view `/` renders summary stats cards with stub data and list of user documents.
+2. Document UploadModal supports drag-and-drop file inputs, showing validation constraints and upload progress states.
+3. Periodic polling queries backend `/documents` status every 3 seconds while documents are in `processing` state and stops once they reach terminal states.
+4. Deleting a document calls the `/documents/{uuid}` DELETE endpoint and updates local dashboard states.
+
+**Plans**: 1 plan
+
+- [ ] 25-01: Design the main dashboard layout, drag-and-drop UploadModal, and document list component with 3s interval status polling.
+
+---
+
+### Phase 26: Chat Interface & SSE Streaming
+
+**Goal**: Implement the multi-turn conversational chat sidebar, conditional context select modal, dynamic titles, and citation views.
+**Requirements**: FE-CHAT-01, FE-CHAT-02, FE-CHAT-03, FE-CHAT-04, FE-CHAT-05, FE-CHAT-06
+**Depends on**: Phase 24, Phase 25
+
+**Success Criteria**:
+
+1. Sidebar displays active user chat sessions list and includes a functioning "New Chat" button.
+2. Starting a new chat triggers the document context modal logic:
+   - Shows the file upload modal if no documents exist.
+   - Displays document checklist (default-selecting the first document) for multi-select context if documents exist.
+   - Chat input is blocked if no documents are selected or exist.
+3. Chat viewport displays human and assistant messages in custom message bubbles.
+4. Real-time typewriter effect is rendered using browser ReadableStream body readers to append incoming SSE tokens chunk-by-chunk on `/query/stream` with smooth auto-scroll.
+5. The sidebar chat title is dynamically updated in real-time when the first turn completes.
+6. Citation indicators next to assistant statements render source filenames and pages on mouse hover.
+
+**Plans**: 1 plan
+
+- [ ] 26-01: Create chat route layouts, sidebar session managers, conditional document multi-select modal, SSE typewriter response viewer, and grounding citation tooltips.
+
+---
 
 <details>
 <summary>✅ v1.5 Q&A History & Conversational Memory (Phases 20-22) — SHIPPED 2026-06-27</summary>
 
 - [x] **Phase 20: Chat Session Management & Database Storage** (1/1 plan) — completed 2026-06-25
-  - Goal: Implement SQLite tables for `sessions` and `messages` in `users.db` and expose REST CRUD endpoints.
-  - Requirements: MEM-01, MEM-02
 - [x] **Phase 21: Query Condensation & Conversational Retrieval** (1/1 plan) — completed 2026-06-25
-  - Goal: Implement query condensation chain using LLM to rewrite user query based on past message history.
-  - Requirements: MEM-03
 - [x] **Phase 22: Conversational endpoints (`/query` & `/query/stream`)** (1/1 plan) — completed 2026-06-25
-  - Goal: Update endpoints to accept `session_id`, log messages, generate session titles, and support streaming with memory.
-  - Requirements: MEM-04, MEM-05, MEM-06
 
 </details>
 
@@ -92,7 +126,7 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 23. Next.js Bootstrap & API Client Layer | v2.0 | 0/1 | Active | |
+| 23. Next.js Bootstrap & API Client Layer | v2.0 | 0/1 | Complete    | 2026-06-27 |
 | 24. User Authentication Screens & Token State | v2.0 | 0/1 | Planned | |
 | 25. Dashboard & Document Ingestion Panel | v2.0 | 0/1 | Planned | |
 | 26. Chat Interface & SSE Streaming | v2.0 | 0/1 | Planned | |
