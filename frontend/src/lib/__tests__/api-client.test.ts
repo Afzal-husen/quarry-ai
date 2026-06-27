@@ -1,3 +1,5 @@
+// @vitest-environment jsdom
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { apiGet, apiPost, APIError } from '../api-client';
 
@@ -5,6 +7,7 @@ describe('API Client Layer', () => {
   const mockFetch = vi.fn();
   
   beforeEach(() => {
+    document.cookie = '';
     vi.stubGlobal('fetch', mockFetch);
     vi.stubGlobal('window', {
       location: {
@@ -39,8 +42,8 @@ describe('API Client Layer', () => {
     );
   });
 
-  it('should automatically append Authorization header if token exists in localStorage', async () => {
-    vi.mocked(localStorage.getItem).mockReturnValue('mocked-token-456');
+  it('should automatically append Authorization header if token exists in cookies', async () => {
+    document.cookie = 'token=mocked-token-456';
     mockFetch.mockResolvedValueOnce({
       status: 200,
       ok: true,
@@ -50,7 +53,6 @@ describe('API Client Layer', () => {
 
     await apiGet('/secure-route');
 
-    expect(localStorage.getItem).toHaveBeenCalledWith('token');
     const calledOptions = mockFetch.mock.calls[0][1] as RequestInit;
     const calledHeaders = calledOptions.headers as Headers;
     expect(calledHeaders.get('Authorization')).toBe('Bearer mocked-token-456');
@@ -93,7 +95,8 @@ describe('API Client Layer', () => {
     }
   });
 
-  it('should clean up token and redirect to /login on 401 response status code', async () => {
+  it('should clean up token cookie and redirect to /login on 401 response status code', async () => {
+    document.cookie = 'token=expired-token-789';
     mockFetch.mockResolvedValueOnce({
       status: 401,
       ok: false,
@@ -103,7 +106,7 @@ describe('API Client Layer', () => {
 
     await expect(apiGet('/private-route')).rejects.toThrowError(APIError);
 
-    expect(localStorage.removeItem).toHaveBeenCalledWith('token');
+    expect(document.cookie).not.toContain('expired-token-789');
     expect(localStorage.removeItem).toHaveBeenCalledWith('user');
     expect(window.location.href).toBe('/login');
   });
