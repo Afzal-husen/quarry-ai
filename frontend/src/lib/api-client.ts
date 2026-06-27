@@ -1,4 +1,4 @@
-import { getTokenAction, deleteTokenAction } from '../app/actions/cookies';
+import { getCookie, deleteCookie } from './cookies';
 
 export class APIError extends Error {
   status: number;
@@ -22,7 +22,7 @@ export async function apiRequest(path: string, options: RequestInit = {}): Promi
   
   // Retrieve token from cookies if in browser environment
   if (typeof window !== 'undefined') {
-    const token = await getTokenAction();
+    const token = getCookie('token');
     if (token && !headers.has('Authorization')) {
       headers.set('Authorization', `Bearer ${token}`);
     }
@@ -40,7 +40,7 @@ export async function apiRequest(path: string, options: RequestInit = {}): Promi
 
   if (response.status === 401) {
     if (typeof window !== 'undefined') {
-      await deleteTokenAction();
+      deleteCookie('token');
       localStorage.removeItem('user');
       // Prevent infinite redirect loops if already on auth screens
       if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
