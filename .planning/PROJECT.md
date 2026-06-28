@@ -10,7 +10,7 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ## Current State
 
-Milestone v2.0 (Web Frontend Integration) has been successfully completed, integrating a fully featured, secure Next.js web dashboard and chat interface with the RAG REST API.
+Milestone v3.0 (LLM Response & Retrieval Enhancements) has been successfully completed, implementing Reciprocal Rank Fusion, multi-query expansion, and robust citation grounding.
 
 ---
 
@@ -60,10 +60,16 @@ Milestone v2.0 (Web Frontend Integration) has been successfully completed, integ
 - ✓ Ingestion check modals and dynamic target files context selectors (FE-CHAT-02). (v2.0)
 - ✓ Typewrite token output stream reader and smart auto-scrolling (FE-CHAT-03, FE-CHAT-04, FE-CHAT-05). (v2.0)
 - ✓ Interactive grounded references tooltips displaying source details on hover (FE-CHAT-06). (v2.0)
+- ✓ Strict inline citation mapping and detailed formatting rules. (v3.0)
+- ✓ Configurable Groq model override support. (v3.0)
+- ✓ LLM-based multi-query rewrite and expansion. (v3.0)
+- ✓ Multi-query dense & lexical search merged using Reciprocal Rank Fusion (RRF). (v3.0)
+- ✓ General knowledge fallback disclaimer with greeting exceptions. (v3.0)
 
 ### Active
 
-No active tasks. All milestones in the v2.0 roadmap are completed.
+- **REQ-DBG-01 (Next.js Middleware/Proxy Location)**: Fix Next.js `proxy.ts` location to be recognized and called by Next.js.
+- **REQ-DBG-02 (Authentication Guards)**: Enforce route protection and redirection.
 
 ---
 
@@ -104,4 +110,4 @@ No active tasks. All milestones in the v2.0 roadmap are completed.
 This document evolves at phase transitions and milestone boundaries.
 
 ---
-*Last updated: 2026-06-27 — Milestone v2.0 completed*
+*Last updated: 2026-06-28 — Milestone v3.1 started*
