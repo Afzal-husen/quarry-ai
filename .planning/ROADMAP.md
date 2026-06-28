@@ -35,7 +35,7 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 **Plans**: 1 plan
 
-- [ ] 28-01: Relocate proxy.ts, fix export names, verify middleware redirects, and fix typescript/routing errors.
+- [x] 28-01: Relocate proxy.ts, fix export names, verify middleware redirects, and fix typescript/routing errors.
 
 ---
 
@@ -43,7 +43,7 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 28. Next.js Proxy & Authentication Guard Stabilization | v3.1 | 0/1 | Planned | |
+| 28. Next.js Proxy & Authentication Guard Stabilization | v3.1 | 1/1 | Complete | 2026-06-28 |
 
 ---
 

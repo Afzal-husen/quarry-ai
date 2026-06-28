@@ -6,6 +6,7 @@
 ## v3.1 Requirements
 
 ### Authentication & Middleware Routing Protection
+
 - **REQ-DBG-01 (Next.js Middleware/Proxy Location)**: Place the `proxy.ts` request interceptor under `frontend/src/` (so it is at `frontend/src/proxy.ts`), allowing Next.js 16 to correctly detect and execute it.
 - **REQ-DBG-02 (Enforce Redirections)**:
   - Protect paths `/` and `/chat`: redirect unauthenticated requests (where no `token` cookie is present) to `/login`.
@@ -16,6 +17,6 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REQ-DBG-01  | Phase 28 | Pending |
-| REQ-DBG-02  | Phase 28 | Pending |
-| REQ-DBG-03  | Phase 28 | Pending |
+| REQ-DBG-01  | Phase 28 | Complete |
+| REQ-DBG-02  | Phase 28 | Complete |
+| REQ-DBG-03  | Phase 28 | Complete |

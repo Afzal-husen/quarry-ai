@@ -1,19 +1,19 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export function proxy(request: NextRequest) {
-  const token = request.cookies.get('token')?.value;
+export default function proxy(request: NextRequest) {
+  const token = request.cookies.get("token")?.value;
   const { pathname } = request.nextUrl;
 
-  const isProtectedRoute = pathname === '/' || pathname.startsWith('/chat');
-  const isAuthRoute = pathname === '/login' || pathname === '/register';
+  const isProtectedRoute = pathname === "/" || pathname.startsWith("/chat");
+  const isAuthRoute = pathname === "/login" || pathname === "/register";
 
   if (isProtectedRoute && !token) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   if (isAuthRoute && token) {
-    return NextResponse.redirect(new URL('/', request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();
@@ -21,6 +21,9 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|next.svg|vercel.svg).*)',
+    "/((?!api|_next/static|_next/image|favicon.ico|next.svg|vercel.svg).*)",
+    "/documents",
+    "/chat",
+    "/register",
   ],
 };
