@@ -2,11 +2,12 @@
 gsd_state_version: 1.0
 milestone: v4.1
 milestone_name: Dark Mode Toggle
-status: planning
-last_updated: "2026-06-29T10:47:22.662Z"
-last_activity: 2026-06-29
+status: Defining requirements
+stopped_at: Phase 34 context gathered
+last_updated: "2026-06-29T10:50:05.665Z"
+last_activity: 2026-06-29 — Milestone v4.1 started
 progress:
-  total_phases: 0
+  total_phases: 2
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -93,9 +94,9 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-29T06:58:10.034Z
-Stopped at: Phase 33 visual verification complete
-Resume file: .planning/phases/33-design-polish-visual-verification/33-01-SUMMARY.md
+Last session: 2026-06-29T10:50:05.656Z
+Stopped at: Phase 34 context gathered
+Resume file: .planning/phases/34-theme-switching-integration/34-CONTEXT.md
 
 ## Operator Next Steps
 
