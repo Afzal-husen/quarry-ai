@@ -8,7 +8,7 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 ## Milestones
 
-- 🚧 **v4.1 Dark Mode Toggle** — Phases 34-35 (active)
+- ✅ **v4.1 Dark Mode Toggle** — Phases 34-35 (shipped 2026-06-29): [v4.1 ROADMAP](file:///.planning/milestones/v4.1-ROADMAP.md)
 - ✅ **v4.0 Shadcn UI Remake** — Phases 29-33 (shipped 2026-06-29): [v4.0 ROADMAP](file:///.planning/milestones/v4.0-ROADMAP.md)
 - ✅ **v3.1 Debugging & Stabilization** — Phase 28 (shipped 2026-06-28): [v3.1 ROADMAP](file:///.planning/milestones/v3.1-ROADMAP.md)
 - ✅ **v3.0 LLM Response & Retrieval Enhancements** — Phase 27 (shipped 2026-06-28): [v3.0 ROADMAP](file:///.planning/milestones/v3.0-ROADMAP.md)
@@ -23,6 +23,14 @@ This roadmap details completed milestones and future plans for the Document RAG 
 ## Phases
 
 <details>
+<summary>✅ v4.1 Dark Mode Toggle (Phases 34-35) — SHIPPED 2026-06-29</summary>
+
+- [x] Phase 34: Theme Switching Integration (1/1 plans) — completed 2026-06-29
+- [x] Phase 35: Contrast Auditing & Color Polish (1/1 plans) — completed 2026-06-29
+
+</details>
+
+<details>
 <summary>✅ v4.0 Shadcn UI Remake (Phases 29-33) — SHIPPED 2026-06-29</summary>
 
 - [x] Phase 29: Shadcn UI Setup & Foundations (1/1 plans) — completed 2026-06-29
@@ -33,32 +41,14 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 </details>
 
-### Phase 34: Theme Switching Integration
-**Goal**: Install next-themes, set up layout provider context, and build responsive toggle components.
-**Depends on**: Phase 33
-**Requirements**: FE-THEME-01, FE-THEME-02
-**Success Criteria**:
-  1. The next-themes ThemeProvider wraps Next.js root layout.
-  2. Toggle dropdown options switch between light, dark, and system themes instantly.
-  3. Chosen theme option persists reliably inside user browsers on refreshes.
-
-### Phase 35: Contrast Auditing & Color Polish
-**Goal**: Polish colors contrast variables inside globals.css for full WCAG readability checks.
-**Depends on**: Phase 34
-**Requirements**: FE-THEME-03
-**Success Criteria**:
-  1. Login cards and dashboard metrics text show clear contrast in both theme scopes.
-  2. Document list tables and chat logs are fully readable under light theme settings.
-  3. citation details sidebar layouts match high-contrast requirements.
-
 ---
 
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 34. Theme Switching Integration | v4.1 | 0/1 | Not started | - |
-| 35. Contrast Auditing & Color Polish | v4.1 | 0/1 | Not started | - |
+| 34. Theme Switching Integration | v4.1 | 1/1 | Complete | 2026-06-29 |
+| 35. Contrast Auditing & Color Polish | v4.1 | 1/1 | Complete | 2026-06-29 |
 
 ---
-*Roadmap updated: 2026-06-29 after milestone v4.1 start*
+*Roadmap updated: 2026-06-29 after v4.1 milestone completion*
