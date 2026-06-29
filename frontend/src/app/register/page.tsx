@@ -1,94 +1,232 @@
 "use client";
 
-import React, { useActionState } from 'react';
-import Link from 'next/link';
-import { signupAction } from '../actions/auth';
+import React, { useActionState, useEffect, useTransition } from "react";
+import Link from "next/link";
+import { signupAction } from "../actions/auth";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { toast } from "sonner";
+import { FileText, CheckCircle2, Lock, User, AlertCircle } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+
+const registerSchema = z
+  .object({
+    username: z.string().min(3, { message: "Username must be at least 3 characters" }),
+    password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+    confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+type RegisterInput = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const [state, formAction, isPending] = useActionState(signupAction, null);
+  const [isSubmitPending, startTransition] = useTransition();
 
+  const isLoading = isPending || isSubmitPending;
   const activeError = state?.error;
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterInput>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  useEffect(() => {
+    if (activeError) {
+      toast.error(activeError, {
+        description: "Please check your inputs and try again.",
+      });
+    }
+  }, [activeError]);
+
+  const onSubmit = (data: RegisterInput) => {
+    const formData = new FormData();
+    formData.append("username", data.username);
+    formData.append("password", data.password);
+    formData.append("confirmPassword", data.confirmPassword);
+    startTransition(() => {
+      formAction(formData);
+    });
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-6 py-12">
-      <div className="w-full max-w-md space-y-8">
-        <div className="flex flex-col items-center text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-50">
-            Create Account
-          </h1>
-          <p className="mt-2 text-sm text-zinc-400">
-            Sign up to get started with document-based Q&A
-          </p>
+    <div className="grid min-h-screen grid-cols-1 md:grid-cols-2 w-full bg-zinc-950">
+      {/* Left panel (Visual branding & taglines) */}
+      <div className="relative hidden md:flex flex-col justify-between p-10 text-white bg-zinc-950 border-r border-zinc-900 overflow-hidden select-none">
+        {/* Glow backgrounds */}
+        <div className="absolute -left-20 -top-20 w-80 h-80 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+        <div className="absolute -right-20 -bottom-20 w-80 h-80 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
+
+        <div className="relative z-20 flex items-center gap-2 text-lg font-semibold tracking-tight">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md shadow-indigo-500/10">
+            <FileText className="h-5 w-5 text-indigo-400" />
+          </div>
+          <span>Antigravity RAG</span>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-8 py-8 shadow-2xl space-y-6">
-          {activeError && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg p-3">
-              {activeError}
+        <div className="relative z-20 my-auto space-y-6 max-w-lg">
+          <h2 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent leading-tight">
+            Interact with your documents like never before.
+          </h2>
+          <p className="text-zinc-400 text-lg">
+            Upload PDFs or Word files and query them using natural language. Fast, local embeddings and low-latency cloud inference.
+          </p>
+
+          <div className="space-y-4 pt-4">
+            <div className="flex items-start gap-3">
+              <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-zinc-200">High-speed local ingestion</p>
+                <p className="text-xs text-zinc-500">Chunked parsing and vector embedding on the fly.</p>
+              </div>
             </div>
-          )}
-
-          <form className="space-y-6" action={formAction}>
-            <div className="space-y-2">
-              <label htmlFor="username" className="block text-xs font-medium text-zinc-300 uppercase tracking-wider">
-                Username
-              </label>
-              <input
-                id="username"
-                name="username"
-                type="text"
-                required
-                disabled={isPending}
-                className="block w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
-                placeholder="Choose username"
-              />
+            <div className="flex items-start gap-3">
+              <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-zinc-200">Typewriter-style SSE streaming</p>
+                <p className="text-xs text-zinc-500">Immediate, progressive token synthesis responses.</p>
+              </div>
             </div>
-
-            <div className="space-y-2">
-              <label htmlFor="password" className="block text-xs font-medium text-zinc-300 uppercase tracking-wider">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                required
-                disabled={isPending}
-                className="block w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
-                placeholder="Minimum 6 characters"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="block text-xs font-medium text-zinc-300 uppercase tracking-wider">
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                required
-                disabled={isPending}
-                className="block w-full rounded-lg bg-zinc-950 border border-zinc-800 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
-                placeholder="Re-enter password"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isPending}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
-            >
-              {isPending ? 'Creating Account...' : 'Create Account'}
-            </button>
-          </form>
-
-          <div className="text-center text-sm text-zinc-400 pt-2 border-t border-zinc-800">
-            Already have an account?{' '}
-            <Link href="/login" className="font-medium text-indigo-500 hover:text-indigo-400 transition-colors">
-              Sign in instead
-            </Link>
           </div>
+        </div>
+
+        <div className="relative z-20 mt-auto text-xs text-zinc-500">
+          &copy; {new Date().getFullYear()} Antigravity Systems. All rights reserved.
+        </div>
+      </div>
+
+      {/* Right panel (Centered Register Card) */}
+      <div className="flex items-center justify-center p-6 sm:p-10 bg-zinc-950/50">
+        <div className="w-full max-w-md space-y-6">
+          <div className="flex flex-col items-center text-center space-y-2 md:hidden">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md">
+              <FileText className="h-6 w-6 text-indigo-400" />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-zinc-50">
+              Antigravity RAG
+            </h1>
+          </div>
+
+          <Card className="border-zinc-900 bg-zinc-950/70 shadow-2xl backdrop-blur-xl">
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-2xl font-bold text-zinc-50">Create Account</CardTitle>
+              <CardDescription className="text-zinc-400 text-sm">
+                Sign up to get started with document-based Q&A
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {activeError && (
+                  <div className="flex items-start gap-2.5 bg-destructive/10 border border-destructive/20 text-destructive text-sm rounded-lg p-3 animate-in fade-in-50 duration-200">
+                    <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                    <span>{activeError}</span>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="username" className="text-zinc-300 text-xs font-semibold uppercase tracking-wider">
+                    Username
+                  </Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-4 w-4 text-zinc-500 pointer-events-none" />
+                    <Input
+                      id="username"
+                      type="text"
+                      placeholder="Choose username"
+                      disabled={isLoading}
+                      {...register("username")}
+                      className={`pl-9 border-zinc-800 bg-zinc-900/50 text-zinc-100 placeholder-zinc-600 focus-visible:ring-indigo-500 focus-visible:border-indigo-500 ${
+                        errors.username ? "border-destructive focus-visible:ring-destructive" : ""
+                      }`}
+                      aria-invalid={errors.username ? "true" : "false"}
+                    />
+                  </div>
+                  {errors.username && (
+                    <p className="text-xs text-destructive mt-1 font-medium">{errors.username.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-zinc-300 text-xs font-semibold uppercase tracking-wider">
+                    Password
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-zinc-500 pointer-events-none" />
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Minimum 6 characters"
+                      disabled={isLoading}
+                      {...register("password")}
+                      className={`pl-9 border-zinc-800 bg-zinc-900/50 text-zinc-100 placeholder-zinc-600 focus-visible:ring-indigo-500 focus-visible:border-indigo-500 ${
+                        errors.password ? "border-destructive focus-visible:ring-destructive" : ""
+                      }`}
+                      aria-invalid={errors.password ? "true" : "false"}
+                    />
+                  </div>
+                  {errors.password && (
+                    <p className="text-xs text-destructive mt-1 font-medium">{errors.password.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-zinc-300 text-xs font-semibold uppercase tracking-wider">
+                    Confirm Password
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-zinc-500 pointer-events-none" />
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="Re-enter password"
+                      disabled={isLoading}
+                      {...register("confirmPassword")}
+                      className={`pl-9 border-zinc-800 bg-zinc-900/50 text-zinc-100 placeholder-zinc-600 focus-visible:ring-indigo-500 focus-visible:border-indigo-500 ${
+                        errors.confirmPassword ? "border-destructive focus-visible:ring-destructive" : ""
+                      }`}
+                      aria-invalid={errors.confirmPassword ? "true" : "false"}
+                    />
+                  </div>
+                  {errors.confirmPassword && (
+                    <p className="text-xs text-destructive mt-1 font-medium">{errors.confirmPassword.message}</p>
+                  )}
+                </div>
+
+                <Button type="submit" disabled={isLoading} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-md shadow-indigo-600/10 transition-colors">
+                  {isLoading ? "Creating Account..." : "Create Account"}
+                </Button>
+              </form>
+            </CardContent>
+
+            <CardFooter className="border-t border-zinc-900/50 pt-4 flex justify-center">
+              <p className="text-xs text-zinc-500">
+                Already have an account?{" "}
+                <Link href="/login" className="font-semibold text-indigo-500 hover:text-indigo-400 transition-colors">
+                  Sign in instead
+                </Link>
+              </p>
+            </CardFooter>
+          </Card>
         </div>
       </div>
     </div>
