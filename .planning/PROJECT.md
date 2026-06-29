@@ -8,9 +8,15 @@ A Python-based REST API that enables Retrieval-Augmented Generation (RAG) over u
 
 Enable seamless, low-latency document parsing and precise Q&A retrieval via a programmatic REST API using local embeddings and high-speed cloud LLM inference.
 
-## Current State
+## Current Milestone: v4.0 Shadcn UI Remake
 
-Milestone v3.0 (LLM Response & Retrieval Enhancements) has been successfully completed, implementing Reciprocal Rank Fusion, multi-query expansion, and robust citation grounding.
+**Goal:** Remake the Next.js frontend user interface using `shadcn/ui` components and `impeccable` design principles.
+
+**Target features:**
+- Remake frontend layouts using shadcn/ui components (Sidebar, Card, Dialog, Table, Button, Inputs)
+- Enhance visual style and layout spacing following impeccable design standards (accessible contrast, semantic tokens)
+- Integrate SSE token typewriter streaming and document status polling
+- Maintain route protection and authentication flow integration
 
 ---
 
@@ -65,11 +71,12 @@ Milestone v3.0 (LLM Response & Retrieval Enhancements) has been successfully com
 - ✓ LLM-based multi-query rewrite and expansion. (v3.0)
 - ✓ Multi-query dense & lexical search merged using Reciprocal Rank Fusion (RRF). (v3.0)
 - ✓ General knowledge fallback disclaimer with greeting exceptions. (v3.0)
+- ✓ Next.js proxy.ts location fixed and recognized/called by Next.js. (v3.1)
+- ✓ Authentication guards and redirects stabilized in Next.js middleware/proxy. (v3.1)
 
 ### Active
 
-- **REQ-DBG-01 (Next.js Middleware/Proxy Location)**: Fix Next.js `proxy.ts` location to be recognized and called by Next.js.
-- **REQ-DBG-02 (Authentication Guards)**: Enforce route protection and redirection.
+- *(None yet — defining requirements)*
 
 ---
 
