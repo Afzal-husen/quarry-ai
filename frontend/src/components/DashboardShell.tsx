@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { apiGet, apiDelete, apiPost } from "../lib/api-client";
 import { logoutAction } from "../app/actions/auth";
+import { ThemeToggle } from "./ThemeToggle";
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -423,13 +424,16 @@ export default function DashboardShell({
           <h2 className="text-lg font-semibold tracking-tight text-zinc-50">
             Dashboard
           </h2>
-          <Button
-            onClick={() => setIsUploadOpen(true)}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs h-9 flex items-center gap-1.5 shadow-md shadow-indigo-600/10"
-          >
-            <Upload className="w-3.5 h-3.5" />
-            Upload Document
-          </Button>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Button
+              onClick={() => setIsUploadOpen(true)}
+              className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs h-9 flex items-center gap-1.5 shadow-md shadow-indigo-600/10"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              Upload Document
+            </Button>
+          </div>
         </header>
 
         <main className="p-6 md:p-8 space-y-6 max-w-6xl w-full mx-auto">
