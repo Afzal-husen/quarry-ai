@@ -11,7 +11,9 @@ requires:
     provides: [collapsible left sidebar layout shell integrated with logout actions]
 provides:
   - double sidebar layout structure inside chat screen (aligned collapsible navigation sidebar far-left, threads listing left-center)
+  - collapsible right sidebar panel listing complete source citation details on demand
   - typewriter animated caret cursor indicator blinking at the end of streaming assistant messages
+  - active scroll locks keeping feed focused to the bottom as response tokens generate
   - custom Dialog overlay confirming thread deletion actions
   - restyled popover context selectors and glassmorphism citation badges
 affects:
@@ -19,7 +21,7 @@ affects:
 
 tech-stack:
   added: []
-  patterns: [Double sidebar navigation, Blinking caretaker cursors, Glassmorphism hover popovers]
+  patterns: [Double sidebar navigation, Blinking caretaker cursors, Collapsible citations sidebar panel]
 
 key-files:
   created: []
@@ -28,35 +30,35 @@ key-files:
 
 key-decisions:
   - "Configured a double sidebar layout (collapsible far-left navigation bar + static secondary threads catalog sidebar) to align layout standards across pages."
-  - "Injected a blinking caret text caret cursor character ▋ at the end of streaming responses using React state triggers and CSS animations."
+  - "Replaced hover tooltips on source citations with a collapsible right sidebar panel (w-80) displaying the full text content, document name, and reference page index of clicked citation badges."
+  - "Wired a scroll-locking useEffect to automatically scroll the message feed to the bottom during active message generation cycles."
 
 patterns-established:
-  - "Display typewriter caret blinking markers inline inside code citations splits using standard spans."
+  - "Toggle a right details sidebar dynamically by binding parent state selections to custom badge click callbacks."
 
 requirements-completed: [FE-CHAT-01, FE-CHAT-02, FE-CHAT-03]
 
-duration: 15min
+duration: 20min
 completed: 2026-06-29
 ---
 
 # Phase 32: Q&A Chat Feed & SSE Streaming Summary
 
-**Refactored ChatShell.tsx to implement the aligned double sidebar layout, blinking typewriter caret cursor stream animations, glassmorphism hover citation details, and Dialog delete confirmations.**
+**Refactored ChatShell.tsx to implement the double sidebar layout, right collapsible references sidebar, blinking typewriter caret cursors, active feed autoscrolling, and Dialog delete confirmations.**
 
 ## Performance
 
-- **Duration:** 15 min
+- **Duration:** 20 min
 - **Started:** 2026-06-29T06:31:00Z
-- **Completed:** 2026-06-29T06:33:00Z
+- **Completed:** 2026-06-29T06:44:00Z
 - **Tasks:** 3 completed
 - **Files modified:** 1
 
 ## Accomplishments
-- Refactored chat page layout to support double sidebars:
-  - Collapsible Left Navigation Sidebar (collapses from `w-64` to `w-16` showing icons) aligned with the main dashboard.
-  - Secondary static inner sidebar (`w-72`) displaying conversation history threads.
-- Mapped streaming query responses to append a blinking typewriter text cursor caret `▋` with a pulsing animation at the end of assistant bubbles while streaming chunks.
-- Refactored citations hover boxes to use glassmorphism overlay popovers.
+- Refactored chat page layout to support collapsible double sidebars: collapsible navigation sidebar far-left and static thread sidebar next to it.
+- **Collapsible Right Citations Sidebar:** Clicking document citation badges `[1]` slides open a secondary right sidebar displaying the complete target filename, reference page number, and the full matched text content with zero clippings.
+- **Active Autoscrolling:** Configured a React hook to auto-scroll the chat log container to the bottom during SSE model token generation.
+- Mapped streaming query responses to append a blinking typewriter text cursor caret `▋` with a pulsing animation at the end of assistant bubbles while streaming.
 - Upgraded thread deletion confirmations to use styled Dialog modals.
 - Cleaned up manual context selectors to use card structures.
 
@@ -64,23 +66,23 @@ completed: 2026-06-29
 
 Each task was committed atomically in:
 
-1. **Chat Refactoring** - `bb171cd` (feat(32): refactor chat screen with double sidebars layout, typewriter cursor, and custom dialogs)
+1. **Chat Refactoring** - `5d6a7ee` (feat(32): replace citation tooltips with a collapsible right reference sidebar and fix autoscroll)
 
 ## Files Created/Modified
 - `frontend/src/components/ChatShell.tsx` - Rebuilt chat component shell
 
 ## Decisions Made
-- Passed active `isStreaming` states down to the citations text splitter function to append the blinking caret directly to the final parsed chunk.
-- Standardized double-sidebar structural width grids to avoid page-layout overlap issues.
+- Replaced the hover popovers on citation badges with click events that open a right-side collapsible panel, providing full readability of matching documents sections without hover cuts or clipping constraints.
 
 ## Deviations from Plan
-None - plan executed exactly as written.
+- **Collapsible Right Sidebar:** Introduced right sidebar to display source text instead of hover tooltips per user request.
 
 ## Issues Encountered
-- Missing `FileSpreadsheet` icon in imports was resolved by adding it to the `lucide-react` import statement.
+- User reported autoscroll not tracking generation. Resolved by placing an active scroll-locking effect in React lifecycle hooks.
+- User reported hovering tooltip constraints. Resolved by replacing badges tooltips with the right sidebar content panel.
 
 ## Next Phase Readiness
-- Chat interface refactoring is fully complete and compiles cleanly.
+- Chat interface refactoring is fully complete.
 - Ready to move on to **Phase 33: Design Polish & Visual Verification** to review overall alignments, transition animations, and verify all screens.
 
 ---
