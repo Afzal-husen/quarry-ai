@@ -10,15 +10,22 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ---
 
-## Shipped Milestone: v4.0 Shadcn UI Remake
+## Current Milestone: v4.1 Dark Mode Toggle
 
-**Goal:** Remake the Next.js frontend user interface using `shadcn/ui` components and `impeccable` design principles.
+**Goal:** Enable user-controlled theme switching between light, dark, and system color schemes using `next-themes` and a polished toggle button.
 
 **Target features:**
-- Remake frontend layouts using shadcn/ui components (Sidebar, Card, Dialog, Table, Button, Inputs)
-- Enhance visual style and layout spacing following impeccable design standards (accessible contrast, semantic tokens)
-- Integrate SSE token typewriter streaming and document status polling
-- Maintain route protection and authentication flow integration
+- Integrate `next-themes` provider in root layout.
+- Build a responsive theme toggle selector dropdown/button component.
+- Verify and polish light/dark theme variables inside globals.css for accessible WCAG contrast values across all remade screens.
+- Persist theme preferences across page navigations and reloads.
+
+---
+
+## Shipped Milestones
+
+### v4.0 Shadcn UI Remake (Shipped 2026-06-29)
+**Goal:** Remake the Next.js frontend user interface using `shadcn/ui` components and `impeccable` design principles.
 
 ---
 
@@ -116,4 +123,4 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 This document evolves at phase transitions and milestone boundaries.
 
 ---
-*Last updated: 2026-06-29 — Milestone v4.0 complete*
+*Last updated: 2026-06-29 — Milestone v4.1 started*

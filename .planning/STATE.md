@@ -1,17 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v4.0
-milestone_name: milestone
-status: Awaiting next milestone
-stopped_at: Phase 33 visual verification complete
-last_updated: "2026-06-29T10:36:39.968Z"
-last_activity: 2026-06-29 — Milestone v4.0 completed and archived
+milestone: v4.1
+milestone_name: Dark Mode Toggle
+status: planning
+last_updated: "2026-06-29T10:47:22.662Z"
+last_activity: 2026-06-29
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 5
-  completed_plans: 5
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,10 +24,10 @@ See: .planning/PROJECT.md (updated 2026-06-28)
 
 ## Current Position
 
-Phase: Milestone v4.0 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-06-29 — Milestone v4.0 completed and archived
+Status: Defining requirements
+Last activity: 2026-06-29 — Milestone v4.1 started
 
 ## Performance Metrics
 
