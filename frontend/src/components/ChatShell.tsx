@@ -23,6 +23,7 @@ import {
 import { apiGet, apiDelete, apiPost } from "../lib/api-client";
 import { getTokenAction } from "../app/actions/cookies";
 import { logoutAction } from "../app/actions/auth";
+import { ThemeToggle } from "./ThemeToggle";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -586,68 +587,71 @@ export default function ChatShell({ username }: ChatShellProps) {
                 <span>Active Conversation</span>
               </h2>
 
-              {/* Context checklist dropdown */}
-              <div ref={dropdownRef} className="relative">
-                <Button
-                  variant="ghost"
-                  onClick={() => setIsDocDropdownOpen(!isDocDropdownOpen)}
-                  className="bg-zinc-900 border border-zinc-800 hover:bg-zinc-900/60 rounded-lg text-xs font-medium text-zinc-300 hover:text-zinc-100 flex items-center gap-1.5 transition-colors h-8"
-                >
-                  <BookOpen className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                  <span>Context ({selectedDocIds.length} files)</span>
-                  <ChevronDown className="w-3 h-3 text-zinc-500" />
-                </Button>
+              <div className="flex items-center gap-3">
+                <ThemeToggle />
+                {/* Context checklist dropdown */}
+                <div ref={dropdownRef} className="relative">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setIsDocDropdownOpen(!isDocDropdownOpen)}
+                    className="bg-zinc-900 border border-zinc-800 hover:bg-zinc-900/60 rounded-lg text-xs font-medium text-zinc-300 hover:text-zinc-100 flex items-center gap-1.5 transition-colors h-8"
+                  >
+                    <BookOpen className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                    <span>Context ({selectedDocIds.length} files)</span>
+                    <ChevronDown className="w-3 h-3 text-zinc-500" />
+                  </Button>
 
-                {isDocDropdownOpen && (
-                  <Card className="absolute right-0 mt-2 w-72 bg-zinc-950 border-zinc-900 shadow-2xl z-50 overflow-hidden">
-                    <div className="p-3 border-b border-zinc-900/50 bg-zinc-900/10">
-                      <p className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">Query Target Files</p>
-                    </div>
-                    <div className="max-h-60 overflow-y-auto p-2 space-y-1">
-                      {documents.length === 0 ? (
-                        <p className="text-xs text-zinc-500 p-2 text-center">No documents found</p>
-                      ) : (
-                        documents.map((doc) => {
-                          const isChecked = selectedDocIds.includes(doc.document_id);
-                          return (
-                            <button
-                              key={doc.document_id}
-                              onClick={() => {
-                                let newSelection;
-                                if (isChecked) {
-                                  newSelection = selectedDocIds.filter((id) => id !== doc.document_id);
-                                } else {
-                                  newSelection = [...selectedDocIds, doc.document_id];
-                                }
-                                setSelectedDocIds(newSelection);
-                                if (activeSessionId) {
-                                  try {
-                                    localStorage.setItem(
-                                      `document_rag_session_docs_${activeSessionId}`,
-                                      JSON.stringify(newSelection),
-                                    );
-                                  } catch (err) {
-                                    console.warn("Failed to save document context:", err);
+                  {isDocDropdownOpen && (
+                    <Card className="absolute right-0 mt-2 w-72 bg-zinc-950 border-zinc-900 shadow-2xl z-50 overflow-hidden">
+                      <div className="p-3 border-b border-zinc-900/50 bg-zinc-900/10">
+                        <p className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">Query Target Files</p>
+                      </div>
+                      <div className="max-h-60 overflow-y-auto p-2 space-y-1">
+                        {documents.length === 0 ? (
+                          <p className="text-xs text-zinc-500 p-2 text-center">No documents found</p>
+                        ) : (
+                          documents.map((doc) => {
+                            const isChecked = selectedDocIds.includes(doc.document_id);
+                            return (
+                              <button
+                                key={doc.document_id}
+                                onClick={() => {
+                                  let newSelection;
+                                  if (isChecked) {
+                                    newSelection = selectedDocIds.filter((id) => id !== doc.document_id);
+                                  } else {
+                                    newSelection = [...selectedDocIds, doc.document_id];
                                   }
-                                }
-                              }}
-                              className="w-full flex items-center gap-2.5 p-2 rounded-lg text-xs hover:bg-zinc-900/60 cursor-pointer select-none text-zinc-300 hover:text-zinc-100 text-left transition-colors"
-                            >
-                              <div
-                                className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors shrink-0 ${
-                                  isChecked ? "bg-indigo-600 border-indigo-600 text-white" : "border-zinc-800 bg-zinc-900"
-                                }`}
+                                  setSelectedDocIds(newSelection);
+                                  if (activeSessionId) {
+                                    try {
+                                      localStorage.setItem(
+                                        `document_rag_session_docs_${activeSessionId}`,
+                                        JSON.stringify(newSelection),
+                                      );
+                                    } catch (err) {
+                                      console.warn("Failed to save document context:", err);
+                                    }
+                                  }
+                                }}
+                                className="w-full flex items-center gap-2.5 p-2 rounded-lg text-xs hover:bg-zinc-900/60 cursor-pointer select-none text-zinc-300 hover:text-zinc-100 text-left transition-colors"
                               >
-                                {isChecked && <Check className="w-2.5 h-2.5" />}
-                              </div>
-                              <span className="truncate flex-1">{doc.filename}</span>
-                            </button>
-                          );
-                        })
-                      )}
-                    </div>
-                  </Card>
-                )}
+                                <div
+                                  className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors shrink-0 ${
+                                    isChecked ? "bg-indigo-600 border-indigo-600 text-white" : "border-zinc-800 bg-zinc-900"
+                                  }`}
+                                >
+                                  {isChecked && <Check className="w-2.5 h-2.5" />}
+                                </div>
+                                <span className="truncate flex-1">{doc.filename}</span>
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    </Card>
+                  )}
+                </div>
               </div>
             </header>
 
