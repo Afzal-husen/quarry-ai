@@ -4,8 +4,8 @@ milestone: v4.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 30 plan created
-last_updated: "2026-06-29T06:14:18.679Z"
-last_activity: 2026-06-29 -- Phase 29 execution started
+last_updated: "2026-06-29T06:15:19.313Z"
+last_activity: 2026-06-29 -- Phase 30 execution started
 progress:
   total_phases: 5
   completed_phases: 1
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-28)
 
 **Core value:** Enable seamless, low-latency document parsing and precise Q&A retrieval via a programmatic REST API using local embeddings and high-speed cloud LLM inference.
-**Current focus:** Phase 29 — shadcn-ui-setup-foundations
+**Current focus:** Phase 30 — authentication-screens-refactoring
 
 ## Current Position
 
-Phase: 29 (shadcn-ui-setup-foundations) — EXECUTING
+Phase: 30 (authentication-screens-refactoring) — EXECUTING
 Plan: 1 of 1
-Status: Executing Phase 29
-Last activity: 2026-06-29 -- Phase 29 execution started
+Status: Executing Phase 30
+Last activity: 2026-06-29 -- Phase 30 execution started
 
 ## Performance Metrics
 
