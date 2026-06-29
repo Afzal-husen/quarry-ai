@@ -1,5 +1,21 @@
 # Milestones
 
+## v4.1 Dark Mode Toggle (Shipped: 2026-06-29)
+
+**Phases completed:** 7 phases, 7 plans, 24 tasks
+
+**Key accomplishments:**
+
+- Initialized the shadcn/ui library, configured the custom OKLCH Indigo design tokens inside Tailwind CSS v4, and installed all core component primitives.
+- Refactored the login and register pages to implement a Split Hero Layout, integrated with client-side Zod validation schemas, react-hook-form resolvers, inline alerts, and Sonner toast warnings.
+- Refactored DashboardShell.tsx to implement the collapsible sidebar shell, visual page-wide drag-and-drop file upload target overlay, pulsing status indicators, and custom delete Dialog overlays.
+- Refactored ChatShell.tsx to implement the double sidebar layout, right collapsible references sidebar, blinking typewriter caret cursors, active feed autoscrolling, and Dialog delete confirmations.
+- Visual elements polished across all screens, integrating custom scrollbars, timing transitions ease-in-out curves, focus highlights outlines, and responsive grid safeguards.
+- Theme provider context wired up and ThemeToggle button switchers embedded inside both Dashboard and Chat content headers.
+- Removed hardcoded dark backgrounds and borders, replacing them with semantic color tokens supporting dynamic light and dark theme toggling.
+
+---
+
 ## v4.0 v4.0 (Shipped: 2026-06-29)
 
 **Phases completed:** 5 phases, 5 plans, 17 tasks
