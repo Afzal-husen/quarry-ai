@@ -434,7 +434,7 @@ export default function ChatShell({ username }: ChatShellProps) {
     <div className="flex h-screen bg-zinc-950 text-zinc-100 font-sans overflow-hidden w-full">
       {/* Collapsible Left Sidebar */}
       <div
-        className={`border-r border-zinc-900 bg-zinc-950 flex flex-col justify-between transition-all duration-300 shrink-0 ${
+        className={`border-r border-zinc-900 bg-zinc-950 flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 ${
           isSidebarCollapsed ? "w-16" : "w-64"
         }`}
       >
@@ -731,7 +731,7 @@ export default function ChatShell({ username }: ChatShellProps) {
 
       {/* Right sidebar: Citations reference panel */}
       <aside
-        className={`border-l border-zinc-900 bg-zinc-950 flex flex-col transition-all duration-300 shrink-0 h-full ${
+        className={`border-l border-zinc-900 bg-zinc-950 flex flex-col transition-all duration-300 ease-in-out shrink-0 h-full ${
           selectedCitation ? "w-80" : "w-0 overflow-hidden border-l-transparent"
         }`}
       >

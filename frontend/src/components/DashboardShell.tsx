@@ -337,7 +337,7 @@ export default function DashboardShell({
 
       {/* Collapsible Left Sidebar */}
       <div
-        className={`border-r border-zinc-900 bg-zinc-950 flex flex-col justify-between transition-all duration-300 shrink-0 ${
+        className={`border-r border-zinc-900 bg-zinc-950 flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 ${
           isSidebarCollapsed ? "w-16" : "w-64"
         }`}
       >
