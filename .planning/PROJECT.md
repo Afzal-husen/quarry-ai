@@ -8,7 +8,9 @@ A Python-based REST API that enables Retrieval-Augmented Generation (RAG) over u
 
 Enable seamless, low-latency document parsing and precise Q&A retrieval via a programmatic REST API using local embeddings and high-speed cloud LLM inference.
 
-## Current Milestone: v4.0 Shadcn UI Remake
+---
+
+## Shipped Milestone: v4.0 Shadcn UI Remake
 
 **Goal:** Remake the Next.js frontend user interface using `shadcn/ui` components and `impeccable` design principles.
 
@@ -24,37 +26,22 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ### Validated
 
-- ✓ Basic Python 3.14 backend structure and environment initialized. (v1.0)
-- ✓ FastAPI REST API skeleton with clean route structure. (v1.0)
-- ✓ File Upload endpoint supporting `.pdf`, `.doc`, and `.docx` formats. (v1.0)
-- ✓ Document parser and text chunking processor. (v1.0)
-- ✓ Embedding generation pipeline using local Hugging Face models. (v1.0)
-- ✓ Local vector store persistence (Chroma) to local disk. (v1.0)
-- ✓ Query and Retrieval pipeline fetching relevant context from local vector index. (v1.0)
-- ✓ Generative LLM answering pipeline powered by Groq API. (v1.0)
-- ✓ Programmatic Q&A endpoint `/query` returning answers and page citations. (v1.0)
-- ✓ LCEL Runnable Chains: Declarative LCEL chain (`prompt | model | parser`) configuration. (v1.1)
-- ✓ Native Retrievers: Chroma vector database exposed as a native LangChain `Retriever`. (v1.1)
-- ✓ Structured Prompting & Parsers: Standardized instructions using `ChatPromptTemplate` and `StrOutputParser`. (v1.1)
-- ✓ Clean Code & Quality Audit: Standardized absolute app-relative imports and unified exception handler domains. (v1.1)
-- ✓ User Signup & Login: Registration and login actions with bcrypt password hashing in SQLite (AUTH-01, AUTH-02). (v1.2)
-- ✓ JWT Route Protection: Valid Bearer token enforcement on `/upload` and `/query` routes (AUTH-03). (v1.2)
-- ✓ Directory-based Isolation: User ID partitioned directories for files/chunks/indices on disk (TENANT-01). (v1.2)
-- ✓ Cross-Tenant Ownership Checks: Prevent cross-tenant document querying (TENANT-02). (v1.2)
-- ✓ Hybrid Search: Combined dense vectors and BM25 lexical keyword matching (RET-01). (v1.3)
-- ✓ Candidate Re-ranking: Fast, lightweight re-ranking engine using FlashRank (RET-02). (v1.3)
-- ✓ Retrieval Integration: `/query` and QAPipeline updated to return hybrid-reranked cited answers (RET-03). (v1.3)
-- ✓ Document Lifecycle: Endpoints to list, delete, and re-index uploaded documents (DOC-01, DOC-02, DOC-03). (v1.4)
-- ✓ Async Ingestion Engine: Decoupled background task threads indexing documents asynchronously (PERF-01, PERF-02). (v1.4)
-- ✓ Connection Caching: LRU thread-safe connection caching for Chroma client handles (PERF-03). (v1.4)
-- ✓ Multi-document Q&A: RRF merges and multi-file contextual queries (MULTI-01, MULTI-02, MULTI-03). (v1.4)
-- ✓ SSE Token Streaming: `/query/stream` token streaming (STREAM-01, STREAM-02). (v1.4)
-- ✓ API Quality & DX: Rate limits, pagination, and unified error formats (API-01, API-02, API-03, API-04). (v1.4)
-- ✓ Structured Observability: JSON logging and latency trackers (OBS-01, OBS-02, OBS-03). (v1.4)
-- ✓ Advanced Chunking: Semantic sentence boundary splitting and query-time parent swapping (CHUNK-01, CHUNK-02, CHUNK-03). (v1.4)
-- ✓ Chat Session CRUD endpoints and SQLite database persistence mapping (MEM-01, MEM-02) — v1.5
-- ✓ Query condensation conversational retrieval model chains (MEM-03, MEM-04, MEM-05) — v1.5
-- ✓ Dynamic chat title generation models (MEM-06) — v1.5
+- ✓ Initialize shadcn/ui configuration, Geist Sans font loading, and global Tooltip/Toaster providers (FE-SETUP-01, FE-SETUP-02). (v4.0)
+- ✓ Authentication cards, Form hook validations, and server cookies action triggers (FE-AUTH-01, FE-AUTH-02). (v4.0)
+- ✓ Dashboard layout with metrics summary cards, files catalog list, and custom delete Dialog modals (FE-DASH-01, FE-DASH-04). (v4.0)
+- ✓ Visual drag-and-drop page-wide ingestion overlay with size and extension checks (FE-DASH-02). (v4.0)
+- ✓ Document status background polling and animated state indicator badges (FE-DASH-03). (v4.0)
+- ✓ Double sidebar chat feed screens, typewriter blinking caretaker, and active viewport scroll locking (FE-CHAT-01). (v4.0)
+- ✓ Collapsible right references sidebar showing document name, page index, and full matched segment text context (FE-CHAT-02). (v4.0)
+- ✓ Chat room documents selectors checklist modals and dynamic scope filters context mapping (FE-CHAT-03). (v4.0)
+- ✓ Design polish including custom Zinc scrollbar utilities, unified sidebars transition-all ease curves, and focus rings (FE-POLISH-01). (v4.0)
+- ✓ Next.js proxy.ts location fixed and recognized/called by Next.js. (v3.1)
+- ✓ Authentication guards and redirects stabilized in Next.js middleware/proxy. (v3.1)
+- ✓ Strict inline citation mapping and detailed formatting rules. (v3.0)
+- ✓ Configurable Groq model override support. (v3.0)
+- ✓ LLM-based multi-query rewrite and expansion. (v3.0)
+- ✓ Multi-query dense & lexical search merged using Reciprocal Rank Fusion (RRF). (v3.0)
+- ✓ General knowledge fallback disclaimer with greeting exceptions. (v3.0)
 - ✓ Next.js App Router workspace bootstrap under `/frontend` with Tailwind CSS (FE-CORE-01). (v2.0)
 - ✓ Secure API client wrapper managing JWT injection and unauthorized route redirects (FE-CORE-02). (v2.0)
 - ✓ User Register and Login layouts with secure cookie token states (FE-AUTH-01, FE-AUTH-02). (v2.0)
@@ -66,13 +53,28 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 - ✓ Ingestion check modals and dynamic target files context selectors (FE-CHAT-02). (v2.0)
 - ✓ Typewrite token output stream reader and smart auto-scrolling (FE-CHAT-03, FE-CHAT-04, FE-CHAT-05). (v2.0)
 - ✓ Interactive grounded references tooltips displaying source details on hover (FE-CHAT-06). (v2.0)
-- ✓ Strict inline citation mapping and detailed formatting rules. (v3.0)
-- ✓ Configurable Groq model override support. (v3.0)
-- ✓ LLM-based multi-query rewrite and expansion. (v3.0)
-- ✓ Multi-query dense & lexical search merged using Reciprocal Rank Fusion (RRF). (v3.0)
-- ✓ General knowledge fallback disclaimer with greeting exceptions. (v3.0)
-- ✓ Next.js proxy.ts location fixed and recognized/called by Next.js. (v3.1)
-- ✓ Authentication guards and redirects stabilized in Next.js middleware/proxy. (v3.1)
+- ✓ Chat Session CRUD endpoints and SQLite database persistence mapping (MEM-01, MEM-02) — v1.5
+- ✓ Query condensation conversational retrieval model chains (MEM-03, MEM-04, MEM-05) — v1.5
+- ✓ Dynamic chat title generation models (MEM-06) — v1.5
+- ✓ Document Lifecycle: Endpoints to list, delete, and re-index uploaded documents (DOC-01, DOC-02, DOC-03). (v1.4)
+- ✓ Async Ingestion Engine: Decoupled background task threads indexing documents asynchronously (PERF-01, PERF-02). (v1.4)
+- ✓ Connection Caching: LRU thread-safe connection caching for Chroma client handles (PERF-03). (v1.4)
+- ✓ Multi-document Q&A: RRF merges and multi-file contextual queries (MULTI-01, MULTI-02, MULTI-03). (v1.4)
+- ✓ SSE Token Streaming: `/query/stream` token streaming (STREAM-01, STREAM-02). (v1.4)
+- ✓ API Quality & DX: Rate limits, pagination, and unified error formats (API-01, API-02, API-03, API-04). (v1.4)
+- ✓ Structured Observability: JSON logging and latency trackers (OBS-01, OBS-02, OBS-03). (v1.4)
+- ✓ Advanced Chunking: Semantic sentence boundary splitting and query-time parent swapping (CHUNK-01, CHUNK-02, CHUNK-03). (v1.4)
+- ✓ Hybrid Search: Combined dense vectors and BM25 lexical keyword matching (RET-01). (v1.3)
+- ✓ Candidate Re-ranking: Fast, lightweight re-ranking engine using FlashRank (RET-02). (v1.3)
+- ✓ Retrieval Integration: `/query` and QAPipeline updated to return hybrid-reranked cited answers (RET-03). (v1.3)
+- ✓ User Signup & Login: Registration and login actions with bcrypt password hashing in SQLite (AUTH-01, AUTH-02). (v1.2)
+- ✓ JWT Route Protection: Valid Bearer token enforcement on `/upload` and `/query` routes (AUTH-03). (v1.2)
+- ✓ Directory-based Isolation: User ID partitioned directories for files/chunks/indices on disk (TENANT-01). (v1.2)
+- ✓ Cross-Tenant Ownership Checks: Prevent cross-tenant document querying (TENANT-02). (v1.2)
+- ✓ LCEL Runnable Chains: Declarative LCEL chain configuration (prompt | model | parser). (v1.1)
+- ✓ Native Retrievers: Chroma database exposed as native retriever. (v1.1)
+- ✓ Structured Prompting & Parsers: Standard ChatPromptTemplate configurations. (v1.1)
+- ✓ Basic Python 3.14 structure, FastAPI setup, local embeddings, and local vector DB. (v1.0)
 
 ### Active
 
@@ -99,22 +101,19 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| FastAPI Web Framework | Fast, standard, auto-documents REST endpoints with OpenAPI, and fits Python 3.14 async ecosystem perfectly. | — Validated (v1.0) |
-| LangChain Expression Language (LCEL) | Declarative pipelines for prompt formatting, LLM invocation, and output parsing. | — Validated (v1.1) |
-| Groq LLM Generation | Fast execution and high speed specified by the user. | — Validated (v1.0) |
-| Hugging Face Local Embeddings | Keeps embeddings private and local, avoiding cloud costs. | — Validated (v1.0) |
-| Local Vector DB (Chroma/FAISS) | Self-contained local disk persistence as requested. | — Validated (v1.0) |
-| Async Ingestion Thread Pool | Offload slow parsing and embedding generation to background threads, returning 202 immediately. | — Validated (v1.4) |
-| Chroma Connection Cache | Thread-safe LRU connection caching avoids Windows WinError 32 handle locking issues. | — Validated (v1.4) |
-| Post-Rerank Parent swapping | Swapping child chunks with parent document texts *after* FlashRank keeps retrieval specific and fast. | — Validated (v1.4) |
-| slowapi rate-limiter middleware | Seamless per-user route throttling limits without custom store overhead. | — Validated (v1.4) |
-| Structured JSON log formatters | Direct-to-stdout JSON logging aligns with 12-factor cloud apps. | — Validated (v1.4) |
+| Collapsible Right References Sidebar | Replaced hover citation popovers with a collapsible right sidebar panel to show full segment text without line cutoffs. | — Validated (v4.0) |
+| Active Viewport Autoscrolling | Bound scroll-locking useEffect to keep the chat viewport locked to bottom during token output streams. | — Validated (v4.0) |
+| Custom WebKit Scrollbars | Configured global narrow webkit-scrollbar styling in globals.css for dark RAG overflow panels. | — Validated (v4.0) |
 | Next.js Server Actions | Encapsulates login/logout cookies mutators securely on the server context. | — Validated (v2.0) |
 | LocalStorage Polling States | Saved active jobs checklist in client storage ensures status tracking survives page reloads. | — Validated (v2.0) |
+| Post-Rerank Parent swapping | Swapping child chunks with parent document texts *after* FlashRank keeps retrieval specific and fast. | — Validated (v1.4) |
+| Chroma Connection Cache | Thread-safe LRU connection caching avoids Windows WinError 32 handle locking issues. | — Validated (v1.4) |
+| Async Ingestion Thread Pool | Offload slow parsing and embedding generation to background threads, returning 202 immediately. | — Validated (v1.4) |
+| FastAPI Web Framework | Fast, standard, auto-documents REST endpoints with OpenAPI, and fits Python 3.14 async ecosystem perfectly. | — Validated (v1.0) |
 
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
 
 ---
-*Last updated: 2026-06-28 — Milestone v3.1 started*
+*Last updated: 2026-06-29 — Milestone v4.0 complete*
