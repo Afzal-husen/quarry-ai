@@ -62,31 +62,15 @@ interface ChatShellProps {
   username: string;
 }
 
-function CitationBadge({ index, citation }: { index: number; citation: any }) {
-  const [hovered, setHovered] = useState(false);
-
+function CitationBadge({ index, onSelect }: { index: number; onSelect: () => void }) {
   return (
-    <span className="relative inline-block mx-0.5">
-      <button
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        className="bg-indigo-900/40 hover:bg-indigo-800 border border-indigo-700/30 text-indigo-300 px-1 py-0.5 rounded text-xs font-mono select-none cursor-help transition-colors focus:outline-none"
-      >
-        [{index}]
-      </button>
-
-      {hovered && (
-        <span className="absolute bottom-full left-0 mb-2 z-50 w-64 backdrop-blur-md bg-zinc-950/90 border border-zinc-800 rounded-xl p-3 shadow-2xl text-left pointer-events-none flex flex-col gap-1.5 animate-in fade-in zoom-in-95 duration-100">
-          <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider flex items-center justify-between">
-            <span className="truncate max-w-[150px]">{citation.source_filename || "source"}</span>
-            <span>Page {citation.page_index !== undefined ? citation.page_index + 1 : "—"}</span>
-          </span>
-          <span className="text-xs text-zinc-300 font-sans italic line-clamp-4 leading-normal">
-            "{citation.text}"
-          </span>
-        </span>
-      )}
-    </span>
+    <button
+      type="button"
+      onClick={onSelect}
+      className="bg-indigo-900/40 hover:bg-indigo-800 border border-indigo-700/30 text-indigo-300 px-1 py-0.5 rounded text-xs font-mono select-none cursor-pointer transition-colors focus:outline-none"
+    >
+      [{index}]
+    </button>
   );
 }
 
@@ -102,6 +86,7 @@ export default function ChatShell({ username }: ChatShellProps) {
   const [tempSelectedDocIds, setTempSelectedDocIds] = useState<string[]>([]);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<{ id: string; title: string } | null>(null);
+  const [selectedCitation, setSelectedCitation] = useState<{ source_filename: string; page_index: number; text: string } | null>(null);
 
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
@@ -427,7 +412,11 @@ export default function ChatShell({ username }: ChatShellProps) {
                 <CitationBadge
                   key={index}
                   index={citationIdx + 1}
-                  citation={citation}
+                  onSelect={() => setSelectedCitation({
+                    source_filename: citation.source_filename,
+                    page_index: citation.page_index,
+                    text: citation.text
+                  })}
                 />
               );
             }
@@ -739,6 +728,60 @@ export default function ChatShell({ username }: ChatShellProps) {
           </div>
         )}
       </main>
+
+      {/* Right sidebar: Citations reference panel */}
+      <aside
+        className={`border-l border-zinc-900 bg-zinc-950 flex flex-col transition-all duration-300 shrink-0 h-full ${
+          selectedCitation ? "w-80" : "w-0 overflow-hidden border-l-transparent"
+        }`}
+      >
+        {selectedCitation && (
+          <div className="flex flex-col h-full w-80">
+            <div className="p-4 border-b border-zinc-900 flex items-center justify-between h-16 shrink-0">
+              <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4 text-indigo-500" />
+                Source Reference
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSelectedCitation(null)}
+                className="h-8 w-8 text-zinc-400 hover:text-zinc-100"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="space-y-1">
+                <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Document Name</span>
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-900/50 border border-zinc-800/80">
+                  <FileText className="w-4 h-4 text-indigo-400 shrink-0" />
+                  <p className="text-xs text-zinc-200 font-medium truncate" title={selectedCitation.source_filename}>
+                    {selectedCitation.source_filename}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Reference Location</span>
+                <div className="p-2 rounded-lg bg-zinc-900/50 border border-zinc-800/80">
+                  <p className="text-xs text-zinc-200 font-medium">
+                    Page {selectedCitation.page_index !== undefined ? selectedCitation.page_index + 1 : "—"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Matched Text Segment</span>
+                <div className="p-3 rounded-lg bg-zinc-900/30 border border-zinc-900 text-xs text-zinc-300 font-sans leading-relaxed whitespace-pre-wrap select-text max-h-[300px] overflow-y-auto">
+                  "{selectedCitation.text}"
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </aside>
 
       {/* Select Ingestion Context Modal */}
       <Dialog open={isContextModalOpen} onOpenChange={(open) => !open && setIsContextModalOpen(false)}>
