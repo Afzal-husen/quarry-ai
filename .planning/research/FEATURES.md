@@ -1,37 +1,32 @@
-# Feature Research
+# Expected Features
 
-**Domain:** Web Frontend Client for Document RAG REST API
-**Researched:** 2026-06-27
+**Domain:** Frontend UI Layout & Design
+**Researched:** 2026-06-29
 **Confidence:** HIGH
 
-## Expected Features
+## Feature Taxonomy
 
-### 1. User Authentication (Auth)
-- **Register Screen**: Simple signup with username and password.
-- **Login Screen**: Secure signin returning JWT access token.
-- **Token Manager**: Stores token in `localStorage`, handles authentication state across page reloads, and redirects unauthenticated users to `/login`.
+### Must Have (Table Stakes)
 
-### 2. Document Management (Dashboard)
-- **Dashboard Hub**: Displays system health status, summary statistics (total documents, active sessions), and upload tools.
-- **Upload Modal / Area**: Drag-and-drop zone with loading bars supporting PDF and DOCX formats.
-- **Background Status Polling**: Polls the `/documents` statuses periodically (e.g. every 2-3 seconds) to show real-time processing indicators (processing, complete, error).
-- **Document List & Multi-Select**: Display of all uploaded documents with multi-selection checkboxes. Selecting document contexts is mandatory before starting chats.
-- **Document Delete**: Button next to each document to delete it and automatically clean up associated vector store references.
+*   **Custom Login / Registration Cards:** Clean forms with input fields, proper validation feedback (`data-invalid` / `aria-invalid`), clear error displays, and password visibility toggles.
+*   **App Sidebar Navigation:** Responsive, collapsable sidebar separating the active workspaces: Ingestion Dashboard, Document Lifecycle, and Q&A Chat panels.
+*   **Drag-and-Drop Ingestion Overlay:** Full drag-and-drop file target overlay supporting `.pdf`, `.docx`, and `.doc` drops with size limits validation.
+*   **Active Job Status Polling:** Custom badges showing progress updates (`queued`, `processing`, `completed`, `failed`) queryable from backend status API.
+*   **Document Grid / Table:** Clean table listing uploaded files with metadata (pages, upload date, size) and delete action modal confirmations.
+*   **Streaming SSE Chat Interface:** Rich message feed with typewriter style transitions, responsive layout, clear button, and scrolling management.
 
-### 3. Session Management (Sidebar)
-- **Session List**: Sidebar listing all chat sessions belonging to the user.
-- **New Chat Button**: Instantiates a new session in the database and adds it to the list.
-- **Title Updates**: Shows dynamically updated session titles generated on the backend from the first conversation turn.
-- **Session Delete**: Sidebar action to remove a chat session and purge message logs.
+### Should Have (Differentiators)
 
-### 4. Interactive Conversational Chat (Main Panel)
-- **Message List**: Scrollable area displaying conversational user and assistant turns.
-- **SSE Token Streaming**: Appends assistant tokens in real-time as they stream from the server.
-- **Auto-Scrolling**: Keeps focus on the latest generated tokens during active streaming.
-- **Citations & Grounding UI**: Displays interactive tooltip citations next to generated claims, hovering shows the file source name and matching pages.
-- **Chat State Guard**: Blocks inputs if no documents are uploaded or selected as context.
+*   **Hover Citation References:** Interactive tooltips on grounding citation tags displaying the referenced text snippet in a popover when hovered.
+*   **Multi-Document Context Targeter:** A select selector panel inside the chat view, letting users dynamically check/uncheck uploaded files to constrain the RAG context.
+*   **Dynamic Chat Title Generation:** Triggers backend titles builder to update sidebar threads list with smart auto-generated titles.
+*   **Dark Mode Support:** Auto-adapting layout leveraging shadcn/ui semantic tokens (`bg-background`, `text-muted-foreground`).
 
-## Deferred Features (Future Milestones)
-- **Session Page Limits**: Client-side pagination or loading limits for long message histories.
-- **Token Expiry Refreshes**: Automatically fetch a new JWT token using refresh tokens.
-- **Export Transcripts**: Downloader for session history (PDF/TXT formats).
+### Defer (v2+)
+
+*   **Visual Chart Summaries:** Document text distribution or keyword clusters charts (using Recharts).
+*   **Folder-based Organization:** Grouping uploads into custom virtual folders.
+
+## Sources
+- [shadcn/ui blocks & components documentation](https://ui.shadcn.com/docs)
+- Existing frontend implementation files in [frontend/src](file:///d:/Learnings/document-rag/frontend/src)

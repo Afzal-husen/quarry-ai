@@ -1,34 +1,31 @@
-# Pitfalls Research
+# Critical Pitfalls
 
-**Domain:** Web Frontend Client for Document RAG REST API
-**Researched:** 2026-06-27
+**Domain:** Visual & Accessibility Pitfalls
+**Researched:** 2026-06-29
 **Confidence:** HIGH
 
-## Critical Pitfalls & Mitigation Strategies
+## Common Mistakes & Mitigations
 
-### 1. Hydration Mismatches (Next.js SSR vs. Client LocalStorage)
-- **Problem**: Next.js App Router attempts to pre-render pages on the server. If code on a page checks `localStorage` (which only exists in the browser) directly during rendering, Next.js will throw a hydration mismatch error.
-- **Mitigation**:
-  - Guard browser-only storage lookups inside React's `useEffect` hook or wrap the component with `useState(false)` loading states.
-  - Mark any interactive pages or components reading user tokens/sessions with the `'use client'` directive.
+### 1. Visual Contrast Failures
+*   **Pitfall:** Saturated neutral backgrounds or light-gray body copy can cause contrast to fall below the WCAG 4.5:1 ratio.
+*   **Mitigation:** Verify contrast ratio. Use darker/ink shades for body copy (e.g. `text-foreground` or `text-neutral-800`), avoiding hardcoded values. Never use washed out grays on colored tints.
 
-### 2. CORS (Cross-Origin Resource Sharing) Errors
-- **Problem**: The frontend Next.js dev server runs on `http://localhost:3000` while the backend FastAPI server runs on `http://localhost:8000`. By default, browsers block requests across different origins unless CORS headers are explicitly sent by the backend.
-- **Mitigation**:
-  - Verify that the backend `main.py` registers the FastAPI `CORSMiddleware`.
-  - Allow `http://localhost:3000` as an allowed origin, permitting `GET`, `POST`, `OPTIONS`, and `DELETE` requests with matching headers.
+### 2. Z-Index and Clip Issues in Overflow Containers
+*   **Pitfall:** Placing dropdowns or popovers inside layout elements with `overflow: hidden` or `overflow: auto` (such as sidebar lists or tables) clips the rendering.
+*   **Mitigation:** Render dropdown overlay items using Radix portals or native Popovers which escape the parent stacking context and position relative to the viewport.
 
-### 3. Server-Sent Events (SSE) Buffering
-- **Problem**: If there are intermediate proxies (like Nginx, Cloudflare) or specific configurations on the server, streaming tokens can be buffered and sent to the client in a single large chunk, negating the real-time typewriter effect.
-- **Mitigation**:
-  - The client must read the stream via standard chunked fetch reader bodies.
-  - The server should output correct SSE headers:
-    - `Content-Type: text/event-stream`
-    - `Cache-Control: no-cache`
-    - `X-Accel-Buffering: no` (critical for Nginx)
+### 3. Layout Spacing Refactoring Slop
+*   **Pitfall:** Relying on Tailwind `space-y-*` or `space-x-*` spacing breaks when layout flow shifts or items are wrapped.
+*   **Mitigation:** Enforce flexbox layouts utilizing gap configurations (e.g. `flex flex-col gap-4`) for modern, highly responsive stacks.
 
-### 4. Excessive Polling & File Handle Exhaustion
-- **Problem**: In Windows, opening SQLite databases or Chroma DB folder descriptors is sensitive to concurrent locks. If the frontend polls backend routes at an extremely high frequency (e.g. 100ms), it can trigger database access conflicts or rate limit locks.
-- **Mitigation**:
-  - Keep document processing status polling intervals capped at a reasonable limit (e.g. 3 seconds).
-  - Automatically terminate the polling interval once all documents are either in `completed` or `failed` states.
+### 4. Over-nesting of Cards
+*   **Pitfall:** Wrapping cards within cards creates a cluttered, SaaS-cliché look.
+*   **Mitigation:** Keep layout flat. Differentiate zones using borders, subtle background tints, or layout spacing rather than stacking panel card layers.
+
+### 5. Typewriter Scroll Locking
+*   **Pitfall:** Forcing continuous auto-scrolling during text streaming locks the user out of scrolling up to read previous messages.
+*   **Mitigation:** Implement viewport scroll detection. Only trigger `scrollIntoView` if the scroll position is already at or very near the bottom of the conversation feed.
+
+### 6. Image Animations and Slop Markers
+*   **Pitfall:** Animating image scales on card hover is a clear indicator of automated AI styling templates.
+*   **Mitigation:** Animate card shadows or background border highlights instead. Do not scale or rotate images on client-facing hovers.

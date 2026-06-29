@@ -1,73 +1,45 @@
-# Architecture Research
+# Architecture Approach
 
-**Domain:** Web Frontend Client for Document RAG REST API
-**Researched:** 2026-06-27
+**Domain:** Frontend Architecture
+**Researched:** 2026-06-29
 **Confidence:** HIGH
 
-## Architecture Overview
+## Component Mapping
 
-The client-side web interface will be structured as a standalone Next.js App Router application nested inside the `/frontend` directory of the project repository. It interfaces directly with the backend REST API running at `http://localhost:8000`.
+The frontend project is structured inside `frontend/src`. The refactored UI will map components as follows:
 
-## Component Structure
-
-```text
-frontend/
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx         # Global fonts, layouts, and Authentication Provider
-│   │   ├── page.tsx           # Dashboard view with summary cards and stub content
-│   │   ├── login/
-│   │   │   └── page.tsx       # Login screen
-│   │   ├── register/
-│   │   │   └── page.tsx       # Registration screen
-│   │   └── chat/
-│   │       └── page.tsx       # Main multi-turn Q&A chat panel with sidebars
-│   ├── components/
-│   │   ├── Sidebar.tsx        # Chat sessions lists and document selectors
-│   │   ├── ChatPanel.tsx      # Chat bubbles, SSE listener, and scroll locks
-│   │   ├── UploadModal.tsx    # Drag-and-drop document uploader
-│   │   └── DocumentList.tsx   # Dashboard listing with process status polling
-│   └── lib/
-│       ├── api-client.ts      # Custom fetch wrapper injects JWT and handles streaming API
-│       └── utils.ts           # Class merges and format helpers
-├── tailwind.config.js         # Theme variables (dark mode, glass overrides)
-└── package.json
+```
+frontend/src/
+├── app/                      # Page routing
+│   ├── layout.tsx            # Global providers, styling, and toasts wrapper (Sonner)
+│   ├── page.tsx              # Auth-guarded dashboard/chat view shell
+│   ├── login/page.tsx        # Login layout using shadcn Card and Forms
+│   └── register/page.tsx     # Registration layout
+├── components/
+│   ├── ui/                   # Shadcn raw primitives (Button, Card, Input, Sidebar, etc.)
+│   ├── chat/                 # Composed chat-feed, message bubbles, and hover references
+│   └── dashboard/            # Composed file list table, upload overlay, and polling status
+├── context/                  # Auth state and workspace configs
+├── lib/
+│   ├── utils.ts              # Contains the cn() class-merging helper
+│   └── api.ts                # Client API wrapper executing requests with Bearer tokens
+└── proxy.ts                  # Next.js route protection middleware
 ```
 
 ## Data Flow
 
-### 1. Request Interception & Authentication
-- Authenticated state is managed globally by an `AuthProvider` context.
-- The `api-client.ts` acts as a request helper:
-  - Fetches the JWT token from `localStorage` and appends it as `Authorization: Bearer <token>` to headers.
-  - Intercepts `401 Unauthorized` errors to wipe local tokens and redirect the browser to `/login`.
+### Authentication Flow:
+1. Client inputs credentials. Page invokes Next.js Server Actions or API client.
+2. Success writes a secure JWT `token` cookie.
+3. Next.js `proxy.ts` middleware intercepts incoming routes: redirects unauthenticated users off `/` to `/login`, and redirects authenticated users off `/login` to `/`.
 
-### 2. Document Processing & Status Polling
-```mermaid
-sequenceDiagram
-    participant Client
-    participant Backend
-    Client->>Backend: POST /upload (with file body)
-    Backend-->>Client: 2022 Accepted (job details, doc_id)
-    Note over Client: Start status polling interval
-    loop Every 3 Seconds
-        Client->>Backend: GET /documents (list with statuses)
-        Backend-->>Client: 200 OK (doc statuses: processing/completed/error)
-    end
-    Note over Client: Once completed, enable multi-select checkbox
-```
+### Document Ingestion Flow:
+1. Drop file in dashboard -> triggers API `POST /upload`.
+2. Receives `{ job_id }` and starts background polling `/upload/{job_id}/status`.
+3. Displays loading badges. Polling completes -> updates local localStorage dashboard cache to refresh the document grid.
 
-### 3. Server-Sent Events (SSE) Streaming
-- When querying on `/query/stream`, the client performs a standard `fetch` with the `session_id` and list of `document_ids`.
-- Rather than waiting for the entire JSON payload, the client reads the response body stream chunk-by-chunk using a reader:
-  ```typescript
-  const response = await fetch("/query/stream", ...);
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    const chunk = decoder.decode(value);
-    // Parse SSE text and append to assistant bubble
-  }
-  ```
+### Query Streaming Flow:
+1. Chat input form triggers `POST /query/stream` with the prompt and chosen document filters.
+2. Reads the response body chunk by chunk using a `ReadableStream` reader interface.
+3. Appends raw text tokens to the message feed in real time.
+4. Auto-scrolls the conversation pane on new arrivals unless user scrolled up manually.
