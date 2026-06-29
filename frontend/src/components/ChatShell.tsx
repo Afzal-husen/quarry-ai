@@ -76,7 +76,7 @@ function CitationBadge({ index, citation }: { index: number; citation: any }) {
       </button>
 
       {hovered && (
-        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-64 backdrop-blur-md bg-zinc-950/90 border border-zinc-800 rounded-xl p-3 shadow-2xl text-left pointer-events-none flex flex-col gap-1.5 animate-in fade-in zoom-in-95 duration-100">
+        <span className="absolute bottom-full left-0 mb-2 z-50 w-64 backdrop-blur-md bg-zinc-950/90 border border-zinc-800 rounded-xl p-3 shadow-2xl text-left pointer-events-none flex flex-col gap-1.5 animate-in fade-in zoom-in-95 duration-100">
           <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider flex items-center justify-between">
             <span className="truncate max-w-[150px]">{citation.source_filename || "source"}</span>
             <span>Page {citation.page_index !== undefined ? citation.page_index + 1 : "—"}</span>
@@ -224,6 +224,13 @@ export default function ChatShell({ username }: ChatShellProps) {
 
     loadMessages();
   }, [activeSessionId, documents]);
+
+  // Keep scrolled to bottom during generation and initial loading
+  useEffect(() => {
+    if (feedContainerRef.current) {
+      feedContainerRef.current.scrollTop = feedContainerRef.current.scrollHeight;
+    }
+  }, [messages, loading]);
 
   const handleNewChatClick = async () => {
     try {
