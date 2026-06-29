@@ -7,12 +7,10 @@ import {
   Plus,
   Trash2,
   Send,
-  ArrowLeft,
   FileText,
   FileSpreadsheet,
   ChevronDown,
   BookOpen,
-  Clock,
   AlertCircle,
   Sparkles,
   Check,
@@ -28,8 +26,6 @@ import { logoutAction } from "../app/actions/auth";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 interface SessionItem {
   id: string;
@@ -76,7 +72,12 @@ function CitationBadge({ index, onSelect }: { index: number; onSelect: () => voi
 
 export default function ChatShell({ username }: ChatShellProps) {
   const [sessions, setSessions] = useState<SessionItem[]>([]);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("document_rag_active_session_id");
+    }
+    return null;
+  });
   const [messages, setMessages] = useState<Message[]>([]);
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
@@ -120,7 +121,7 @@ export default function ChatShell({ username }: ChatShellProps) {
       if (res && res.items) {
         setSessions(res.items);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to load chat sessions:", err);
     }
   }, []);
@@ -131,22 +132,27 @@ export default function ChatShell({ username }: ChatShellProps) {
       if (res && res.items) {
         setDocuments(res.items);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to load documents registry:", err);
     }
   }, []);
 
   useEffect(() => {
-    fetchSessions();
-    fetchDocuments();
-  }, [fetchSessions, fetchDocuments]);
-
-  // Restore active session ID on mount
-  useEffect(() => {
-    const savedSessionId = localStorage.getItem("document_rag_active_session_id");
-    if (savedSessionId) {
-      setActiveSessionId(savedSessionId);
-    }
+    let active = true;
+    const load = async () => {
+      const sRes = await apiGet("/sessions?limit=50");
+      if (active && sRes && sRes.items) {
+        setSessions(sRes.items);
+      }
+      const dRes = await apiGet("/documents");
+      if (active && dRes && dRes.items) {
+        setDocuments(dRes.items);
+      }
+    };
+    load();
+    return () => {
+      active = false;
+    };
   }, []);
 
   // Save active session ID on changes
@@ -169,7 +175,7 @@ export default function ChatShell({ username }: ChatShellProps) {
   // Load message logs and selected documents of the active session
   useEffect(() => {
     if (!activeSessionId) {
-      setMessages([]);
+      setMessages((prev) => (prev.length > 0 ? [] : prev));
       return;
     }
 
@@ -227,7 +233,7 @@ export default function ChatShell({ username }: ChatShellProps) {
         setTempSelectedDocIds([res.items[0].document_id]);
         setIsContextModalOpen(true);
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to access document registry.");
     }
   };
@@ -251,7 +257,7 @@ export default function ChatShell({ username }: ChatShellProps) {
         setIsContextModalOpen(false);
         await fetchSessions();
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to create chat session.");
     }
   };
@@ -268,7 +274,7 @@ export default function ChatShell({ username }: ChatShellProps) {
       }
       await fetchSessions();
       toast.success("Chat deleted successfully.");
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete chat session.");
     } finally {
       setSessionToDelete(null);
@@ -333,7 +339,7 @@ export default function ChatShell({ username }: ChatShellProps) {
       ]);
 
       let assistantContent = "";
-      let assistantCitations: any[] = [];
+      let assistantCitations: NonNullable<NonNullable<Message["metadata"]>["citations"]> = [];
 
       while (true) {
         const { value, done } = await reader.read();
@@ -380,14 +386,19 @@ export default function ChatShell({ username }: ChatShellProps) {
       if (isFirstMessage) {
         await fetchSessions();
       }
-    } catch (err: any) {
-      toast.error(err.message || "Error loading model stream.");
+    } catch (err: unknown) {
+      const error = err as Error;
+      toast.error(error.message || "Error loading model stream.");
     } finally {
       setLoading(false);
     }
   };
 
-  const renderMessageContent = (content: string, citations: any[] | undefined, isStreaming: boolean) => {
+  const renderMessageContent = (
+    content: string,
+    citations: NonNullable<NonNullable<Message["metadata"]>["citations"]> | undefined,
+    isStreaming: boolean
+  ) => {
     if (!citations || citations.length === 0) {
       return (
         <span className="whitespace-pre-wrap leading-relaxed text-sm">
@@ -775,7 +786,7 @@ export default function ChatShell({ username }: ChatShellProps) {
               <div className="space-y-1.5">
                 <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Matched Text Segment</span>
                 <div className="p-3 rounded-lg bg-zinc-900/30 border border-zinc-900 text-xs text-zinc-300 font-sans leading-relaxed whitespace-pre-wrap select-text max-h-[300px] overflow-y-auto">
-                  "{selectedCitation.text}"
+                  &quot;{selectedCitation.text}&quot;
                 </div>
               </div>
             </div>
@@ -852,7 +863,7 @@ export default function ChatShell({ username }: ChatShellProps) {
             <DialogTitle className="text-lg font-bold text-zinc-50">Delete Chat</DialogTitle>
             <DialogDescription className="text-zinc-400 text-xs mt-2">
               Are you sure you want to delete this chat session:{" "}
-              <strong className="text-zinc-200">"{sessionToDelete?.title}"</strong>? All message history will be lost.
+              <strong className="text-zinc-200">&quot;{sessionToDelete?.title}&quot;</strong>? All message history will be lost.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-2 justify-end mt-4">

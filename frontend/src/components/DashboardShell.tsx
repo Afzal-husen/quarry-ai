@@ -51,7 +51,19 @@ export default function DashboardShell({
   username,
 }: DashboardShellProps) {
   const [documents, setDocuments] = useState<DocumentItem[]>(initialDocuments);
-  const [activeJobs, setActiveJobs] = useState<ActiveJob[]>([]);
+  const [activeJobs, setActiveJobs] = useState<ActiveJob[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedJobs = localStorage.getItem("document_rag_active_jobs");
+      if (savedJobs) {
+        try {
+          return JSON.parse(savedJobs);
+        } catch {
+          localStorage.removeItem("document_rag_active_jobs");
+        }
+      }
+    }
+    return [];
+  });
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -62,18 +74,6 @@ export default function DashboardShell({
   const dragCounter = useRef(0);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Load active jobs from localStorage on mount
-  useEffect(() => {
-    const savedJobs = localStorage.getItem("document_rag_active_jobs");
-    if (savedJobs) {
-      try {
-        setActiveJobs(JSON.parse(savedJobs));
-      } catch {
-        localStorage.removeItem("document_rag_active_jobs");
-      }
-    }
-  }, []);
 
   // Fetch updated document list
   const refreshDocuments = useCallback(async () => {
@@ -120,8 +120,9 @@ export default function DashboardShell({
               toast.error(`Failed to process "${job.filename}": ${res.error || "Unknown error"}`);
             }
           }
-        } catch (err: any) {
-          if (err.status === 404) {
+        } catch (err: unknown) {
+          const apiError = err as { status?: number };
+          if (apiError.status === 404) {
             updatedJobs[i] = {
               ...job,
               status: "failed",
@@ -164,7 +165,7 @@ export default function DashboardShell({
   }, [activeJobs, refreshDocuments]);
 
   // Add job to local storage and active tracking list
-  const handleUploadStarted = (jobId: string, filename: string) => {
+  const handleUploadStarted = useCallback((jobId: string, filename: string) => {
     const newJob: ActiveJob = { job_id: jobId, filename, status: "pending" };
     const updatedJobs = [...activeJobs, newJob];
     setActiveJobs(updatedJobs);
@@ -176,7 +177,7 @@ export default function DashboardShell({
     } catch (err) {
       console.warn("LocalStorage writing is blocked by browser policies.", err);
     }
-  };
+  }, [activeJobs]);
 
   // Drag-and-drop window listeners
   useEffect(() => {
@@ -237,8 +238,9 @@ export default function DashboardShell({
           } else {
             toast.error("Failed to initiate document ingestion.", { id: toastId });
           }
-        } catch (err: any) {
-          toast.error(err.detail || "An unexpected error occurred during file upload.", { id: toastId });
+        } catch (err: unknown) {
+          const apiError = err as { detail?: string };
+          toast.error(apiError.detail || "An unexpected error occurred during file upload.", { id: toastId });
         }
       }
     };
@@ -254,7 +256,7 @@ export default function DashboardShell({
       window.removeEventListener("dragover", handleDragOver);
       window.removeEventListener("drop", handleDrop);
     };
-  }, [activeJobs]);
+  }, [activeJobs, handleUploadStarted]);
 
   const confirmDelete = async () => {
     if (!docToDelete) return;
@@ -262,8 +264,9 @@ export default function DashboardShell({
       await apiDelete(`/documents/${docToDelete.id}`);
       toast.success(`Deleted "${docToDelete.filename}" successfully.`);
       await refreshDocuments();
-    } catch (err: any) {
-      toast.error(err.detail || `Failed to delete document "${docToDelete.filename}".`);
+    } catch (err: unknown) {
+      const apiError = err as { detail?: string };
+      toast.error(apiError.detail || `Failed to delete document "${docToDelete.filename}".`);
     } finally {
       setDocToDelete(null);
     }
@@ -308,8 +311,9 @@ export default function DashboardShell({
       } else {
         toast.error("Failed to initiate document ingestion.", { id: toastId });
       }
-    } catch (err: any) {
-      toast.error(err.detail || "An unexpected error occurred during file upload.", { id: toastId });
+    } catch (err: unknown) {
+      const apiError = err as { detail?: string };
+      toast.error(apiError.detail || "An unexpected error occurred during file upload.", { id: toastId });
     } finally {
       setIsUploading(false);
     }
@@ -644,8 +648,7 @@ export default function DashboardShell({
             <DialogTitle className="text-lg font-bold text-zinc-50">Delete Document</DialogTitle>
             <DialogDescription className="text-zinc-400 text-xs mt-2">
               Are you sure you want to delete this document:{" "}
-              <strong className="text-zinc-200">"{docToDelete?.filename}"</strong>? This action cannot be undone and
-              will permanently delete the parsed chunks.
+              <strong className="text-zinc-200">&quot;{docToDelete?.filename}&quot;</strong>? This action cannot be undone and will permanently delete the parsed chunks.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-2 justify-end mt-4">

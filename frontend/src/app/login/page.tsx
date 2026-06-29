@@ -193,7 +193,7 @@ export default function LoginPage() {
 
             <CardFooter className="border-t border-zinc-900/50 pt-4 flex justify-center">
               <p className="text-xs text-zinc-500">
-                Don't have an account?{" "}
+                {"Don't have an account? "}
                 <Link href="/register" className="font-semibold text-indigo-500 hover:text-indigo-400 transition-colors">
                   Register here
                 </Link>
