@@ -330,26 +330,26 @@ export default function DashboardShell({
   const pendingCount = activeJobs.length;
 
   return (
-    <div className="flex min-h-screen bg-zinc-950 text-zinc-100 font-sans w-full">
+    <div className="flex min-h-screen bg-background text-foreground font-sans w-full">
       {/* Page-wide Drag target overlay */}
       {isDragging && (
-        <div className="fixed inset-0 z-50 bg-zinc-950/80 backdrop-blur-md flex flex-col items-center justify-center border-4 border-dashed border-indigo-500/50 m-6 rounded-2xl pointer-events-none select-none animate-in fade-in-50 duration-200">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex flex-col items-center justify-center border-4 border-dashed border-indigo-500/50 m-6 rounded-2xl pointer-events-none select-none animate-in fade-in-50 duration-200">
           <Upload className="w-16 h-16 text-indigo-400 animate-bounce mb-4" />
-          <h3 className="text-2xl font-bold text-zinc-50">Drop files here to upload</h3>
-          <p className="text-sm text-zinc-400 mt-2">PDF and DOCX only (Max 50MB)</p>
+          <h3 className="text-2xl font-bold text-foreground">Drop files here to upload</h3>
+          <p className="text-sm text-muted-foreground mt-2">PDF and DOCX only (Max 50MB)</p>
         </div>
       )}
 
       {/* Collapsible Left Sidebar */}
       <div
-        className={`border-r border-zinc-900 bg-zinc-950 flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 ${
+        className={`border-r border-border bg-card flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 ${
           isSidebarCollapsed ? "w-16" : "w-64"
         }`}
       >
         {/* Sidebar Header */}
-        <div className="p-4 flex items-center justify-between border-b border-zinc-900 h-16">
+        <div className="p-4 flex items-center justify-between border-b border-border h-16">
           {!isSidebarCollapsed && (
-            <div className="flex items-center gap-2 text-md font-semibold tracking-tight text-zinc-50 select-none">
+            <div className="flex items-center gap-2 text-md font-semibold tracking-tight text-foreground select-none">
               <FileSpreadsheet className="w-5 h-5 text-indigo-500" />
               <span>Antigravity RAG</span>
             </div>
@@ -361,7 +361,7 @@ export default function DashboardShell({
             variant="ghost"
             size="icon"
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="text-zinc-400 hover:text-zinc-100 h-8 w-8 ml-auto"
+            className="text-muted-foreground hover:text-foreground h-8 w-8 ml-auto"
           >
             {isSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
@@ -376,7 +376,7 @@ export default function DashboardShell({
             </div>
           </Link>
           <Link href="/chat">
-            <div className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/50 transition-colors cursor-pointer">
+            <div className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer">
               <Activity className="w-5 h-5 shrink-0" />
               {!isSidebarCollapsed && <span>Chat Feed</span>}
             </div>
@@ -384,7 +384,7 @@ export default function DashboardShell({
         </div>
 
         {/* Sidebar Profile Card */}
-        <div className="p-4 border-t border-zinc-900 bg-zinc-950/40">
+        <div className="p-4 border-t border-border bg-card/40">
           {!isSidebarCollapsed ? (
             <div className="space-y-3">
               <div className="flex items-center gap-2.5">
@@ -392,8 +392,8 @@ export default function DashboardShell({
                   {username.slice(0, 2)}
                 </div>
                 <div className="truncate">
-                  <p className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">User</p>
-                  <p className="text-sm font-medium text-zinc-200 truncate">{username}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">User</p>
+                  <p className="text-sm font-medium text-foreground truncate">{username}</p>
                 </div>
               </div>
               <form action={logoutAction} className="w-full">
@@ -409,7 +409,7 @@ export default function DashboardShell({
                 {username.slice(0, 2)}
               </div>
               <form action={logoutAction}>
-                <Button type="submit" variant="ghost" size="icon" className="h-8 w-8 text-zinc-400 hover:text-zinc-100 hover:bg-destructive/10 hover:text-destructive">
+                <Button type="submit" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-destructive/10 hover:text-destructive">
                   <LogOut className="w-4 h-4" />
                 </Button>
               </form>
@@ -419,9 +419,9 @@ export default function DashboardShell({
       </div>
 
       {/* Main Container */}
-      <div className="flex-1 flex flex-col min-w-0 bg-zinc-950 overflow-y-auto">
-        <header className="border-b border-zinc-900 h-16 flex items-center justify-between px-6 md:px-8 bg-zinc-950/40 backdrop-blur sticky top-0 z-30">
-          <h2 className="text-lg font-semibold tracking-tight text-zinc-50">
+      <div className="flex-1 flex flex-col min-w-0 bg-background overflow-y-auto">
+        <header className="border-b border-border h-16 flex items-center justify-between px-6 md:px-8 bg-background/40 backdrop-blur sticky top-0 z-30">
+          <h2 className="text-lg font-semibold tracking-tight text-foreground">
             Dashboard
           </h2>
           <div className="flex items-center gap-3">
@@ -439,49 +439,49 @@ export default function DashboardShell({
         <main className="p-6 md:p-8 space-y-6 max-w-6xl w-full mx-auto">
           {/* Stats Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <Card className="border-zinc-900 bg-zinc-950/50 shadow-sm">
+            <Card className="border-border bg-card shadow-sm">
               <CardHeader className="pb-2">
-                <CardDescription className="text-zinc-500 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+                <CardDescription className="text-muted-foreground text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
                   Total Documents
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-extrabold text-zinc-50">{completedDocsCount}</div>
+                <div className="text-3xl font-extrabold text-foreground">{completedDocsCount}</div>
               </CardContent>
             </Card>
 
-            <Card className="border-zinc-900 bg-zinc-950/50 shadow-sm">
+            <Card className="border-border bg-card shadow-sm">
               <CardHeader className="pb-2">
-                <CardDescription className="text-zinc-500 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+                <CardDescription className="text-muted-foreground text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                   Indexed Chunks
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-extrabold text-zinc-50">{totalChunks}</div>
+                <div className="text-3xl font-extrabold text-foreground">{totalChunks}</div>
               </CardContent>
             </Card>
 
-            <Card className="border-zinc-900 bg-zinc-950/50 shadow-sm">
+            <Card className="border-border bg-card shadow-sm">
               <CardHeader className="pb-2">
-                <CardDescription className="text-zinc-500 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+                <CardDescription className="text-muted-foreground text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                   Pending Ingestions
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-extrabold text-zinc-50">{pendingCount}</div>
+                <div className="text-3xl font-extrabold text-foreground">{pendingCount}</div>
               </CardContent>
             </Card>
           </div>
 
           {/* Catalog Listing */}
-          <Card className="border-zinc-900 bg-zinc-950/50 overflow-hidden shadow-md">
-            <CardHeader className="border-b border-zinc-900/50 py-4 flex flex-row items-center justify-between">
+          <Card className="border-border bg-card overflow-hidden shadow-md">
+            <CardHeader className="border-b border-border/50 py-4 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold text-zinc-50 font-sans">Your Documents</CardTitle>
-                <CardDescription className="text-zinc-400 text-xs mt-1">
+                <CardTitle className="text-lg font-bold text-foreground font-sans">Your Documents</CardTitle>
+                <CardDescription className="text-muted-foreground text-xs mt-1">
                   Manage and monitor indexed ingestion jobs
                 </CardDescription>
               </div>
@@ -489,9 +489,9 @@ export default function DashboardShell({
             <CardContent className="p-0">
               {documents.length === 0 && activeJobs.length === 0 ? (
                 <div className="py-20 flex flex-col items-center justify-center text-center px-4 space-y-4">
-                  <FileText className="w-16 h-16 text-zinc-800" />
-                  <h3 className="text-lg font-medium text-zinc-400">No documents yet</h3>
-                  <p className="text-zinc-500 text-sm max-w-sm">
+                  <FileText className="w-16 h-16 text-muted-foreground" />
+                  <h3 className="text-lg font-medium text-muted-foreground">No documents yet</h3>
+                  <p className="text-muted-foreground text-sm max-w-sm">
                     Drag and drop a PDF or DOCX file anywhere onto the page to start indexing.
                   </p>
                   <Button onClick={() => setIsUploadOpen(true)} className="bg-indigo-600 hover:bg-indigo-500">
@@ -501,37 +501,37 @@ export default function DashboardShell({
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
-                    <TableHeader className="bg-zinc-900/10 border-b border-zinc-900">
-                      <TableRow className="border-zinc-900 hover:bg-transparent">
-                        <TableHead className="text-zinc-400 px-6 h-11">Filename</TableHead>
-                        <TableHead className="text-zinc-400 px-6 h-11">Upload Date</TableHead>
-                        <TableHead className="text-zinc-400 px-6 h-11">Chunks</TableHead>
-                        <TableHead className="text-zinc-400 px-6 h-11">Status</TableHead>
-                        <TableHead className="text-zinc-400 px-6 h-11 text-right">Action</TableHead>
+                    <TableHeader className="bg-muted/40 border-b border-border">
+                      <TableRow className="border-border hover:bg-transparent">
+                        <TableHead className="text-muted-foreground px-6 h-11">Filename</TableHead>
+                        <TableHead className="text-muted-foreground px-6 h-11">Upload Date</TableHead>
+                        <TableHead className="text-muted-foreground px-6 h-11">Chunks</TableHead>
+                        <TableHead className="text-muted-foreground px-6 h-11">Status</TableHead>
+                        <TableHead className="text-muted-foreground px-6 h-11 text-right">Action</TableHead>
                       </TableRow>
                     </TableHeader>
-                    <TableBody className="divide-y divide-zinc-900/40">
+                    <TableBody className="divide-y divide-border/40">
                       {/* Active Polling Jobs */}
                       {activeJobs.map((job) => (
-                        <TableRow key={job.job_id} className="border-zinc-900 hover:bg-zinc-900/10 text-zinc-300">
+                        <TableRow key={job.job_id} className="border-border hover:bg-accent text-foreground">
                           <TableCell className="px-6 py-3.5 font-medium max-w-xs truncate">{job.filename}</TableCell>
-                          <TableCell className="px-6 py-3.5 text-zinc-500">—</TableCell>
-                          <TableCell className="px-6 py-3.5 text-zinc-500">—</TableCell>
+                          <TableCell className="px-6 py-3.5 text-muted-foreground">—</TableCell>
+                          <TableCell className="px-6 py-3.5 text-muted-foreground">—</TableCell>
                           <TableCell className="px-6 py-3.5">
                             <Badge className="bg-amber-500/10 text-amber-500 hover:bg-amber-500/10 border border-amber-500/20 text-xs px-2.5 py-0.5 rounded-full font-medium animate-pulse">
                               <Clock className="w-3 h-3 mr-1" />
                               Processing
                             </Badge>
                           </TableCell>
-                          <TableCell className="px-6 py-3.5 text-right text-zinc-500">—</TableCell>
+                          <TableCell className="px-6 py-3.5 text-right text-muted-foreground">—</TableCell>
                         </TableRow>
                       ))}
 
                       {/* Documents */}
                       {documents.map((doc) => (
-                        <TableRow key={doc.document_id} className="border-zinc-900 hover:bg-zinc-900/10 text-zinc-200 transition-colors">
+                        <TableRow key={doc.document_id} className="border-border hover:bg-accent text-foreground transition-colors">
                           <TableCell className="px-6 py-3.5 font-medium max-w-xs truncate">{doc.filename}</TableCell>
-                          <TableCell className="px-6 py-3.5 text-zinc-400">
+                          <TableCell className="px-6 py-3.5 text-muted-foreground">
                             {doc.upload_date !== "unknown"
                               ? new Date(doc.upload_date).toLocaleDateString(undefined, {
                                   year: "numeric",
@@ -542,15 +542,15 @@ export default function DashboardShell({
                                 })
                               : "unknown"}
                           </TableCell>
-                          <TableCell className="px-6 py-3.5 font-mono text-zinc-300">{doc.chunk_count}</TableCell>
+                          <TableCell className="px-6 py-3.5 font-mono text-foreground">{doc.chunk_count}</TableCell>
                           <TableCell className="px-6 py-3.5">
                             {doc.status === "complete" ? (
-                              <Badge className="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/10 border border-emerald-500/20 text-xs px-2.5 py-0.5 rounded-full font-medium">
+                              <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 border border-emerald-500/20 text-xs px-2.5 py-0.5 rounded-full font-medium">
                                 <CheckCircle2 className="w-3.5 h-3.5 mr-1 shrink-0" />
                                 Indexed
                               </Badge>
                             ) : (
-                              <Badge className="bg-red-500/10 text-red-400 hover:bg-red-500/10 border border-red-500/20 text-xs px-2.5 py-0.5 rounded-full font-medium">
+                              <Badge className="bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/10 border border-red-500/20 text-xs px-2.5 py-0.5 rounded-full font-medium">
                                 <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0" />
                                 Failed
                               </Badge>
@@ -561,7 +561,7 @@ export default function DashboardShell({
                               variant="ghost"
                               size="icon"
                               onClick={() => setDocToDelete({ id: doc.document_id, filename: doc.filename })}
-                              className="text-zinc-500 hover:text-red-400 hover:bg-red-500/10 h-8 w-8"
+                              className="text-muted-foreground hover:text-red-600 hover:bg-red-500/10 h-8 w-8"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -582,13 +582,13 @@ export default function DashboardShell({
         open={isUploadOpen}
         onOpenChange={(open) => !open && !isUploading && (setIsUploadOpen(false), setUploadFile(null))}
       >
-        <DialogContent className="border-zinc-900 bg-zinc-950 max-w-md text-zinc-100">
+        <DialogContent className="border-border bg-card max-w-md text-foreground">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-zinc-50 flex items-center gap-2">
+            <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
               <Upload className="w-5 h-5 text-indigo-500" />
               Upload Document
             </DialogTitle>
-            <DialogDescription className="text-zinc-400 text-xs mt-1">
+            <DialogDescription className="text-muted-foreground text-xs mt-1">
               Select a PDF or DOCX file to start indexing chunks and querying.
             </DialogDescription>
           </DialogHeader>
@@ -604,19 +604,19 @@ export default function DashboardShell({
             />
             <div
               onClick={triggerFileInput}
-              className="border-2 border-dashed border-zinc-800 bg-zinc-900/20 hover:border-zinc-700 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors"
+              className="border-2 border-dashed border-border bg-muted/20 hover:border-indigo-500/50 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors"
             >
               {uploadFile ? (
                 <div className="space-y-2">
                   <FileText className="w-10 h-10 text-indigo-400 mx-auto animate-pulse" />
-                  <p className="text-sm font-medium text-zinc-200 truncate max-w-xs">{uploadFile.name}</p>
-                  <p className="text-xs text-zinc-500">{(uploadFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+                  <p className="text-sm font-medium text-foreground truncate max-w-xs">{uploadFile.name}</p>
+                  <p className="text-xs text-muted-foreground">{(uploadFile.size / (1024 * 1024)).toFixed(2)} MB</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Upload className="w-10 h-10 text-zinc-500 mx-auto" />
-                  <p className="text-sm text-zinc-300">Click to browse your files</p>
-                  <p className="text-xs text-zinc-500">PDF or DOCX only (Max 50MB)</p>
+                  <Upload className="w-10 h-10 text-muted-foreground mx-auto" />
+                  <p className="text-sm text-foreground">Click to browse your files</p>
+                  <p className="text-xs text-muted-foreground">PDF or DOCX only (Max 50MB)</p>
                 </div>
               )}
             </div>
@@ -630,7 +630,7 @@ export default function DashboardShell({
                 setUploadFile(null);
               }}
               disabled={isUploading}
-              className="text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent"
             >
               Cancel
             </Button>
@@ -647,19 +647,19 @@ export default function DashboardShell({
 
       {/* Delete Confirmation Alert Dialog */}
       <Dialog open={docToDelete !== null} onOpenChange={(open) => !open && setDocToDelete(null)}>
-        <DialogContent className="border-zinc-900 bg-zinc-950 max-w-sm text-zinc-100">
+        <DialogContent className="border-border bg-card max-w-sm text-foreground">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-zinc-50">Delete Document</DialogTitle>
-            <DialogDescription className="text-zinc-400 text-xs mt-2">
+            <DialogTitle className="text-lg font-bold text-foreground">Delete Document</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-xs mt-2">
               Are you sure you want to delete this document:{" "}
-              <strong className="text-zinc-200">&quot;{docToDelete?.filename}&quot;</strong>? This action cannot be undone and will permanently delete the parsed chunks.
+              <strong className="text-foreground">&quot;{docToDelete?.filename}&quot;</strong>? This action cannot be undone and will permanently delete the parsed chunks.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-2 justify-end mt-4">
             <Button
               variant="ghost"
               onClick={() => setDocToDelete(null)}
-              className="text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent"
             >
               Cancel
             </Button>
