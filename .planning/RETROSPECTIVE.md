@@ -1,43 +1,52 @@
-# Retrospective: Milestone v1.4
+# Living Retrospective: Document RAG REST API
 
-## Overview
-Milestone v1.4 focused on delivering **Production Readiness & Full Document Lifecycle** capabilities. Over the course of 8 phases (Phases 12–19), we designed and implemented a production-grade RAG REST API with robust document management, async ingestion, thread-safe connection caching, multi-document querying, Server-Sent Events (SSE) streaming, rate-limiting, observability, and advanced chunking strategies.
+## Milestone: v4.0 — Shadcn UI Remake
 
----
+**Shipped:** 2026-06-29
+**Phases:** 5 | **Plans:** 5
 
-## What Went Well
+### What Was Built
+- Initialized the shadcn/ui library, configured the custom OKLCH Indigo design tokens inside Tailwind CSS v4, and installed all core component primitives.
+- Refactored the login and register pages to implement a Split Hero Layout, integrated with client-side Zod validation schemas, react-hook-form resolvers, inline alerts, and Sonner toast warnings.
+- Refactored DashboardShell.tsx to implement the collapsible sidebar shell, visual page-wide drag-and-drop file upload target overlay, pulsing status indicators, and custom delete Dialog overlays.
+- Refactored ChatShell.tsx to implement the double sidebar layout, right collapsible references sidebar, blinking typewriter caret cursors, active feed autoscrolling, and Dialog delete confirmations.
+- Visual elements polished across all screens, integrating custom scrollbars, timing transitions ease-in-out curves, focus highlights outlines, and responsive grid safeguards.
 
-### 1. Robust Resource Management & Windows OS Safety
-- **WinError 32 Prevention**: One of the biggest challenges on Windows host environments is file handle locking. By implementing a thread-safe, bounded Least Recently Used (LRU) cache (`ChromaConnectionCache`), we avoided repeated SQLite database open/close overhead.
-- **Eviction on Deletion**: Coupled with the cache, we ensured that deleting a document triggers an immediate cache eviction, freeing up file handles and cleanly purging index folders from the disk.
+### What Worked
+- **Zod Schema Forms validation:** Next.js + React Hook Form + Zod made validation handling robust and visual.
+- **Dynamic useState localStorage loaders:** Initializing persistent states directly in `useState` initializers bypassed cascading `useEffect` updates.
+- **CSS-level WebKit styling overrides:** Custom scrollbar styles configured at the base `globals.css` layer avoided redundant inline layouts code.
 
-### 2. Multi-Document Blending & Citations
-- **Exact Text Deduplication**: The multi-document query pipeline handles blending results from multiple documents, performing exact text deduplication to optimize token context size.
-- **Granular Citations**: Citations enrich the answer with precise sources, mapping back to the target document's ID, filename, and page number.
+### What Was Inefficient
+- **Hover Citation Tooltips:** Initial citation badges hover cards truncated text segments on small viewports.
 
-### 3. Asynchronous Task Decoupling
-- By decoupling document parsing, chunking, and embedding from the HTTP cycle via background threads, we reduced `/upload` latency to sub-500ms and introduced a clean polling status endpoint.
+### Patterns Established
+- **Collapsible right detail sidebars:** Slide details panels contextually when clicking badge indicator nodes.
+- **Synchronous state loads:** Run localStorage checks inside states initialization callbacks on mount.
 
-### 4. Advanced Semantic Retrieval
-- **Sentence-Boundary Sliding Window Chunks**: The semantic text splitter successfully groups sentences based on cosine distance thresholds (Percentile, Standard Deviation, Absolute).
-- **Post-Rerank Parent Swap**: Retrieving small, high-density child chunks first, then swapping them with their larger parent document texts *after* FlashRank re-ranking, keeps retrieval fast and contextually complete.
-
----
-
-## Challenges & Solutions
-
-### Challenge: SQLite & Chroma File Descriptor Locking on Windows
-* **Problem**: Concurrent requests or frequent initialization of Chroma client instances triggered `WinError 32: The process cannot access the file because it is being used by another process`.
-* **Solution**: Developed `ChromaConnectionCache` in `app/core/vectorstore.py` with an internal thread lock. All routes retrieve Chroma clients through this cache.
-
-### Challenge: LLM Streaming with citations
-* **Problem**: Citations must be resolved and formatted before or alongside streaming SSE events.
-* **Solution**: Fully resolved the hybrid-retrieval and FlashRank reranking pipeline first, emitted source citation metadata as a custom SSE event, and then streamed the ChatGroq model tokens.
+### Cost Observations
+- Model mix: 100% Gemini Flash
+- Sessions: 4 sessions
 
 ---
 
-## Patterns & Conventions Established
+## Milestone: v1.4 — Production Readiness & Full Document Lifecycle
 
-1. **Standardized JSON API Errors**: Unified route error handlers to return detail-code-field structures.
-2. **12-Factor Structured Logging**: Logs are printed to stdout as JSON lines with millisecond latency breakdowns.
-3. **Robust Unit & Integration Coverage**: Developed extensive tests targeting edge-cases like sentence tokenization, parent document swapping, concurrency, and validation.
+**Shipped:** 2025-06-25
+**Phases:** 8 | **Plans:** 8
+
+### What Was Built
+- One-off upload background threads and Chroma DB persistence engines.
+- Bounded thread-safe Least Recently Used (LRU) cached client managers.
+- Semantic sliding window sentence tokenizers and parent chunk swapping.
+- Reciprocal Rank Fusion (RRF) dense-lexical queries blending pipelines.
+
+### What Worked
+- **WinError 32 Prevention**: Bounded connection cache solved database descriptor handle locking issues.
+- **Asynchronous task execution:** Background threading reduced /upload latencies to sub-500ms bounds.
+
+### What Was Inefficient
+- chroma client open/close overhead resolved in latency reviews.
+
+---
+*Retrospective updated: 2026-06-29*
