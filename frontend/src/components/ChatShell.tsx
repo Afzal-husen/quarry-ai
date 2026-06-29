@@ -784,7 +784,7 @@ export default function ChatShell({ username }: ChatShellProps) {
                         className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                       >
                         <div
-                          className={`p-4 rounded-2xl max-w-[85%] shadow-sm border ${
+                          className={`p-4 rounded-2xl shadow-sm border ${
                             msg.role === "user"
                               ? "bg-muted border border-border rounded-tr-none text-foreground"
                               : "bg-transparent border-transparent rounded-tl-none text-foreground"
@@ -964,22 +964,22 @@ export default function ChatShell({ username }: ChatShellProps) {
                 const isChecked = tempSelectedDocIds.includes(doc.document_id);
                 return (
                   <button
-                     key={doc.document_id}
-                     onClick={() => {
-                       if (isChecked) {
-                         setTempSelectedDocIds(
-                           tempSelectedDocIds.filter(
-                             (id) => id !== doc.document_id,
-                           ),
-                         );
-                       } else {
-                         setTempSelectedDocIds([
-                           ...tempSelectedDocIds,
-                           doc.document_id,
-                         ]);
-                       }
-                     }}
-                     className="w-full flex items-center justify-between p-2.5 rounded-lg text-xs hover:bg-accent cursor-pointer select-none text-muted-foreground hover:text-foreground text-left transition-colors"
+                    key={doc.document_id}
+                    onClick={() => {
+                      if (isChecked) {
+                        setTempSelectedDocIds(
+                          tempSelectedDocIds.filter(
+                            (id) => id !== doc.document_id,
+                          ),
+                        );
+                      } else {
+                        setTempSelectedDocIds([
+                          ...tempSelectedDocIds,
+                          doc.document_id,
+                        ]);
+                      }
+                    }}
+                    className="w-full flex items-center justify-between p-2.5 rounded-lg text-xs hover:bg-accent cursor-pointer select-none text-muted-foreground hover:text-foreground text-left transition-colors"
                   >
                     <span className="truncate max-w-[280px] font-medium">
                       {doc.filename}
