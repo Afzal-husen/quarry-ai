@@ -10,19 +10,22 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ---
 
-## Current Milestone: v4.1 Dark Mode Toggle
+## Current Milestone: v5.0 Document Preview & Unified Sidebar
 
-**Goal:** Enable user-controlled theme switching between light, dark, and system color schemes using `next-themes` and a polished toggle button.
+**Goal:** Redesign the document dashboard with interactive preview cards, unify the application sidebars, support inline document selection in chat via a context modal, and improve chat response rendering.
 
 **Target features:**
-- Integrate `next-themes` provider in root layout.
-- Build a responsive theme toggle selector dropdown/button component.
-- Verify and polish light/dark theme variables inside globals.css for accessible WCAG contrast values across all remade screens.
-- Persist theme preferences across page navigations and reloads.
+- Dashboard showing uploaded documents in a card layout instead of chunk lists, with click-to-preview capability.
+- Unified sidebar merging dashboard links, user profile, and conversational chat history.
+- Input context menu (Plus icon) allowing chat scoping with document checklist selection and file previews.
+- Rich-text and markdown response renderer configuration for chat answers.
 
 ---
 
 ## Shipped Milestones
+
+### v4.1 Dark Mode Toggle (Shipped 2026-06-29)
+**Goal:** Enable user-controlled theme switching between light, dark, and system color schemes using `next-themes` and a polished toggle button.
 
 ### v4.0 Shadcn UI Remake (Shipped 2026-06-29)
 **Goal:** Remake the Next.js frontend user interface using `shadcn/ui` components and `impeccable` design principles.
@@ -122,5 +125,19 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 This document evolves at phase transitions and milestone boundaries.
 
+**After each phase transition** (via `/gsd-transition`):
+1. Requirements invalidated? → Move to Out of Scope with reason
+2. Requirements validated? → Move to Validated with phase reference
+3. New requirements emerged? → Add to Active
+4. Decisions to log? → Add to Key Decisions
+5. "What This Is" still accurate? → Update if drifted
+
+**After each milestone** (via `/gsd-complete-milestone`):
+1. Full review of all sections
+2. Core Value check — still the right priority?
+3. Audit Out of Scope — reasons still valid?
+4. Update Context with current state
+
 ---
-*Last updated: 2026-06-29 — Milestone v4.1 started*
+*Last updated: 2026-06-30 — Milestone v5.0 started*
+
