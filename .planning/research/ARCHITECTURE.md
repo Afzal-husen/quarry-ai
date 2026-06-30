@@ -1,45 +1,64 @@
-# Architecture Approach
+# Architecture Research
 
-**Domain:** Frontend Architecture
-**Researched:** 2026-06-29
+**Domain:** Document Preview & Unified Sidebar Layout
+**Researched:** 2026-06-30
 **Confidence:** HIGH
 
-## Component Mapping
+## Standard Architecture
 
-The frontend project is structured inside `frontend/src`. The refactored UI will map components as follows:
+### System Overview
 
 ```
-frontend/src/
-├── app/                      # Page routing
-│   ├── layout.tsx            # Global providers, styling, and toasts wrapper (Sonner)
-│   ├── page.tsx              # Auth-guarded dashboard/chat view shell
-│   ├── login/page.tsx        # Login layout using shadcn Card and Forms
-│   └── register/page.tsx     # Registration layout
+┌─────────────────────────────────────────────────────────────┐
+│                       Frontend (Next.js)                    │
+├─────────────────────────────────────────────────────────────┤
+│  ┌──────────────┐  ┌─────────────────┐  ┌────────────────┐  │
+│  │ Unified      │  │ Document Cards  │  │ Chat Input     │  │
+│  │ Sidebar      │  │ & Preview Modal │  │ Popover Context│  │
+│  └──────┬───────┘  └────────┬────────┘  └────────┬───────┘  │
+│         │                   │                    │          │
+├─────────┼───────────────────┼────────────────────┼──────────┤
+│         ▼                   ▼                    ▼          │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │                      API Proxy                        │  │
+│  └──────────────────────────┬────────────────────────────┘  │
+├─────────────────────────────┼───────────────────────────────┤
+│                             ▼                               │
+│                       Backend (FastAPI)                     │
+│  ┌──────────────────────────┬────────────────────────────┐  │
+│  │                  /documents/{id}/file                 │  │
+│  │                 /documents/{id}/chunks                │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Component Responsibilities
+
+| Component | Responsibility | Typical Implementation |
+|-----------|----------------|------------------------|
+| Unified Sidebar | Integrates app branding, primary links (Dashboard, Chat), chat session history, and user profile metadata. | A single Next.js component rendered in the root dashboard layout. |
+| Preview Modal | Renders a modal overlay containing a document viewer. PDFs load inside an iframe, DOCX loads the chunks API output. | A Radix UI / Shadcn Dialog modal wrapper. |
+| Context Selector | Opens a file checklist inside a modal, updating the query context filter for the active session. | Triggered by a Plus icon next to the chat input text box. |
+
+## Recommended Project Structure
+
+```
+backend/
+├── app/
+│   └── routes/
+│       └── documents.py       # Add GET /{id}/file and GET /{id}/chunks endpoints
+frontend/
 ├── components/
-│   ├── ui/                   # Shadcn raw primitives (Button, Card, Input, Sidebar, etc.)
-│   ├── chat/                 # Composed chat-feed, message bubbles, and hover references
-│   └── dashboard/            # Composed file list table, upload overlay, and polling status
-├── context/                  # Auth state and workspace configs
-├── lib/
-│   ├── utils.ts              # Contains the cn() class-merging helper
-│   └── api.ts                # Client API wrapper executing requests with Bearer tokens
-└── proxy.ts                  # Next.js route protection middleware
+│   ├── sidebar.tsx            # Unified sidebar component
+│   ├── document-card.tsx      # Document grid item layout
+│   └── preview-modal.tsx      # Multi-format document preview modal
 ```
 
-## Data Flow
+## Architectural Patterns
 
-### Authentication Flow:
-1. Client inputs credentials. Page invokes Next.js Server Actions or API client.
-2. Success writes a secure JWT `token` cookie.
-3. Next.js `proxy.ts` middleware intercepts incoming routes: redirects unauthenticated users off `/` to `/login`, and redirects authenticated users off `/login` to `/`.
+### Pattern: Text-Based Document Streaming (DOCX)
+Instead of processing DOCX binary layouts on the client side which is heavy and error-prone, we load the parsed chunks JSON. The frontend loops over the list of chunks sorted by `page_index` and renders them as simple paragraphs inside a scrollable card container.
 
-### Document Ingestion Flow:
-1. Drop file in dashboard -> triggers API `POST /upload`.
-2. Receives `{ job_id }` and starts background polling `/upload/{job_id}/status`.
-3. Displays loading badges. Polling completes -> updates local localStorage dashboard cache to refresh the document grid.
-
-### Query Streaming Flow:
-1. Chat input form triggers `POST /query/stream` with the prompt and chosen document filters.
-2. Reads the response body chunk by chunk using a `ReadableStream` reader interface.
-3. Appends raw text tokens to the message feed in real time.
-4. Auto-scrolls the conversation pane on new arrivals unless user scrolled up manually.
+---
+*Architecture research for: Document RAG REST API v5.0*
+*Researched: 2026-06-30*

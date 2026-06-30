@@ -1,7 +1,7 @@
 # Stack Research
 
-**Domain:** Frontend UI Framework & Components
-**Researched:** 2026-06-29
+**Domain:** Document Preview & Unified Sidebar Layout
+**Researched:** 2026-06-30
 **Confidence:** HIGH
 
 ## Recommended Stack
@@ -10,53 +10,32 @@
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| Next.js | 16.2.9 | App Router React Framework | Core web application routing, server actions, and middleware. |
-| React | 19.2.4 | UI Component Engine | State management, context provider, and DOM updates. |
-| Tailwind CSS | 4.x | Utility CSS Styling | Unified utility class-based layout and visual system. |
-| shadcn/ui | latest | Source Code Component Library | Highly customizable, unstyled, accessible UI components. |
+| FastAPI (FileResponse) | 0.111.0+ | Serve static document files | Native support for streaming file buffers with custom content-types. |
+| React-Markdown | ^9.0.0 | Render markdown responses | Standard, highly secure, extensible markdown parsing and rendering in React. |
+| Remark-Gfm | ^4.0.0 | Support GitHub Flavored Markdown | Enables rendering markdown tables, checklists, strikethroughs, and autolinks. |
 
 ### Supporting Libraries
 
 | Library | Version | Purpose | When to Use |
 |---------|---------|---------|-------------|
-| lucide-react | ^0.450.0 | Iconography | Standardized iconography system for UI controls and states. |
-| clsx | ^2.1.1 | Conditional Classes | Utility for constructing conditional className strings. |
-| tailwind-merge | ^3.6.0 | Tailwind CSS Class Merging | Merges conflicting utility classes cleanly without duplication. |
-| sonner | ^1.5.0 | Toast Notifications | Enriched toast alerts with auto-dismiss and dark mode styling. |
-| radix-ui primitives | latest | Accessible UI Primitives | Foundation for shadcn dialog, popover, sheet, and dropdown controls. |
-
-### Development Tools
-
-| Tool | Purpose | Notes |
-|------|---------|-------|
-| Biome / ESLint | Linter and Formatter | Standardizes code format, prevents styling overrides, and alerts on syntax bugs. |
-| Vitest | Client Component Unit Testing | High-speed unit test runner compatible with Next.js compilation. |
-
-## Installation
-
-```bash
-# Core & styling
-pnpm add clsx tailwind-merge lucide-react sonner
-
-# Initialize shadcn UI
-pnpm dlx shadcn@latest init
-```
+| Lucide React | ^0.400.0 | Iconography (Plus, Eye, BookOpen, etc.) | High-quality icons for new UI components. |
+| Radix UI Dialog | ^1.0.0 | Modal interfaces | Used for the document preview modal and the chat context configuration modal. |
+| Radix UI Popover | ^1.0.0 | Popover menus | Triggers context actions when the chat input Plus icon is clicked. |
 
 ## Alternatives Considered
 
 | Recommended | Alternative | When to Use Alternative |
 |-------------|-------------|-------------------------|
-| shadcn/ui | Tailwind UI | When custom styled HTML markup is preferred over Radix primitives. |
-| sonner | react-hot-toast | When lightweight toaster script without custom actions is needed. |
+| Native PDF `iframe` | PDF.js / react-pdf | If we need custom drawing overlays, highlight annotations, or mobile browsers without built-in PDF viewer support. Monolith native view is cleaner for our layout. |
+| Text Chunk Previewer | docx-preview (js) | If we require pixel-perfect rendering of headers/footers/images in docx. A text chunk previewer is faster, requires no external file parser, and uses existing pre-extracted data. |
 
 ## What NOT to Use
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| raw inline color classes | Breaks accessibility constraints and ignores dark-mode tokens. | Semantic classes like `bg-background` and `text-foreground`. |
-| custom dropdown layouts | Focus trapping and keyboard accessibility are difficult to build. | Radix-based Dropdown or Popover controls. |
+| Google Docs Viewer | Requires public document URLs, leaking user files to third-party endpoints. | Self-contained HTML/Text preview or secure local file stream. |
+| `dangerouslySetInnerHTML` | High risk of XSS vulnerability when rendering LLM outputs or raw text. | Safely sanitized `react-markdown` or React text-nodes. |
 
-## Sources
-
-- [shadcn/ui documentation](https://ui.shadcn.com) — component installation and preset guidelines.
-- [Next.js documentation](https://nextjs.org) — middleware, server actions, and app routing structures.
+---
+*Stack research for: Document RAG REST API v5.0*
+*Researched: 2026-06-30*

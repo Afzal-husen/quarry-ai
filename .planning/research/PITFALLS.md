@@ -1,31 +1,23 @@
-# Critical Pitfalls
+# Pitfalls Research
 
-**Domain:** Visual & Accessibility Pitfalls
-**Researched:** 2026-06-29
+**Domain:** Document Preview & Unified Sidebar Layout
+**Researched:** 2026-06-30
 **Confidence:** HIGH
 
-## Common Mistakes & Mitigations
+## Common Pitfalls & Solutions
 
-### 1. Visual Contrast Failures
-*   **Pitfall:** Saturated neutral backgrounds or light-gray body copy can cause contrast to fall below the WCAG 4.5:1 ratio.
-*   **Mitigation:** Verify contrast ratio. Use darker/ink shades for body copy (e.g. `text-foreground` or `text-neutral-800`), avoiding hardcoded values. Never use washed out grays on colored tints.
+### Pitfall 1: Browser PDF Viewer CORS and Credentials
+**Problem:** Serving PDF files with improper headers causes browser sandboxes to block loading the PDF within an iframe, especially when authorization cookies/tokens are required.
+**Solution:** Ensure the FastAPI `FileResponse` is properly exposed, credentials are set on CORS settings, and frontend fetches PDF using local proxy paths to auto-inject session cookies.
 
-### 2. Z-Index and Clip Issues in Overflow Containers
-*   **Pitfall:** Placing dropdowns or popovers inside layout elements with `overflow: hidden` or `overflow: auto` (such as sidebar lists or tables) clips the rendering.
-*   **Mitigation:** Render dropdown overlay items using Radix portals or native Popovers which escape the parent stacking context and position relative to the viewport.
+### Pitfall 2: Memory Leak in Chat Scroll Viewports
+**Problem:** Merging sidebars changes layout nesting. If the chat viewport is scroll-locked, switching between pages can cause scroll event handlers to remain attached, causing memory leaks or locking screen scroll positions.
+**Solution:** Clean up all window scroll listeners in the chat viewport component during component unmounting.
 
-### 3. Layout Spacing Refactoring Slop
-*   **Pitfall:** Relying on Tailwind `space-y-*` or `space-x-*` spacing breaks when layout flow shifts or items are wrapped.
-*   **Mitigation:** Enforce flexbox layouts utilizing gap configurations (e.g. `flex flex-col gap-4`) for modern, highly responsive stacks.
+### Pitfall 3: Markdown XSS injection in Chat Responses
+**Problem:** Rendering raw Markdown strings from the LLM could introduce scripts or HTML elements that execute malicious actions.
+**Solution:** Ensure `react-markdown` is configured with no HTML support (`skipHtml={true}`) or uses a strict sanitizer to prevent script tags.
 
-### 4. Over-nesting of Cards
-*   **Pitfall:** Wrapping cards within cards creates a cluttered, SaaS-cliché look.
-*   **Mitigation:** Keep layout flat. Differentiate zones using borders, subtle background tints, or layout spacing rather than stacking panel card layers.
-
-### 5. Typewriter Scroll Locking
-*   **Pitfall:** Forcing continuous auto-scrolling during text streaming locks the user out of scrolling up to read previous messages.
-*   **Mitigation:** Implement viewport scroll detection. Only trigger `scrollIntoView` if the scroll position is already at or very near the bottom of the conversation feed.
-
-### 6. Image Animations and Slop Markers
-*   **Pitfall:** Animating image scales on card hover is a clear indicator of automated AI styling templates.
-*   **Mitigation:** Animate card shadows or background border highlights instead. Do not scale or rotate images on client-facing hovers.
+---
+*Pitfalls research for: Document RAG REST API v5.0*
+*Researched: 2026-06-30*
