@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import React from 'react';
 import DashboardShell from '../DashboardShell';
 
@@ -12,6 +12,18 @@ vi.mock('../../lib/api-client', () => ({
 
 vi.mock('../../app/actions/auth', () => ({
   logoutAction: vi.fn(),
+}));
+
+vi.mock('../PreviewModal', () => ({
+  default: ({ isOpen, onClose, document }: { isOpen: boolean; onClose: () => void; document: { filename: string } | null }) => {
+    if (!isOpen || !document) return null;
+    return (
+      <div data-testid="mock-preview-modal">
+        <h3>Mock Preview: {document.filename}</h3>
+        <button onClick={onClose}>Close</button>
+      </div>
+    );
+  }
 }));
 
 vi.mock('next/navigation', () => ({
@@ -85,5 +97,17 @@ describe('DashboardShell Component', () => {
     const pendingLabel = screen.getByText('Pending Ingestions');
     expect(pendingLabel).toBeDefined();
     expect(screen.getByText('uploading_file.pdf')).toBeDefined();
+  });
+
+  it('opens preview modal when a document card is clicked', () => {
+    render(<DashboardShell initialDocuments={mockDocuments} username="test-user" />);
+
+    const docCard = screen.getByText('document_one.pdf');
+    expect(screen.queryByTestId('mock-preview-modal')).toBeNull();
+
+    fireEvent.click(docCard);
+
+    expect(screen.getByTestId('mock-preview-modal')).toBeDefined();
+    expect(screen.getByText('Mock Preview: document_one.pdf')).toBeDefined();
   });
 });

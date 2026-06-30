@@ -6,14 +6,12 @@ import {
   FileText,
   Trash2,
   Clock,
-  CheckCircle2,
-  AlertCircle,
 } from "lucide-react";
 import { apiGet, apiDelete, apiPost } from "../lib/api-client";
 import { ThemeToggle } from "./ThemeToggle";
 import Sidebar from "./Sidebar";
+import PreviewModal from "./PreviewModal";
 import { toast } from "sonner";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -26,6 +24,7 @@ interface DocumentItem {
   chunk_count: number;
   status: string;
   can_reindex: boolean;
+  file_size?: number;
 }
 
 interface ActiveJob {
@@ -63,6 +62,8 @@ export default function DashboardShell({
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [docToDelete, setDocToDelete] = useState<{ id: string; filename: string } | null>(null);
+  const [activePreviewDoc, setActivePreviewDoc] = useState<DocumentItem | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const dragCounter = useRef(0);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
@@ -416,83 +417,130 @@ export default function DashboardShell({
                   </Button>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader className="bg-muted/40 border-b border-border">
-                      <TableRow className="border-border hover:bg-transparent">
-                        <TableHead className="text-muted-foreground px-6 h-11">Filename</TableHead>
-                        <TableHead className="text-muted-foreground px-6 h-11">Upload Date</TableHead>
-                        <TableHead className="text-muted-foreground px-6 h-11">Chunks</TableHead>
-                        <TableHead className="text-muted-foreground px-6 h-11">Status</TableHead>
-                        <TableHead className="text-muted-foreground px-6 h-11 text-right">Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="divide-y divide-border/40">
-                      {/* Active Polling Jobs */}
-                      {activeJobs.map((job) => (
-                        <TableRow key={job.job_id} className="border-border hover:bg-accent text-foreground">
-                          <TableCell className="px-6 py-3.5 font-medium max-w-xs truncate">{job.filename}</TableCell>
-                          <TableCell className="px-6 py-3.5 text-muted-foreground">—</TableCell>
-                          <TableCell className="px-6 py-3.5 text-muted-foreground">—</TableCell>
-                          <TableCell className="px-6 py-3.5">
-                            <Badge className="bg-amber-500/10 text-amber-500 hover:bg-amber-500/10 border border-amber-500/20 text-xs px-2.5 py-0.5 rounded-full font-medium animate-pulse">
-                              <Clock className="w-3 h-3 mr-1" />
-                              Processing
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="px-6 py-3.5 text-right text-muted-foreground">—</TableCell>
-                        </TableRow>
-                      ))}
+                <div className="p-6 md:p-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* Active Polling Jobs */}
+                    {activeJobs.map((job) => (
+                      <div
+                        key={job.job_id}
+                        className="bg-card/40 border border-border/80 border-dashed backdrop-blur-md rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-300 relative group flex flex-col justify-between h-48 select-none animate-pulse"
+                      >
+                        <div className="flex items-start justify-between min-w-0">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500 shrink-0 border border-amber-500/20">
+                            <Clock className="w-5 h-5 animate-spin" />
+                          </div>
+                          <Badge className="bg-amber-500/10 text-amber-500 hover:bg-amber-500/10 border border-amber-500/20 text-[10px] uppercase tracking-wider font-bold py-0.5 rounded-full">
+                            Processing
+                          </Badge>
+                        </div>
+                        <div className="min-w-0 mt-4 flex-1">
+                          <h4 className="text-sm font-semibold text-foreground truncate" title={job.filename}>
+                            {job.filename}
+                          </h4>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mt-1">
+                            Parsing document chunks...
+                          </p>
+                        </div>
+                        <div className="mt-4 pt-3 border-t border-border/40 flex justify-between items-center text-[10px] text-muted-foreground select-none">
+                          <span>Size: --</span>
+                          <span>Uploaded: --</span>
+                        </div>
+                      </div>
+                    ))}
 
-                      {/* Documents */}
-                      {documents.map((doc) => (
-                        <TableRow key={doc.document_id} className="border-border hover:bg-accent text-foreground transition-colors">
-                          <TableCell className="px-6 py-3.5 font-medium max-w-xs truncate">{doc.filename}</TableCell>
-                          <TableCell className="px-6 py-3.5 text-muted-foreground">
-                            {doc.upload_date !== "unknown"
-                              ? new Date(doc.upload_date).toLocaleDateString(undefined, {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })
-                              : "unknown"}
-                          </TableCell>
-                          <TableCell className="px-6 py-3.5 font-mono text-foreground">{doc.chunk_count}</TableCell>
-                          <TableCell className="px-6 py-3.5">
-                            {doc.status === "complete" ? (
-                              <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 border border-emerald-500/20 text-xs px-2.5 py-0.5 rounded-full font-medium">
-                                <CheckCircle2 className="w-3.5 h-3.5 mr-1 shrink-0" />
-                                Indexed
-                              </Badge>
-                            ) : (
-                              <Badge className="bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/10 border border-red-500/20 text-xs px-2.5 py-0.5 rounded-full font-medium">
-                                <AlertCircle className="w-3.5 h-3.5 mr-1 shrink-0" />
-                                Failed
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="px-6 py-3.5 text-right">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setDocToDelete({ id: doc.document_id, filename: doc.filename })}
-                              className="text-muted-foreground hover:text-red-600 hover:bg-red-500/10 h-8 w-8"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                    {/* Documents */}
+                    {documents.map((doc) => {
+                      const isPdf = doc.filename.toLowerCase().endsWith(".pdf");
+                      
+                      // Format bytes to human readable file size
+                      const formatSize = (bytes?: number) => {
+                        if (bytes === undefined || bytes === null) return "unknown";
+                        if (bytes === 0) return "0 B";
+                        const k = 1024;
+                        const sizes = ["B", "KB", "MB", "GB"];
+                        const i = Math.floor(Math.log(bytes) / Math.log(k));
+                        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+                      };
+
+                      return (
+                        <div
+                          key={doc.document_id}
+                          onClick={() => {
+                            setActivePreviewDoc(doc);
+                            setIsPreviewOpen(true);
+                          }}
+                          className="bg-card hover:bg-card/90 border border-border/80 hover:border-indigo-500/50 rounded-xl p-5 shadow-sm hover:shadow-lg transition-all duration-300 relative group flex flex-col justify-between h-48 cursor-pointer select-none transform hover:-translate-y-1"
+                        >
+                          <div className="flex items-start justify-between min-w-0 w-full">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 shrink-0 border border-indigo-500/20">
+                              <FileText className="w-5 h-5" />
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              {doc.status === "complete" ? (
+                                <Badge className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/10 border border-emerald-500/20 text-[10px] uppercase tracking-wider font-bold py-0.5 rounded-full">
+                                  Complete
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-red-500/10 text-red-500 hover:bg-red-500/10 border border-red-500/20 text-[10px] uppercase tracking-wider font-bold py-0.5 rounded-full">
+                                  Failed
+                                </Badge>
+                              )}
+                              
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDocToDelete({ id: doc.document_id, filename: doc.filename });
+                                }}
+                                className="opacity-0 group-hover:opacity-100 h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all shrink-0"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          
+                          <div className="min-w-0 mt-4 flex-1">
+                            <h4 className="text-sm font-semibold text-foreground truncate" title={doc.filename}>
+                              {doc.filename}
+                            </h4>
+                            <p className="text-[10px] text-indigo-400 font-bold tracking-wider uppercase mt-1">
+                              {isPdf ? "PDF Document" : "Word Document"}
+                            </p>
+                          </div>
+                          
+                          <div className="mt-4 pt-3 border-t border-border/40 flex justify-between items-center text-[10px] text-muted-foreground select-none">
+                            <span>Size: {formatSize(doc.file_size)}</span>
+                            <span>Uploaded: {
+                              doc.upload_date !== "unknown"
+                                ? new Date(doc.upload_date).toLocaleDateString(undefined, {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  })
+                                : "unknown"
+                            }</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </CardContent>
           </Card>
         </main>
       </div>
+
+      <PreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => {
+          setIsPreviewOpen(false);
+          setActivePreviewDoc(null);
+        }}
+        document={activePreviewDoc}
+      />
 
       {/* Manual Upload Dialog */}
       <Dialog
