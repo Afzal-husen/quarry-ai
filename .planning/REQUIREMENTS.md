@@ -1,0 +1,89 @@
+# Requirements: Document RAG REST API
+
+**Defined:** 2026-06-30
+**Core Value:** Enable seamless, low-latency document parsing and precise Q&A retrieval via a programmatic REST API using local embeddings and high-speed cloud LLM inference.
+
+## v1 Requirements
+
+Requirements for this milestone. Each maps to roadmap phases.
+
+### Document Preview Cards (FE-PREV)
+
+- [ ] **FE-PREV-01**: User can view uploaded documents on the Dashboard in a responsive card grid instead of a table.
+- [ ] **FE-PREV-02**: Document cards display the document name, upload date, file size, status, and omit chunk counts.
+- [ ] **FE-PREV-03**: Clicking on a document card opens a fullscreen preview modal.
+- [ ] **FE-PREV-04**: PDF documents render inside the preview modal using a native browser iframe embedding.
+- [ ] **FE-PREV-05**: DOC/DOCX documents render inside the preview modal as clean, scrollable page-by-page paragraph text.
+
+### Unified Sidebar (FE-SIDE)
+
+- [ ] **FE-SIDE-01**: Merge the dashboard sidebar and chat history sidebar into a single unified sidebar component.
+- [ ] **FE-SIDE-02**: Unified Sidebar layout structure:
+  - Top: Application branding logo and main navigation links (Dashboard, New Chat).
+  - Middle: Conversational chat session history list, separated from navigation links by a visual divider/separator.
+  - Bottom: Current user profile details, settings control, and logout actions.
+
+### Chat Context & Input Menu (FE-CHAT)
+
+- [ ] **FE-CHAT-01**: Chat input panel includes a Plus icon button at the extreme left of the input textarea/input field.
+- [ ] **FE-CHAT-02**: Clicking the Plus icon triggers a popover menu showing a "Context" selection option.
+- [ ] **FE-CHAT-03**: Selecting "Context" opens a modal displaying all uploaded documents checklist.
+- [ ] **FE-CHAT-04**: Context modal supports checking/unchecking multiple documents to scope the RAG query context dynamically.
+- [ ] **FE-CHAT-05**: Context modal includes a visual document preview action link/button for each item in the checklist.
+
+### Rich Text Response Rendering (FE-REND)
+
+- [ ] **FE-REND-01**: Chat response container parses and renders rich text formatting, lists, tables, inline/block code highlights, and Markdown formatting using safe HTML sanitization.
+
+### Backend Document Serving (BE-PREV)
+
+- [ ] **BE-PREV-01**: Serve raw uploaded files via a GET endpoint `GET /api/documents/{document_id}/file` protected by JWT user authentication.
+- [ ] **BE-PREV-02**: Serve parsed text chunks via a GET endpoint `GET /api/documents/{document_id}/chunks` protected by JWT user authentication.
+
+## v2 Requirements
+
+Deferred to future release. Tracked but not in current roadmap.
+
+### Interactive Citation Jump (FE-JUMP)
+
+- **FE-JUMP-01**: Click on a citation reference link inside a chat bubble to automatically open the preview modal and jump/scroll to the cited page or paragraph.
+
+## Out of Scope
+
+Explicitly excluded. Documented to prevent scope creep.
+
+| Feature | Reason |
+|---------|--------|
+| Native Mobile PDF viewer engine | Heavy dependency overhead; standard iframe and native download buttons are sufficient. |
+| In-browser DOCX layout rendering | Direct rendering of original pagination, fonts, tables, margins is brittle and slow on client side. Clean paragraph chunk text rendering is more reliable. |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| FE-PREV-01 | Pending | Pending |
+| FE-PREV-02 | Pending | Pending |
+| FE-PREV-03 | Pending | Pending |
+| FE-PREV-04 | Pending | Pending |
+| FE-PREV-05 | Pending | Pending |
+| FE-SIDE-01 | Pending | Pending |
+| FE-SIDE-02 | Pending | Pending |
+| FE-CHAT-01 | Pending | Pending |
+| FE-CHAT-02 | Pending | Pending |
+| FE-CHAT-03 | Pending | Pending |
+| FE-CHAT-04 | Pending | Pending |
+| FE-CHAT-05 | Pending | Pending |
+| FE-REND-01 | Pending | Pending |
+| BE-PREV-01 | Pending | Pending |
+| BE-PREV-02 | Pending | Pending |
+
+**Coverage:**
+- v1 requirements: 15 total
+- Mapped to phases: 0
+- Unmapped: 15 ⚠️
+
+---
+*Requirements defined: 2026-06-30*
+*Last updated: 2026-06-30 after milestone v5.0 start*
