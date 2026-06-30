@@ -24,8 +24,8 @@ Implement backend API endpoints to serve raw uploaded document files and list pa
 - **D-04:** Return the entire pre-computed chunks JSON metadata payload directly from the filesystem (containing the list of parents, child chunks, filenames, and upload timestamps).
 
 ### the agent's Discretion
-- **D-05:** Exact error message details for unauthenticated or unauthorized access (though must yield standard error formats).
-- **D-06:** Choice of streaming chunks or loading the JSON payload completely into memory before serialization (since file size is bounded to 50MB, complete JSON load is simple and fast).
+- Exact error message details for unauthenticated or unauthorized access (though must yield standard error formats).
+- Choice of streaming chunks or loading the JSON payload completely into memory before serialization (since file size is bounded to 50MB, complete JSON load is simple and fast).
 
 </decisions>
 
