@@ -237,3 +237,114 @@ def test_reindex_missing_raw_file(auth_headers):
         chunks_path.unlink()
     if vs_path.exists():
         shutil.rmtree(vs_path)
+
+
+def test_get_document_file_success(auth_headers):
+    """Verify that an authenticated user can download/preview their document."""
+    # Write a dummy file to UPLOADS_DIR/user-123/ and mock metadata in CHUNKS_DIR/user-123/
+    doc_id = "12345678-1234-1234-1234-123456789012"
+    user_uploads = UPLOADS_DIR / "user-123"
+    user_uploads.mkdir(parents=True, exist_ok=True)
+    file_path = user_uploads / f"{doc_id}.pdf"
+    file_path.write_bytes(b"dummy pdf bytes")
+
+    user_chunks = CHUNKS_DIR / "user-123"
+    user_chunks.mkdir(parents=True, exist_ok=True)
+    chunks_path = user_chunks / f"{doc_id}.json"
+    with open(chunks_path, "w", encoding="utf-8") as f:
+        json.dump({"document_id": doc_id, "source_filename": "test.pdf", "total_chunks": 5}, f)
+
+    try:
+        response = client.get(f"/documents/{doc_id}/file", headers=auth_headers)
+        assert response.status_code == 200
+        assert response.content == b"dummy pdf bytes"
+        assert response.headers["content-type"] == "application/pdf"
+        assert "inline" in response.headers["content-disposition"]
+    finally:
+        if file_path.exists():
+            file_path.unlink()
+        if chunks_path.exists():
+            chunks_path.unlink()
+
+
+def test_get_document_file_forbidden(auth_headers, other_auth_headers):
+    """Verify that retrieving another tenant's document file returns 403."""
+    doc_id = "12345678-1234-1234-1234-123456789012"
+    user_uploads = UPLOADS_DIR / "user-123"
+    user_uploads.mkdir(parents=True, exist_ok=True)
+    file_path = user_uploads / f"{doc_id}.pdf"
+    file_path.write_bytes(b"dummy pdf bytes")
+
+    user_chunks = CHUNKS_DIR / "user-123"
+    user_chunks.mkdir(parents=True, exist_ok=True)
+    chunks_path = user_chunks / f"{doc_id}.json"
+    with open(chunks_path, "w", encoding="utf-8") as f:
+        json.dump({"document_id": doc_id, "source_filename": "test.pdf", "total_chunks": 5}, f)
+
+    try:
+        response = client.get(f"/documents/{doc_id}/file", headers=other_auth_headers)
+        assert response.status_code == 403
+    finally:
+        if file_path.exists():
+            file_path.unlink()
+        if chunks_path.exists():
+            chunks_path.unlink()
+
+
+def test_get_document_file_not_found(auth_headers):
+    """Verify that a non-existent document file returns 404."""
+    doc_id = "99999999-9999-9999-9999-999999999999"
+    response = client.get(f"/documents/{doc_id}/file", headers=auth_headers)
+    assert response.status_code == 404
+
+
+def test_get_document_chunks_success(auth_headers):
+    """Verify that an authenticated user can retrieve document chunks metadata."""
+    doc_id = "12345678-1234-1234-1234-123456789012"
+    user_chunks = CHUNKS_DIR / "user-123"
+    user_chunks.mkdir(parents=True, exist_ok=True)
+    chunks_path = user_chunks / f"{doc_id}.json"
+    metadata = {
+        "document_id": doc_id,
+        "source_filename": "test.pdf",
+        "total_chunks": 2,
+        "chunks": [{"text": "chunk1"}, {"text": "chunk2"}]
+    }
+    with open(chunks_path, "w", encoding="utf-8") as f:
+        json.dump(metadata, f)
+
+    try:
+        response = client.get(f"/documents/{doc_id}/chunks", headers=auth_headers)
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["document_id"] == doc_id
+        assert payload["total_chunks"] == 2
+        assert len(payload["chunks"]) == 2
+    finally:
+        if chunks_path.exists():
+            chunks_path.unlink()
+
+
+def test_get_document_chunks_forbidden(auth_headers, other_auth_headers):
+    """Verify that retrieving another user's document chunks returns 403."""
+    doc_id = "12345678-1234-1234-1234-123456789012"
+    user_chunks = CHUNKS_DIR / "user-123"
+    user_chunks.mkdir(parents=True, exist_ok=True)
+    chunks_path = user_chunks / f"{doc_id}.json"
+    with open(chunks_path, "w", encoding="utf-8") as f:
+        json.dump({"document_id": doc_id, "source_filename": "test.pdf"}, f)
+
+    try:
+        response = client.get(f"/documents/{doc_id}/chunks", headers=other_auth_headers)
+        assert response.status_code == 403
+    finally:
+        if chunks_path.exists():
+            chunks_path.unlink()
+
+
+def test_get_document_chunks_not_found(auth_headers):
+    """Verify that a non-existent document chunks request returns 404."""
+    doc_id = "99999999-9999-9999-9999-999999999999"
+    response = client.get(f"/documents/{doc_id}/chunks", headers=auth_headers)
+    assert response.status_code == 404
+

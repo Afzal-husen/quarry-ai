@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from app.core.auth import get_current_user
@@ -414,3 +415,146 @@ async def reindex_document(
         status="success",
         chunks_count=len(split_docs)
     )
+
+
+@router.get(
+    "/{document_id}/file",
+    summary="Get Document File",
+    description="Retrieves the raw uploaded document file for preview or download."
+)
+async def get_document_file(
+    document_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Retrieves the raw uploaded document file for preview or download, isolated by tenant."""
+    try:
+        uuid.UUID(document_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=422,
+            detail="document_id must be a valid UUID string."
+        )
+
+    user_id = current_user["id"]
+
+    # Ownership checks and 404 early checks
+    global_matches = list(CHUNKS_DIR.glob(f"*/{document_id}.json")) or \
+                     list(UPLOADS_DIR.glob(f"*/{document_id}.*"))
+
+    if not global_matches:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Document '{document_id}' not found."
+        )
+
+    # Check if any artifact exists for this user_id
+    chunks_file = CHUNKS_DIR / user_id / f"{document_id}.json"
+    user_uploads_dir = UPLOADS_DIR / user_id
+    upload_files = []
+    if user_uploads_dir.exists():
+        upload_files = list(user_uploads_dir.glob(f"{document_id}.*"))
+
+    user_has_any_artifact = bool(chunks_file.exists() or upload_files)
+
+    if not user_has_any_artifact:
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: You do not own or have permission to access this document."
+        )
+
+    # Filter upload_files by allowed extensions
+    upload_files = [f for f in upload_files if f.suffix.lower() in ALLOWED_EXTENSIONS]
+    if not upload_files:
+        raise HTTPException(
+            status_code=404,
+            detail="Original raw document file not found on disk."
+        )
+
+    target_file = upload_files[0]
+    suffix = target_file.suffix.lower()
+
+    if suffix == ".pdf":
+        media_type = "application/pdf"
+        content_disposition = "inline"
+    elif suffix == ".docx":
+        media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        content_disposition = "attachment"
+    elif suffix == ".doc":
+        media_type = "application/msword"
+        content_disposition = "attachment"
+    else:
+        media_type = "application/octet-stream"
+        content_disposition = "attachment"
+
+    headers = {
+        "Content-Disposition": f"{content_disposition}; filename=\"{target_file.name}\""
+    }
+
+    return FileResponse(
+        path=target_file,
+        media_type=media_type,
+        headers=headers
+    )
+
+
+@router.get(
+    "/{document_id}/chunks",
+    summary="Get Document Chunks",
+    description="Retrieves the full parsed text chunks of a document."
+)
+async def get_document_chunks(
+    document_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Retrieves the full parsed text chunks of a document, isolated by tenant."""
+    try:
+        uuid.UUID(document_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=422,
+            detail="document_id must be a valid UUID string."
+        )
+
+    user_id = current_user["id"]
+
+    # Ownership checks and 404 early checks
+    global_matches = list(CHUNKS_DIR.glob(f"*/{document_id}.json")) or \
+                     list(UPLOADS_DIR.glob(f"*/{document_id}.*"))
+
+    if not global_matches:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Document '{document_id}' not found."
+        )
+
+    # Check if any artifact exists for this user_id
+    chunks_file = CHUNKS_DIR / user_id / f"{document_id}.json"
+    user_uploads_dir = UPLOADS_DIR / user_id
+    upload_files = []
+    if user_uploads_dir.exists():
+        upload_files = list(user_uploads_dir.glob(f"{document_id}.*"))
+
+    user_has_any_artifact = bool(chunks_file.exists() or upload_files)
+
+    if not user_has_any_artifact:
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: You do not own or have permission to access this document."
+        )
+
+    if not chunks_file.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Document chunks metadata file not found on disk."
+        )
+
+    try:
+        with open(chunks_file, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+        return payload
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to read chunks metadata: {str(e)}"
+        )
+
