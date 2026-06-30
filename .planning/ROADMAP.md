@@ -77,7 +77,7 @@ Plans:
 **Plans**: 1 plan
 Plans:
 
-- [ ] 38-01: Implement dashboard card grid and the multi-format preview dialog modal.
+- [x] 38-01: Implement dashboard card grid and the multi-format preview dialog modal.
 
 ### Phase 39: Input Context Menu Popover & Selection Modal
 
@@ -124,7 +124,7 @@ Phases execute in numeric order: 36 → 37 → 38 → 39 → 40
 |-------|----------------|--------|-----------|
 | 36. Backend Preview Support | 0/1 | Not started | - |
 | 37. Unified Navigation Sidebar | 0/1 | Not started | - |
-| 38. Document Cards Grid & Preview Modal | 0/1 | Planned    |  |
+| 38. Document Cards Grid & Preview Modal | 1/1 | Complete   | 2026-06-30 |
 | 39. Input Context Menu Popover & Selection Modal | 0/1 | Not started | - |
 | 40. Rich Text & Markdown Rendering Polish | 0/1 | Not started | - |
 
