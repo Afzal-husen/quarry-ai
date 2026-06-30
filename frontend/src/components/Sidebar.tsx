@@ -11,10 +11,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Database,
-  Activity,
   LogOut,
 } from "lucide-react";
-import { apiGet, apiDelete, apiPost } from "../lib/api-client";
+import { apiGet, apiDelete } from "../lib/api-client";
 import { logoutAction } from "../app/actions/auth";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "@/components/ui/button";
@@ -65,7 +64,11 @@ export default function Sidebar({
   useEffect(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("document_rag_sidebar_collapsed");
-      setIsSidebarCollapsed(saved === "true");
+      if (saved === "true") {
+        setTimeout(() => {
+          setIsSidebarCollapsed(true);
+        }, 0);
+      }
     }
   }, []);
 
@@ -85,9 +88,25 @@ export default function Sidebar({
   };
 
   useEffect(() => {
+    let active = true;
+    const load = async () => {
+      try {
+        const res = await apiGet("/sessions?limit=50");
+        if (active && res && res.items) {
+          setLocalSessions(res.items);
+        }
+      } catch (err) {
+        console.error("Failed to load local sessions:", err);
+      }
+    };
+
     if (isDashboardMode) {
-      fetchLocalSessions();
+      load();
     }
+
+    return () => {
+      active = false;
+    };
   }, [isDashboardMode]);
 
   const toggleSidebar = () => {
@@ -350,11 +369,11 @@ export default function Sidebar({
           <DialogHeader>
             <DialogTitle>Delete Conversation</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete the conversation thread "
+              Are you sure you want to delete the conversation thread &quot;
               <span className="font-semibold text-foreground">
                 {sessionToDelete?.title}
               </span>
-              "? This action is permanent and cannot be undone.
+              &quot;? This action is permanent and cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import Link from "next/link";
 import {
   Upload,
   FileText,
@@ -9,15 +8,8 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
-  FileSpreadsheet,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-  Database,
-  Activity,
 } from "lucide-react";
 import { apiGet, apiDelete, apiPost } from "../lib/api-client";
-import { logoutAction } from "../app/actions/auth";
 import { ThemeToggle } from "./ThemeToggle";
 import Sidebar from "./Sidebar";
 import { toast } from "sonner";

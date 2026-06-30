@@ -1,28 +1,19 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import Link from "next/link";
 import {
   MessageSquare,
-  Plus,
-  Trash2,
   Send,
   FileText,
-  FileSpreadsheet,
   ChevronDown,
   BookOpen,
   AlertCircle,
   Sparkles,
   Check,
-  ChevronLeft,
   ChevronRight,
-  Database,
-  Activity,
-  LogOut,
 } from "lucide-react";
 import { apiGet, apiDelete, apiPost } from "../lib/api-client";
 import { getTokenAction } from "../app/actions/cookies";
-import { logoutAction } from "../app/actions/auth";
 import { useSearchParams, useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
 import { ThemeToggle } from "./ThemeToggle";
@@ -161,16 +152,6 @@ export default function ChatShell({ username }: ChatShellProps) {
     }
   }, []);
 
-  const fetchDocuments = useCallback(async () => {
-    try {
-      const res = await apiGet("/documents");
-      if (res && res.items) {
-        setDocuments(res.items);
-      }
-    } catch (err) {
-      console.error("Failed to load documents registry:", err);
-    }
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -207,50 +188,36 @@ export default function ChatShell({ username }: ChatShellProps) {
     }
   }, [activeSessionId]);
 
-  // Sync activeSessionId with URL query parameter
-  const paramSessionId = searchParams.get("session_id");
-  useEffect(() => {
-    if (paramSessionId && paramSessionId !== activeSessionId) {
-      setActiveSessionId(paramSessionId);
-    }
-  }, [paramSessionId, activeSessionId]);
-
-  // Automatically trigger New Chat context modal if new=true is in URL
-  const isNewChatParam = searchParams.get("new") === "true";
-  useEffect(() => {
-    if (isNewChatParam) {
-      handleNewChatClick();
-      // Remove query parameter so the dialog doesn't re-trigger on reload
-      router.replace("/chat");
-    }
-  }, [isNewChatParam]);
-
   // Load message logs and selected documents of the active session
   useEffect(() => {
     if (!activeSessionId) {
-      setMessages((prev) => (prev.length > 0 ? [] : prev));
+      setTimeout(() => {
+        setMessages((prev) => (prev.length > 0 ? [] : prev));
+      }, 0);
       return;
     }
 
     const savedDocIds = localStorage.getItem(
       `document_rag_session_docs_${activeSessionId}`,
     );
-    if (savedDocIds) {
-      try {
-        setSelectedDocIds(JSON.parse(savedDocIds));
-      } catch (err) {
-        console.warn("Failed to parse saved document context:", err);
+    setTimeout(() => {
+      if (savedDocIds) {
+        try {
+          setSelectedDocIds(JSON.parse(savedDocIds));
+        } catch (err) {
+          console.warn("Failed to parse saved document context:", err);
+          if (documents.length > 0) {
+            setSelectedDocIds([documents[0].document_id]);
+          }
+        }
+      } else {
         if (documents.length > 0) {
           setSelectedDocIds([documents[0].document_id]);
+        } else {
+          setSelectedDocIds([]);
         }
       }
-    } else {
-      if (documents.length > 0) {
-        setSelectedDocIds([documents[0].document_id]);
-      } else {
-        setSelectedDocIds([]);
-      }
-    }
+    }, 0);
 
     const loadMessages = async () => {
       try {
@@ -279,7 +246,7 @@ export default function ChatShell({ username }: ChatShellProps) {
     }
   }, [messages, loading]);
 
-  const handleNewChatClick = async () => {
+  const handleNewChatClick = useCallback(async () => {
     try {
       const res = await apiGet("/documents");
       if (!res || !res.items || res.items.length === 0) {
@@ -292,7 +259,28 @@ export default function ChatShell({ username }: ChatShellProps) {
     } catch {
       toast.error("Failed to access document registry.");
     }
-  };
+  }, []);
+
+  // Sync activeSessionId with URL query parameter
+  const paramSessionId = searchParams.get("session_id");
+  useEffect(() => {
+    if (paramSessionId && paramSessionId !== activeSessionId) {
+      setTimeout(() => {
+        setActiveSessionId(paramSessionId);
+      }, 0);
+    }
+  }, [paramSessionId, activeSessionId]);
+
+  // Automatically trigger New Chat context modal if new=true is in URL
+  const isNewChatParam = searchParams.get("new") === "true";
+  useEffect(() => {
+    if (isNewChatParam) {
+      setTimeout(() => {
+        handleNewChatClick();
+        router.replace("/chat");
+      }, 0);
+    }
+  }, [isNewChatParam, handleNewChatClick, router]);
 
   const handleStartChat = async () => {
     if (tempSelectedDocIds.length === 0) {
