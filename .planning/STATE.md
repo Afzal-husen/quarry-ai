@@ -1,12 +1,13 @@
 ---
 gsd_state_version: 1.0
 milestone: v5.0
-milestone_name: Document Preview & Unified Sidebar
-status: planning
-last_updated: "2026-06-30T06:46:26.141Z"
-last_activity: 2026-06-30
+milestone_name: milestone
+status: Defining requirements
+stopped_at: Phase 36 context gathered
+last_updated: "2026-06-30T07:03:10.503Z"
+last_activity: 2026-06-30 — Milestone v5.0 started
 progress:
-  total_phases: 0
+  total_phases: 5
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -93,9 +94,9 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-29T11:01:38.781Z
-Stopped at: Phase 35 execution complete
-Resume file: .planning/phases/35-contrast-auditing-color-polish/35-01-SUMMARY.md
+Last session: 2026-06-30T07:03:10.492Z
+Stopped at: Phase 36 context gathered
+Resume file: .planning/phases/36-backend-preview-support/36-CONTEXT.md
 
 ## Operator Next Steps
 
