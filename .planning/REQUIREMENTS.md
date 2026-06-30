@@ -63,26 +63,26 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FE-PREV-01 | Pending | Pending |
-| FE-PREV-02 | Pending | Pending |
-| FE-PREV-03 | Pending | Pending |
-| FE-PREV-04 | Pending | Pending |
-| FE-PREV-05 | Pending | Pending |
-| FE-SIDE-01 | Pending | Pending |
-| FE-SIDE-02 | Pending | Pending |
-| FE-CHAT-01 | Pending | Pending |
-| FE-CHAT-02 | Pending | Pending |
-| FE-CHAT-03 | Pending | Pending |
-| FE-CHAT-04 | Pending | Pending |
-| FE-CHAT-05 | Pending | Pending |
-| FE-REND-01 | Pending | Pending |
-| BE-PREV-01 | Pending | Pending |
-| BE-PREV-02 | Pending | Pending |
+| FE-PREV-01 | Phase 38 | Pending |
+| FE-PREV-02 | Phase 38 | Pending |
+| FE-PREV-03 | Phase 38 | Pending |
+| FE-PREV-04 | Phase 38 | Pending |
+| FE-PREV-05 | Phase 38 | Pending |
+| FE-SIDE-01 | Phase 37 | Pending |
+| FE-SIDE-02 | Phase 37 | Pending |
+| FE-CHAT-01 | Phase 39 | Pending |
+| FE-CHAT-02 | Phase 39 | Pending |
+| FE-CHAT-03 | Phase 39 | Pending |
+| FE-CHAT-04 | Phase 39 | Pending |
+| FE-CHAT-05 | Phase 39 | Pending |
+| FE-REND-01 | Phase 40 | Pending |
+| BE-PREV-01 | Phase 36 | Pending |
+| BE-PREV-02 | Phase 36 | Pending |
 
 **Coverage:**
 - v1 requirements: 15 total
-- Mapped to phases: 0
-- Unmapped: 15 ⚠️
+- Mapped to phases: 15
+- Unmapped: 0 ✅
 
 ---
 *Requirements defined: 2026-06-30*
