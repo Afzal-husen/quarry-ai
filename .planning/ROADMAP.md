@@ -75,7 +75,6 @@ Plans:
   3. PDF files load in an iframe; DOCX files render scrollable text paragraphs.
 
 **Plans**: 1 plan
-
 Plans:
 
 - [ ] 38-01: Implement dashboard card grid and the multi-format preview dialog modal.
