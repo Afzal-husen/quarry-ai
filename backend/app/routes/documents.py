@@ -39,6 +39,7 @@ class DocumentItem(BaseModel):
     chunk_count: int = Field(..., description="The total number of parsed text chunks.")
     status: str = Field(..., description="Lifecycle status: 'complete' or 'partial'.")
     can_reindex: bool = Field(..., description="True if the raw upload file is present to support re-indexing.")
+    file_size: Optional[int] = Field(None, description="The size of the raw upload file in bytes.")
 
 
 class ReindexResponse(BaseModel):
@@ -118,11 +119,16 @@ async def list_documents(
         # Check raw upload file status on disk
         user_uploads_dir = UPLOADS_DIR / user_id
         raw_file_exists = False
+        file_size = 0
         if user_uploads_dir.exists():
             matches = list(user_uploads_dir.glob(f"{document_id}.*"))
             matches = [m for m in matches if m.suffix.lower() in ALLOWED_EXTENSIONS]
             if matches:
                 raw_file_exists = True
+                try:
+                    file_size = matches[0].stat().st_size
+                except Exception:
+                    file_size = 0
 
         # Check vectorstore directory status on disk
         vectorstore_path = vector_manager.vectorstore_dir / user_id / document_id
@@ -140,7 +146,8 @@ async def list_documents(
             upload_date=uploaded_at,
             chunk_count=chunk_count,
             status=status_val,
-            can_reindex=raw_file_exists
+            can_reindex=raw_file_exists,
+            file_size=file_size
         ))
 
     total = len(results)
