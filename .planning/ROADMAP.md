@@ -59,7 +59,6 @@ Plans:
   3. Mobile-responsive menus are fully interactive.
 
 **Plans**: 1 plan
-
 Plans:
 
 - [ ] 37-01: Implement unified sidebar component and integrate it across dashboard and chat templates.
