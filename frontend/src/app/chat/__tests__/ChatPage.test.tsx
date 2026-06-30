@@ -15,6 +15,18 @@ vi.mock('../../../app/actions/cookies', () => ({
   getTokenAction: vi.fn().mockResolvedValue('mock-token'),
 }));
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  usePathname: () => '/chat',
+  useSearchParams: () => ({
+    get: vi.fn().mockReturnValue(null),
+  }),
+}));
+
 describe('Chat Interface Component', () => {
   const mockSessions = [
     { id: 'session-1', title: 'First Conversation', created_at: '2026-06-27T10:00:00Z' },

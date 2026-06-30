@@ -19,6 +19,7 @@ import {
 import { apiGet, apiDelete, apiPost } from "../lib/api-client";
 import { logoutAction } from "../app/actions/auth";
 import { ThemeToggle } from "./ThemeToggle";
+import Sidebar from "./Sidebar";
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -68,7 +69,6 @@ export default function DashboardShell({
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [docToDelete, setDocToDelete] = useState<{ id: string; filename: string } | null>(null);
 
@@ -341,82 +341,7 @@ export default function DashboardShell({
       )}
 
       {/* Collapsible Left Sidebar */}
-      <div
-        className={`border-r border-border bg-card flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 ${
-          isSidebarCollapsed ? "w-16" : "w-64"
-        }`}
-      >
-        {/* Sidebar Header */}
-        <div className="p-4 flex items-center justify-between border-b border-border h-16">
-          {!isSidebarCollapsed && (
-            <div className="flex items-center gap-2 text-md font-semibold tracking-tight text-foreground select-none">
-              <FileSpreadsheet className="w-5 h-5 text-indigo-500" />
-              <span>Antigravity RAG</span>
-            </div>
-          )}
-          {isSidebarCollapsed && (
-            <FileSpreadsheet className="w-5 h-5 text-indigo-500 mx-auto" />
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="text-muted-foreground hover:text-foreground h-8 w-8 ml-auto"
-          >
-            {isSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          </Button>
-        </div>
-
-        {/* Navigation Items */}
-        <div className="flex-1 py-4 space-y-1">
-          <Link href="/">
-            <div className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors bg-indigo-500/10 text-indigo-400 border-l-2 border-indigo-500 cursor-pointer">
-              <Database className="w-5 h-5 shrink-0" />
-              {!isSidebarCollapsed && <span>Dashboard</span>}
-            </div>
-          </Link>
-          <Link href="/chat">
-            <div className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer">
-              <Activity className="w-5 h-5 shrink-0" />
-              {!isSidebarCollapsed && <span>Chat Feed</span>}
-            </div>
-          </Link>
-        </div>
-
-        {/* Sidebar Profile Card */}
-        <div className="p-4 border-t border-border bg-card/40">
-          {!isSidebarCollapsed ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-bold uppercase shrink-0">
-                  {username.slice(0, 2)}
-                </div>
-                <div className="truncate">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">User</p>
-                  <p className="text-sm font-medium text-foreground truncate">{username}</p>
-                </div>
-              </div>
-              <form action={logoutAction} className="w-full">
-                <Button type="submit" variant="destructive" size="sm" className="w-full flex items-center justify-center gap-1.5 h-8">
-                  <LogOut className="w-3.5 h-3.5" />
-                  Sign Out
-                </Button>
-              </form>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-bold uppercase">
-                {username.slice(0, 2)}
-              </div>
-              <form action={logoutAction}>
-                <Button type="submit" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-destructive/10 hover:text-destructive">
-                  <LogOut className="w-4 h-4" />
-                </Button>
-              </form>
-            </div>
-          )}
-        </div>
-      </div>
+      <Sidebar username={username} currentPath="/" />
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 bg-background overflow-y-auto">

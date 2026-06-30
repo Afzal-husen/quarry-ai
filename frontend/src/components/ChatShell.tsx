@@ -23,6 +23,8 @@ import {
 import { apiGet, apiDelete, apiPost } from "../lib/api-client";
 import { getTokenAction } from "../app/actions/cookies";
 import { logoutAction } from "../app/actions/auth";
+import { useSearchParams, useRouter } from "next/navigation";
+import Sidebar from "./Sidebar";
 import { ThemeToggle } from "./ThemeToggle";
 import { toast } from "sonner";
 import {
@@ -86,9 +88,15 @@ function CitationBadge({
 }
 
 export default function ChatShell({ username }: ChatShellProps) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [sessions, setSessions] = useState<SessionItem[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryId = urlParams.get("session_id");
+      if (queryId) return queryId;
       return localStorage.getItem("document_rag_active_session_id");
     }
     return null;
@@ -100,7 +108,6 @@ export default function ChatShell({ username }: ChatShellProps) {
 
   const [isContextModalOpen, setIsContextModalOpen] = useState(false);
   const [tempSelectedDocIds, setTempSelectedDocIds] = useState<string[]>([]);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<{
     id: string;
     title: string;
@@ -200,6 +207,24 @@ export default function ChatShell({ username }: ChatShellProps) {
     }
   }, [activeSessionId]);
 
+  // Sync activeSessionId with URL query parameter
+  const paramSessionId = searchParams.get("session_id");
+  useEffect(() => {
+    if (paramSessionId && paramSessionId !== activeSessionId) {
+      setActiveSessionId(paramSessionId);
+    }
+  }, [paramSessionId, activeSessionId]);
+
+  // Automatically trigger New Chat context modal if new=true is in URL
+  const isNewChatParam = searchParams.get("new") === "true";
+  useEffect(() => {
+    if (isNewChatParam) {
+      handleNewChatClick();
+      // Remove query parameter so the dialog doesn't re-trigger on reload
+      router.replace("/chat");
+    }
+  }, [isNewChatParam]);
+
   // Load message logs and selected documents of the active session
   useEffect(() => {
     if (!activeSessionId) {
@@ -288,12 +313,18 @@ export default function ChatShell({ username }: ChatShellProps) {
         }
         setSelectedDocIds(tempSelectedDocIds);
         setActiveSessionId(res.id);
+        router.push(`/chat?session_id=${res.id}`);
         setIsContextModalOpen(false);
         await fetchSessions();
       }
     } catch {
       toast.error("Failed to create chat session.");
     }
+  };
+
+  const selectSession = (sessionId: string) => {
+    setActiveSessionId(sessionId);
+    router.push(`/chat?session_id=${sessionId}`);
   };
 
   const confirmDeleteSession = async () => {
@@ -307,6 +338,7 @@ export default function ChatShell({ username }: ChatShellProps) {
       } catch {}
       if (activeSessionId === sessionToDelete.id) {
         setActiveSessionId(null);
+        router.push("/chat");
       }
       await fetchSessions();
       toast.success("Chat deleted successfully.");
@@ -505,156 +537,15 @@ export default function ChatShell({ username }: ChatShellProps) {
   return (
     <div className="flex h-screen bg-background text-foreground font-sans overflow-hidden w-full">
       {/* Collapsible Left Sidebar */}
-      <div
-        className={`border-r border-border bg-card flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 ${
-          isSidebarCollapsed ? "w-16" : "w-64"
-        }`}
-      >
-        {/* Sidebar Header */}
-        <div className="p-4 flex items-center justify-between border-b border-border h-16">
-          {!isSidebarCollapsed && (
-            <div className="flex items-center gap-2 text-md font-semibold tracking-tight text-foreground select-none">
-              <FileSpreadsheet className="w-5 h-5 text-indigo-500" />
-              <span>Antigravity RAG</span>
-            </div>
-          )}
-          {isSidebarCollapsed && (
-            <FileSpreadsheet className="w-5 h-5 text-indigo-500 mx-auto" />
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="text-muted-foreground hover:text-foreground h-8 w-8 ml-auto"
-          >
-            {isSidebarCollapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
-
-        {/* Navigation Items */}
-        <div className="flex-1 py-4 space-y-1">
-          <Link href="/">
-            <div className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer">
-              <Database className="w-5 h-5 shrink-0" />
-              {!isSidebarCollapsed && <span>Dashboard</span>}
-            </div>
-          </Link>
-          <Link href="/chat">
-            <div className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors bg-indigo-500/10 text-indigo-400 border-l-2 border-indigo-500 cursor-pointer">
-              <Activity className="w-5 h-5 shrink-0" />
-              {!isSidebarCollapsed && <span>Chat Feed</span>}
-            </div>
-          </Link>
-        </div>
-
-        {/* Sidebar Profile Card */}
-        <div className="p-4 border-t border-border bg-card/40">
-          {!isSidebarCollapsed ? (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-bold uppercase shrink-0">
-                  {username.slice(0, 2)}
-                </div>
-                <div className="truncate">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
-                    User
-                  </p>
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {username}
-                  </p>
-                </div>
-              </div>
-              <form action={logoutAction} className="w-full">
-                <Button
-                  type="submit"
-                  variant="destructive"
-                  size="sm"
-                  className="w-full flex items-center justify-center gap-1.5 h-8"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  Sign Out
-                </Button>
-              </form>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-bold uppercase">
-                {username.slice(0, 2)}
-              </div>
-              <form action={logoutAction}>
-                <Button
-                  type="submit"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <LogOut className="w-4 h-4" />
-                </Button>
-              </form>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Secondary Chat History thread sidebar */}
-      <aside className="w-72 bg-muted/40 border-r border-border flex flex-col h-full shrink-0">
-        {/* Chat History Header */}
-        <div className="p-4 border-b border-border space-y-3 h-28 flex flex-col justify-between shrink-0">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Chat History
-            </span>
-          </div>
-          <Button
-            onClick={handleNewChatClick}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm flex items-center justify-center gap-2 h-9 shadow-md shadow-indigo-600/10"
-          >
-            <Plus className="w-4 h-4" />
-            New Chat
-          </Button>
-        </div>
-
-        {/* Conversation list */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-1 bg-card/20">
-          {sessions.length === 0 ? (
-            <div className="py-12 text-center text-muted-foreground text-xs font-medium">
-              No conversation threads
-            </div>
-          ) : (
-            sessions.map((s) => (
-              <div
-                key={s.id}
-                onClick={() => setActiveSessionId(s.id)}
-                className={`w-full text-left py-2.5 px-3 rounded-lg text-sm font-medium flex items-center justify-between group cursor-pointer transition-colors ${
-                  activeSessionId === s.id
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                }`}
-              >
-                <div className="flex items-center gap-2.5 truncate">
-                  <MessageSquare className="w-4 h-4 shrink-0 text-indigo-400" />
-                  <span className="truncate">{s.title}</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSessionToDelete({ id: s.id, title: s.title });
-                  }}
-                  className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all rounded focus:outline-none"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            ))
-          )}
-        </div>
-      </aside>
+      <Sidebar
+        username={username}
+        currentPath="/chat"
+        activeSessionId={activeSessionId}
+        sessions={sessions}
+        onSelectSession={selectSession}
+        onCreateSession={handleNewChatClick}
+        onDeleteSession={setSessionToDelete}
+      />
 
       {/* Main Q&A viewport */}
       <main className="flex-1 flex flex-col h-full bg-background relative min-w-0">

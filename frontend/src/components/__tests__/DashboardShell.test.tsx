@@ -14,6 +14,18 @@ vi.mock('../../app/actions/auth', () => ({
   logoutAction: vi.fn(),
 }));
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  usePathname: () => '/',
+  useSearchParams: () => ({
+    get: vi.fn().mockReturnValue(null),
+  }),
+}));
+
 describe('DashboardShell Component', () => {
   const mockDocuments = [
     {
