@@ -155,10 +155,12 @@ export default function Sidebar({
     try {
       await apiDelete(`/sessions/${sessionToDelete.id}`);
       toast.success("Chat conversation deleted");
-      
+
       // If we deleted the active session stored in localStorage, clear it
       if (typeof window !== "undefined") {
-        const savedActive = localStorage.getItem("document_rag_active_session_id");
+        const savedActive = localStorage.getItem(
+          "document_rag_active_session_id",
+        );
         if (savedActive === sessionToDelete.id) {
           localStorage.removeItem("document_rag_active_session_id");
         }
@@ -184,7 +186,7 @@ export default function Sidebar({
           {!isSidebarCollapsed && (
             <div className="flex items-center gap-2 text-md font-semibold tracking-tight text-foreground select-none">
               <FileSpreadsheet className="w-5 h-5 text-indigo-500" />
-              <span>Antigravity RAG</span>
+              <span>Quarry</span>
             </div>
           )}
           {isSidebarCollapsed && (
@@ -272,7 +274,9 @@ export default function Sidebar({
                 >
                   <div className="flex items-center gap-2.5 truncate">
                     <MessageSquare className="w-4 h-4 shrink-0 text-indigo-400" />
-                    {!isSidebarCollapsed && <span className="truncate">{s.title}</span>}
+                    {!isSidebarCollapsed && (
+                      <span className="truncate">{s.title}</span>
+                    )}
                   </div>
 
                   {!isSidebarCollapsed && (

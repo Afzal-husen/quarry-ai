@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Document RAG REST API",
-  description: "Upload and chat with documents securely using local embeddings",
+  title: "Quarry - Dig deep into your documents",
+  description: "Dig deep into your documents to find exact text nuggets.",
 };
 
 export default function RootLayout({

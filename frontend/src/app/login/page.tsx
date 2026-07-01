@@ -8,14 +8,25 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { FileText, CheckCircle2, Lock, User, AlertCircle } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
 const loginSchema = z.object({
-  username: z.string().min(3, { message: "Username must be at least 3 characters" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  username: z
+    .string()
+    .min(3, { message: "Username must be at least 3 characters" }),
+  password: z
+    .string()
+    .min(6, { message: "Password must be at least 6 characters" }),
 });
 
 type LoginInput = z.infer<typeof loginSchema>;
@@ -68,15 +79,16 @@ export default function LoginPage() {
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md shadow-indigo-500/10">
             <FileText className="h-5 w-5 text-indigo-400" />
           </div>
-          <span>Antigravity RAG</span>
+          <span>Quarry</span>
         </div>
 
         <div className="relative z-20 my-auto space-y-6 max-w-lg">
           <h2 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-foreground via-foreground/90 to-foreground/60 bg-clip-text text-transparent leading-tight">
-            Interact with your documents like never before.
+            Dig deep into your documents to find exact text nuggets.
           </h2>
           <p className="text-muted-foreground text-lg">
-            Upload PDFs or Word files and query them using natural language. Fast, local embeddings and low-latency cloud inference.
+            Upload PDFs or Word files and query them using natural language.
+            Fast, local embeddings and low-latency cloud inference.
           </p>
 
           <div className="space-y-4 pt-4">
@@ -85,8 +97,12 @@ export default function LoginPage() {
                 <CheckCircle2 className="h-3.5 w-3.5" />
               </div>
               <div>
-                <p className="text-sm font-medium text-foreground">High-speed local ingestion</p>
-                <p className="text-xs text-muted-foreground">Chunked parsing and vector embedding on the fly.</p>
+                <p className="text-sm font-medium text-foreground">
+                  High-speed local ingestion
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Chunked parsing and vector embedding on the fly.
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
@@ -94,15 +110,20 @@ export default function LoginPage() {
                 <CheckCircle2 className="h-3.5 w-3.5" />
               </div>
               <div>
-                <p className="text-sm font-medium text-foreground">Typewriter-style SSE streaming</p>
-                <p className="text-xs text-muted-foreground">Immediate, progressive token synthesis responses.</p>
+                <p className="text-sm font-medium text-foreground">
+                  Typewriter-style SSE streaming
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Immediate, progressive token synthesis responses.
+                </p>
               </div>
             </div>
           </div>
         </div>
 
         <div className="relative z-20 mt-auto text-xs text-muted-foreground">
-          &copy; {new Date().getFullYear()} Antigravity Systems. All rights reserved.
+          &copy; {new Date().getFullYear()} Antigravity Systems. All rights
+          reserved.
         </div>
       </div>
 
@@ -114,13 +135,15 @@ export default function LoginPage() {
               <FileText className="h-6 w-6 text-indigo-400" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              Antigravity RAG
+              Quarry
             </h1>
           </div>
 
           <Card className="border-border bg-card shadow-2xl backdrop-blur-xl">
             <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl font-bold text-foreground">Sign In</CardTitle>
+              <CardTitle className="text-2xl font-bold text-foreground">
+                Sign In
+              </CardTitle>
               <CardDescription className="text-muted-foreground text-sm">
                 Enter your credentials to access your documents
               </CardDescription>
@@ -140,7 +163,10 @@ export default function LoginPage() {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="username" className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+                  <Label
+                    htmlFor="username"
+                    className="text-muted-foreground text-xs font-semibold uppercase tracking-wider"
+                  >
                     Username
                   </Label>
                   <div className="relative">
@@ -152,18 +178,25 @@ export default function LoginPage() {
                       disabled={isLoading}
                       {...register("username")}
                       className={`pl-9 border-border bg-muted/50 text-foreground placeholder-muted-foreground focus-visible:ring-indigo-500 focus-visible:border-indigo-500 ${
-                        errors.username ? "border-destructive focus-visible:ring-destructive" : ""
+                        errors.username
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : ""
                       }`}
                       aria-invalid={errors.username ? "true" : "false"}
                     />
                   </div>
                   {errors.username && (
-                    <p className="text-xs text-destructive mt-1 font-medium">{errors.username.message}</p>
+                    <p className="text-xs text-destructive mt-1 font-medium">
+                      {errors.username.message}
+                    </p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+                  <Label
+                    htmlFor="password"
+                    className="text-muted-foreground text-xs font-semibold uppercase tracking-wider"
+                  >
                     Password
                   </Label>
                   <div className="relative">
@@ -175,17 +208,25 @@ export default function LoginPage() {
                       disabled={isLoading}
                       {...register("password")}
                       className={`pl-9 border-border bg-muted/50 text-foreground placeholder-muted-foreground focus-visible:ring-indigo-500 focus-visible:border-indigo-500 ${
-                        errors.password ? "border-destructive focus-visible:ring-destructive" : ""
+                        errors.password
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : ""
                       }`}
                       aria-invalid={errors.password ? "true" : "false"}
                     />
                   </div>
                   {errors.password && (
-                    <p className="text-xs text-destructive mt-1 font-medium">{errors.password.message}</p>
+                    <p className="text-xs text-destructive mt-1 font-medium">
+                      {errors.password.message}
+                    </p>
                   )}
                 </div>
 
-                <Button type="submit" disabled={isLoading} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-md shadow-indigo-600/10 transition-colors">
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-md shadow-indigo-600/10 transition-colors"
+                >
                   {isLoading ? "Signing In..." : "Sign In"}
                 </Button>
               </form>
@@ -194,7 +235,10 @@ export default function LoginPage() {
             <CardFooter className="border-t border-border/50 pt-4 flex justify-center">
               <p className="text-xs text-muted-foreground">
                 {"Don't have an account? "}
-                <Link href="/register" className="font-semibold text-indigo-500 hover:text-indigo-400 transition-colors">
+                <Link
+                  href="/register"
+                  className="font-semibold text-indigo-500 hover:text-indigo-400 transition-colors"
+                >
                   Register here
                 </Link>
               </p>

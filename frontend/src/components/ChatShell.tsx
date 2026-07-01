@@ -619,7 +619,7 @@ export default function ChatShell({ username }: ChatShellProps) {
                             <div className="flex items-center gap-1.5 text-indigo-400 mb-2 select-none">
                               <Sparkles className="w-3.5 h-3.5 shrink-0" />
                               <span className="text-[10px] font-bold uppercase tracking-wider">
-                                Antigravity AI
+                                Quarry AI
                               </span>
                             </div>
                           )}
