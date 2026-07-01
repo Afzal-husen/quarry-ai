@@ -59,7 +59,7 @@ export default function PreviewModal({ isOpen, onClose, document }: PreviewModal
         if (isPdf) {
           const token = await getTokenAction();
           const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-          const url = `${baseUrl}/api/documents/${document.document_id}/file`;
+          const url = `${baseUrl}/documents/${document.document_id}/file`;
           
           const res = await fetch(url, {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -70,7 +70,8 @@ export default function PreviewModal({ isOpen, onClose, document }: PreviewModal
           }
 
           const blob = await res.blob();
-          const objUrl = URL.createObjectURL(blob);
+          const pdfBlob = new Blob([blob], { type: "application/pdf" });
+          const objUrl = URL.createObjectURL(pdfBlob);
           setPdfUrl(objUrl);
         } else {
           // Fetch DOC/DOCX chunks
@@ -122,7 +123,7 @@ export default function PreviewModal({ isOpen, onClose, document }: PreviewModal
     try {
       const token = await getTokenAction();
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-      const url = `${baseUrl}/api/documents/${document.document_id}/file?download=true`;
+      const url = `${baseUrl}/documents/${document.document_id}/file?download=true`;
       
       const res = await fetch(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -134,7 +135,9 @@ export default function PreviewModal({ isOpen, onClose, document }: PreviewModal
       const a = window.document.createElement("a");
       a.href = objUrl;
       a.download = document.filename;
+      window.document.body.appendChild(a);
       a.click();
+      window.document.body.removeChild(a);
       URL.revokeObjectURL(objUrl);
     } catch {
       toast.error("Failed to download document file");
