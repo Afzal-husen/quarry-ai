@@ -1,5 +1,17 @@
 # Milestones
 
+## v5.0 v5.0 (Shipped: 2026-07-01)
+
+**Phases completed:** 5 phases, 5 plans, 10 tasks
+
+**Key accomplishments:**
+
+- Exposed secure API endpoints to retrieve original document files and chunks metadata JSON, protected by JWT tenant ownership
+- Implemented a unified collapsible navigation sidebar component and successfully integrated it across both Dashboard and Chat screens, providing search-parameter synchronized transitions.
+- Redesigned the Dashboard file listing to modern responsive glassmorphic cards and implemented an immersive fullscreen PreviewModal component supporting secure PDF streaming (via Object URLs) and styled DOCX vertical sheet layers.
+
+---
+
 ## v4.1 Dark Mode Toggle (Shipped: 2026-06-29)
 
 **Phases completed:** 7 phases, 7 plans, 24 tasks
