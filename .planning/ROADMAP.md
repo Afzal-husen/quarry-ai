@@ -107,7 +107,6 @@ Plans:
   3. Script block payloads are sanitized and stripped of HTML injection risks.
 
 **Plans**: 1 plan
-
 Plans:
 
 - [ ] 40-01: Configure ReactMarkdown and RemarkGFM renderers inside the chat feedback bubble.
