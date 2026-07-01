@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v5.0
 milestone_name: milestone
 status: Awaiting next milestone
-stopped_at: Phase 40 completed and verified
-last_updated: "2026-07-01T06:34:24.638Z"
+stopped_at: Milestone v5.0 archived and completed
+last_updated: "2026-07-01T06:34:37.160Z"
 last_activity: 2026-07-01 — Milestone v5.0 completed and archived
 progress:
   total_phases: 5
@@ -94,9 +94,9 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-01T06:31:24.079Z
-Stopped at: Phase 40 completed and verified
-Resume file: .planning/STATE.md
+Last session: 2026-07-01T06:34:37.150Z
+Stopped at: Milestone v5.0 archived and completed
+Resume file: .planning/MILESTONES.md
 
 ## Operator Next Steps
 
