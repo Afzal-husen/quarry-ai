@@ -1,4 +1,8 @@
+---
+status: passed
+---
 # UAT: Phase 40: Rich Text & Markdown Rendering Polish
+
 
 User Acceptance Testing tracking for Phase 40.
 

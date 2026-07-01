@@ -1,4 +1,8 @@
+---
+status: passed
+---
 # UAT: Phase 38: Document Cards Grid & Preview Modal
+
 
 User Acceptance Testing tracking for Phase 38.
 
