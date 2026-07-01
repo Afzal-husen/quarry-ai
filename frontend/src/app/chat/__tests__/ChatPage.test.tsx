@@ -111,4 +111,80 @@ describe('Chat Interface Component', () => {
     const plusButton = screen.getByLabelText('Add context or actions');
     expect(plusButton).toBeDefined();
   });
+
+  it('parses and renders Markdown content (headers, bold, italic, list items, code blocks, and tables) correctly', async () => {
+    const markdownContent = `
+# Main Header
+**bold text** and *italic text* and \`inline code\`
+
+- item one
+- item two
+
+| Header A | Header B |
+|----------|----------|
+| Val A    | Val B    |
+
+\`\`\`javascript
+const test = 123;
+\`\`\`
+[1]
+`;
+
+    const { apiGet } = await import('../../../lib/api-client');
+    vi.mocked(apiGet).mockImplementation((path) => {
+      if (path === '/sessions/session-1') {
+        return Promise.resolve({
+          id: 'session-1',
+          title: 'First Conversation',
+          messages: [
+            {
+              id: 'chat-1',
+              role: 'assistant',
+              content: markdownContent,
+              metadata: {
+                citations: [
+                  { source_filename: 'document_one.pdf', page_index: 2, text: 'Cited text content' }
+                ]
+              },
+              created_at: '2026-06-27T10:10:00Z'
+            }
+          ]
+        });
+      }
+      if (path.startsWith('/sessions')) {
+        return Promise.resolve({ items: mockSessions });
+      }
+      if (path === '/documents') {
+        return Promise.resolve({ items: mockDocuments });
+      }
+      return Promise.resolve({ items: [] });
+    });
+
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn().mockImplementation((key) => {
+        if (key === 'document_rag_active_session_id') return 'session-1';
+        if (key === 'document_rag_session_docs_session-1') return JSON.stringify(['doc-1']);
+        return null;
+      }),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+    });
+
+    render(<ChatShell username="test-user" />);
+
+    // Wait for the markdown components to render in the chat window
+    await screen.findByText('Main Header');
+    expect(screen.getByText('bold text')).toBeDefined();
+    expect(screen.getByText('italic text')).toBeDefined();
+    expect(screen.getByText('inline code')).toBeDefined();
+    expect(screen.getByText('item one')).toBeDefined();
+    expect(screen.getByText('item two')).toBeDefined();
+    expect(screen.getByText('Header A')).toBeDefined();
+    expect(screen.getByText('Val B')).toBeDefined();
+    expect(screen.getByText('const test = 123;')).toBeDefined();
+    
+    // Check citation badge renders
+    expect(screen.getByText('[1]')).toBeDefined();
+  });
 });

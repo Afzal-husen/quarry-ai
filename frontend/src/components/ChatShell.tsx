@@ -19,6 +19,7 @@ import { getTokenAction } from "../app/actions/cookies";
 import { useSearchParams, useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
 import PreviewModal from "./PreviewModal";
+import { parseMarkdown } from "../lib/markdown-parser";
 import { ThemeToggle } from "./ThemeToggle";
 import { toast } from "sonner";
 import {
@@ -519,47 +520,33 @@ export default function ChatShell({ username }: ChatShellProps) {
       | undefined,
     isStreaming: boolean,
   ) => {
-    if (!citations || citations.length === 0) {
-      return (
-        <span className="whitespace-pre-wrap leading-relaxed text-sm">
-          {content}
-          {isStreaming && (
-            <span className="inline-block w-2.5 h-4 ml-1 bg-indigo-400 animate-pulse select-none align-middle" />
-          )}
-        </span>
-      );
-    }
-
-    const parts = content.split(/(\[\d+\])/g);
-    return (
-      <span className="whitespace-pre-wrap leading-relaxed text-sm">
-        {parts.map((part, index) => {
-          const match = part.match(/^\[(\d+)\]$/);
-          if (match) {
-            const citationIdx = parseInt(match[1], 10) - 1;
-            const citation = citations[citationIdx];
-            if (citation) {
-              return (
-                <CitationBadge
-                  key={index}
-                  index={citationIdx + 1}
-                  onSelect={() =>
-                    setSelectedCitation({
-                      source_filename: citation.source_filename,
-                      page_index: citation.page_index,
-                      text: citation.text,
-                    })
-                  }
-                />
-              );
+    const handleRenderCitation = (citationIdx: number) => {
+      const actualIdx = citationIdx - 1;
+      const citation = citations ? citations[actualIdx] : undefined;
+      if (citation) {
+        return (
+          <CitationBadge
+            index={citationIdx}
+            onSelect={() =>
+              setSelectedCitation({
+                source_filename: citation.source_filename,
+                page_index: citation.page_index,
+                text: citation.text,
+              })
             }
-          }
-          return part;
-        })}
+          />
+        );
+      }
+      return `[${citationIdx}]`;
+    };
+
+    return (
+      <div className="space-y-1.5 break-words">
+        {parseMarkdown(content, handleRenderCitation)}
         {isStreaming && (
           <span className="inline-block w-2.5 h-4 ml-1 bg-indigo-400 animate-pulse select-none align-middle" />
         )}
-      </span>
+      </div>
     );
   };
 
