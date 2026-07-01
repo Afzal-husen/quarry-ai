@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { X, Download, FileText, Loader2 } from "lucide-react";
 import { getTokenAction } from "../app/actions/cookies";
 import { apiGet } from "../lib/api-client";
@@ -33,17 +33,16 @@ export default function PreviewModal({ isOpen, onClose, document }: PreviewModal
   const [textPages, setTextPages] = useState<Record<number, string[]>>({});
   const [error, setError] = useState<string | null>(null);
 
-  const cleanUpPdf = useCallback(() => {
-    if (pdfUrl) {
-      URL.revokeObjectURL(pdfUrl);
-      setPdfUrl(null);
-    }
-  }, [pdfUrl]);
+  const pdfUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!isOpen || !document) {
       setTimeout(() => {
-        cleanUpPdf();
+        if (pdfUrlRef.current) {
+          URL.revokeObjectURL(pdfUrlRef.current);
+          pdfUrlRef.current = null;
+        }
+        setPdfUrl(null);
         setTextPages({});
         setError(null);
       }, 0);
@@ -70,8 +69,8 @@ export default function PreviewModal({ isOpen, onClose, document }: PreviewModal
           }
 
           const blob = await res.blob();
-          const pdfBlob = new Blob([blob], { type: "application/pdf" });
-          const objUrl = URL.createObjectURL(pdfBlob);
+          const objUrl = URL.createObjectURL(blob);
+          pdfUrlRef.current = objUrl;
           setPdfUrl(objUrl);
         } else {
           // Fetch DOC/DOCX chunks
@@ -111,9 +110,12 @@ export default function PreviewModal({ isOpen, onClose, document }: PreviewModal
     loadPreview();
 
     return () => {
-      cleanUpPdf();
+      if (pdfUrlRef.current) {
+        URL.revokeObjectURL(pdfUrlRef.current);
+        pdfUrlRef.current = null;
+      }
     };
-  }, [isOpen, document, cleanUpPdf]);
+  }, [isOpen, document]);
 
   if (!isOpen || !document) return null;
 
