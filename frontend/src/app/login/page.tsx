@@ -98,10 +98,10 @@ export default function LoginPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  High-speed local ingestion
+                  Instant document scanning
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Chunked parsing and vector embedding on the fly.
+                  Read and understand your files in seconds.
                 </p>
               </div>
             </div>
@@ -111,10 +111,10 @@ export default function LoginPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Typewriter-style SSE streaming
+                  Real-time answers
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Immediate, progressive token synthesis responses.
+                  Get immediate, helpful responses as they are generated.
                 </p>
               </div>
             </div>

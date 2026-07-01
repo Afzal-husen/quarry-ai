@@ -100,7 +100,6 @@ export default function RegisterPage() {
             Upload PDFs or Word files and query them using natural language.
             Fast, local embeddings and low-latency cloud inference.
           </p>
-
           <div className="space-y-4 pt-4">
             <div className="flex items-start gap-3">
               <div className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400">
@@ -108,10 +107,10 @@ export default function RegisterPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  High-speed local ingestion
+                  Instant document scanning
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Chunked parsing and vector embedding on the fly.
+                  Read and understand your files in seconds.
                 </p>
               </div>
             </div>
@@ -121,10 +120,10 @@ export default function RegisterPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Typewriter-style SSE streaming
+                  Real-time answers
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Immediate, progressive token synthesis responses.
+                  Get immediate, helpful responses as they are generated.
                 </p>
               </div>
             </div>
