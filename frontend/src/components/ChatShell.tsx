@@ -5,17 +5,20 @@ import {
   MessageSquare,
   Send,
   FileText,
-  ChevronDown,
   BookOpen,
   AlertCircle,
   Sparkles,
   Check,
   ChevronRight,
+  Plus,
+  Eye,
+  X,
 } from "lucide-react";
 import { apiGet, apiDelete, apiPost } from "../lib/api-client";
 import { getTokenAction } from "../app/actions/cookies";
 import { useSearchParams, useRouter } from "next/navigation";
 import Sidebar from "./Sidebar";
+import PreviewModal from "./PreviewModal";
 import { ThemeToggle } from "./ThemeToggle";
 import { toast } from "sonner";
 import {
@@ -26,8 +29,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Card } from "./ui/card";
 
 interface SessionItem {
   id: string;
@@ -95,10 +98,11 @@ export default function ChatShell({ username }: ChatShellProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
-  const [isDocDropdownOpen, setIsDocDropdownOpen] = useState(false);
-
   const [isContextModalOpen, setIsContextModalOpen] = useState(false);
   const [tempSelectedDocIds, setTempSelectedDocIds] = useState<string[]>([]);
+  const [activePreviewDoc, setActivePreviewDoc] = useState<DocumentItem | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<{
     id: string;
     title: string;
@@ -261,6 +265,21 @@ export default function ChatShell({ username }: ChatShellProps) {
     }
   }, []);
 
+  const handleOpenContextModal = async () => {
+    try {
+      const res = await apiGet("/documents");
+      if (!res || !res.items || res.items.length === 0) {
+        toast.error("You must upload at least one document to select context.");
+      } else {
+        setDocuments(res.items);
+        setTempSelectedDocIds(selectedDocIds.length > 0 ? selectedDocIds : [res.items[0].document_id]);
+        setIsContextModalOpen(true);
+      }
+    } catch {
+      toast.error("Failed to access document registry.");
+    }
+  };
+
   // Sync activeSessionId with URL query parameter
   const paramSessionId = searchParams.get("session_id");
   useEffect(() => {
@@ -307,6 +326,28 @@ export default function ChatShell({ username }: ChatShellProps) {
       }
     } catch {
       toast.error("Failed to create chat session.");
+    }
+  };
+
+  const handleSaveContext = async () => {
+    if (tempSelectedDocIds.length === 0) {
+      toast.error("Please select at least one document context.");
+      return;
+    }
+
+    if (activeSessionId) {
+      try {
+        localStorage.setItem(
+          `document_rag_session_docs_${activeSessionId}`,
+          JSON.stringify(tempSelectedDocIds),
+        );
+      } catch (err) {
+        console.warn("Failed to save document context:", err);
+      }
+      setSelectedDocIds(tempSelectedDocIds);
+      setIsContextModalOpen(false);
+    } else {
+      await handleStartChat();
     }
   };
 
@@ -548,89 +589,7 @@ export default function ChatShell({ username }: ChatShellProps) {
 
               <div className="flex items-center gap-3">
                 <ThemeToggle />
-                {/* Context checklist dropdown */}
-                <div ref={dropdownRef} className="relative">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setIsDocDropdownOpen(!isDocDropdownOpen)}
-                    className="bg-muted border border-border hover:bg-muted/65 rounded-lg text-xs font-medium text-foreground flex items-center gap-1.5 transition-colors h-8"
-                  >
-                    <BookOpen className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                    <span>Context ({selectedDocIds.length} files)</span>
-                    <ChevronDown className="w-3 h-3 text-muted-foreground" />
-                  </Button>
 
-                  {isDocDropdownOpen && (
-                    <Card className="absolute right-0 mt-2 w-72 bg-card border-border shadow-2xl z-50 overflow-hidden">
-                      <div className="p-3 border-b border-border bg-muted/40">
-                        <p className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
-                          Query Target Files
-                        </p>
-                      </div>
-                      <div className="max-h-60 overflow-y-auto p-2 space-y-1">
-                        {documents.length === 0 ? (
-                          <p className="text-xs text-muted-foreground p-2 text-center">
-                            No documents found
-                          </p>
-                        ) : (
-                          documents.map((doc) => {
-                            const isChecked = selectedDocIds.includes(
-                              doc.document_id,
-                            );
-                            return (
-                              <button
-                                key={doc.document_id}
-                                onClick={() => {
-                                  let newSelection;
-                                  if (isChecked) {
-                                    newSelection = selectedDocIds.filter(
-                                      (id) => id !== doc.document_id,
-                                    );
-                                  } else {
-                                    newSelection = [
-                                      ...selectedDocIds,
-                                      doc.document_id,
-                                    ];
-                                  }
-                                  setSelectedDocIds(newSelection);
-                                  if (activeSessionId) {
-                                    try {
-                                      localStorage.setItem(
-                                        `document_rag_session_docs_${activeSessionId}`,
-                                        JSON.stringify(newSelection),
-                                      );
-                                    } catch (err) {
-                                      console.warn(
-                                        "Failed to save document context:",
-                                        err,
-                                      );
-                                    }
-                                  }
-                                }}
-                                className="w-full flex items-center gap-2.5 p-2 rounded-lg text-xs hover:bg-accent cursor-pointer select-none text-muted-foreground hover:text-foreground text-left transition-colors"
-                              >
-                                <div
-                                  className={`w-3.5 h-3.5 rounded border flex items-center justify-center transition-colors shrink-0 ${
-                                    isChecked
-                                      ? "bg-indigo-600 border-indigo-600 text-white"
-                                      : "border-border bg-muted"
-                                  }`}
-                                >
-                                  {isChecked && (
-                                    <Check className="w-2.5 h-2.5" />
-                                  )}
-                                </div>
-                                <span className="truncate flex-1">
-                                  {doc.filename}
-                                </span>
-                              </button>
-                            );
-                          })
-                        )}
-                      </div>
-                    </Card>
-                  )}
-                </div>
               </div>
             </header>
 
@@ -698,37 +657,100 @@ export default function ChatShell({ username }: ChatShellProps) {
 
             {/* Input Panel */}
             <div className="p-4 border-t border-border bg-background/40 shrink-0">
+              {/* Active context badges */}
+              {selectedDocIds.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2.5 max-w-3xl mx-auto">
+                  {selectedDocIds.map((id) => {
+                    const doc = documents.find((d) => d.document_id === id);
+                    if (!doc) return null;
+                    return (
+                      <div
+                        key={id}
+                        className="flex items-center gap-1 bg-indigo-950/40 hover:bg-indigo-900/50 border border-indigo-700/30 text-indigo-300 px-2 py-0.5 rounded-lg text-[10px] transition-colors"
+                      >
+                        <span className="truncate max-w-[150px]">{doc.filename}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newSelection = selectedDocIds.filter((x) => x !== id);
+                            setSelectedDocIds(newSelection);
+                            if (activeSessionId) {
+                              try {
+                                localStorage.setItem(
+                                  `document_rag_session_docs_${activeSessionId}`,
+                                  JSON.stringify(newSelection),
+                                );
+                              } catch (err) {
+                                console.warn("Failed to save document context:", err);
+                              }
+                            }
+                          }}
+                          className="hover:text-red-400 p-0.5 rounded-full shrink-0 cursor-pointer"
+                          title="Remove from context"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               <form
                 onSubmit={handleSend}
-                className="max-w-3xl mx-auto relative flex items-center gap-3"
+                className="max-w-3xl mx-auto flex items-center gap-3"
               >
-                <input
-                  type="text"
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  disabled={loading || selectedDocIds.length === 0}
-                  placeholder={
-                    selectedDocIds.length === 0
-                      ? "Select at least one document target..."
-                      : "Ask a question about your documents..."
-                  }
-                  className="flex-1 bg-muted border border-border rounded-xl py-3 pl-4 pr-12 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus-visible:border-indigo-600 focus:ring-0 focus:ring-offset-0 disabled:opacity-50"
-                />
-                <Button
-                  type="submit"
-                  disabled={
-                    !question.trim() || loading || selectedDocIds.length === 0
-                  }
-                  className="absolute right-2.5 p-0 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors disabled:bg-muted disabled:text-muted-foreground w-8 h-8 flex items-center justify-center shadow-sm"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                </Button>
+                <div className="flex items-center gap-2 flex-1 bg-muted border border-border rounded-xl px-3 py-1.5 focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600 transition-all">
+                  <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                    <PopoverTrigger
+                      type="button"
+                      className="h-8 w-8 hover:bg-accent text-muted-foreground hover:text-foreground shrink-0 rounded-lg flex items-center justify-center cursor-pointer"
+                      aria-label="Add context or actions"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-40 p-1 bg-card border-border text-foreground shadow-xl">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsPopoverOpen(false);
+                          handleOpenContextModal();
+                        }}
+                        className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs hover:bg-accent cursor-pointer text-left text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <BookOpen className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                        <span>Context</span>
+                      </button>
+                    </PopoverContent>
+                  </Popover>
+
+                  <input
+                    type="text"
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                    disabled={loading || selectedDocIds.length === 0}
+                    placeholder={
+                      selectedDocIds.length === 0
+                        ? "Add document context via + menu..."
+                        : "Ask a question about your documents..."
+                    }
+                    className="flex-1 bg-transparent border-0 outline-none ring-0 placeholder-muted-foreground text-sm text-foreground focus:ring-0 focus:outline-none"
+                  />
+
+                  <Button
+                    type="submit"
+                    disabled={!question.trim() || loading || selectedDocIds.length === 0}
+                    className="h-8 w-8 p-0 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors disabled:bg-muted disabled:text-muted-foreground flex items-center justify-center shadow-sm shrink-0"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
               </form>
+
               {selectedDocIds.length === 0 && (
                 <p className="text-center text-[10px] text-red-400 mt-2 flex items-center justify-center gap-1 font-medium">
                   <AlertCircle className="w-3.5 h-3.5" />
-                  Select at least one document context in the top-right header
-                  to unlock text inputs.
+                  Select at least one document context in the + menu to unlock text inputs.
                 </p>
               )}
             </div>
@@ -838,43 +860,66 @@ export default function ChatShell({ username }: ChatShellProps) {
           </DialogHeader>
 
           <div className="py-4">
-            <div className="max-h-60 overflow-y-auto space-y-1.5 border border-border p-2.5 rounded-lg bg-muted/40">
-              {documents.map((doc) => {
-                const isChecked = tempSelectedDocIds.includes(doc.document_id);
-                return (
-                  <button
-                    key={doc.document_id}
-                    onClick={() => {
-                      if (isChecked) {
-                        setTempSelectedDocIds(
-                          tempSelectedDocIds.filter(
-                            (id) => id !== doc.document_id,
-                          ),
-                        );
-                      } else {
-                        setTempSelectedDocIds([
-                          ...tempSelectedDocIds,
-                          doc.document_id,
-                        ]);
-                      }
-                    }}
-                    className="w-full flex items-center justify-between p-2.5 rounded-lg text-xs hover:bg-accent cursor-pointer select-none text-muted-foreground hover:text-foreground text-left transition-colors"
-                  >
-                    <span className="truncate max-w-[280px] font-medium">
-                      {doc.filename}
-                    </span>
+            <div className="max-h-60 overflow-y-auto space-y-1 border border-border p-2.5 rounded-lg bg-muted/40">
+              {documents.length === 0 ? (
+                <p className="text-xs text-muted-foreground p-2 text-center">
+                  No documents found
+                </p>
+              ) : (
+                documents.map((doc) => {
+                  const isChecked = tempSelectedDocIds.includes(doc.document_id);
+                  return (
                     <div
-                      className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 ${
-                        isChecked
-                          ? "bg-indigo-600 border-indigo-600 text-white"
-                          : "border-border bg-muted"
-                      }`}
+                      key={doc.document_id}
+                      className="flex items-center justify-between p-1.5 rounded-lg hover:bg-accent/50 text-xs text-muted-foreground hover:text-foreground transition-colors group"
                     >
-                      {isChecked && <Check className="w-3 h-3" />}
+                      <div
+                        onClick={() => {
+                          if (isChecked) {
+                            setTempSelectedDocIds(
+                              tempSelectedDocIds.filter(
+                                (id) => id !== doc.document_id,
+                              ),
+                            );
+                          } else {
+                            setTempSelectedDocIds([
+                              ...tempSelectedDocIds,
+                              doc.document_id,
+                            ]);
+                          }
+                        }}
+                        className="flex-1 flex items-center gap-2.5 cursor-pointer py-1 select-none"
+                      >
+                        <div
+                          className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 ${
+                            isChecked
+                              ? "bg-indigo-600 border-indigo-600 text-white"
+                              : "border-border bg-muted"
+                          }`}
+                        >
+                          {isChecked && <Check className="w-3 h-3" />}
+                        </div>
+                        <span className="truncate max-w-[240px] font-medium">
+                          {doc.filename}
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActivePreviewDoc(doc);
+                          setIsPreviewOpen(true);
+                        }}
+                        className="h-7 w-7 text-muted-foreground hover:text-indigo-400 hover:bg-indigo-950/30 rounded-md shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                        title="Preview Document"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </Button>
                     </div>
-                  </button>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -887,15 +932,24 @@ export default function ChatShell({ username }: ChatShellProps) {
               Cancel
             </Button>
             <Button
-              onClick={handleStartChat}
+              onClick={handleSaveContext}
               disabled={tempSelectedDocIds.length === 0}
               className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium"
             >
-              Start Chat
+              Save Context
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => {
+          setIsPreviewOpen(false);
+          setActivePreviewDoc(null);
+        }}
+        document={activePreviewDoc}
+      />
 
       {/* Delete Thread Confirmation Dialog */}
       <Dialog

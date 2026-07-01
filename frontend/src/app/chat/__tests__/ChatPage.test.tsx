@@ -69,4 +69,46 @@ describe('Chat Interface Component', () => {
     await screen.findByText('First Conversation');
     await screen.findByText('Second Conversation');
   });
+
+  it('renders active session chat view with input plus button and selected document badges', async () => {
+    const { apiGet } = await import('../../../lib/api-client');
+    vi.mocked(apiGet).mockImplementation((path) => {
+      if (path.startsWith('/sessions/session-1/chats')) {
+        return Promise.resolve({ items: [] });
+      }
+      if (path.startsWith('/sessions')) {
+        return Promise.resolve({ items: mockSessions });
+      }
+      if (path === '/documents') {
+        return Promise.resolve({ items: mockDocuments });
+      }
+      return Promise.resolve({ items: [] });
+    });
+
+    // Mock localStorage
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn().mockImplementation((key) => {
+        if (key === 'document_rag_active_session_id') return 'session-1';
+        if (key === 'document_rag_session_docs_session-1') return JSON.stringify(['doc-1']);
+        return null;
+      }),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+    });
+
+    render(<ChatShell username="test-user" />);
+
+    // Verify active context badge displays the document name (waits for async state update)
+    const badge = await screen.findByText('document_one.pdf');
+    expect(badge).toBeDefined();
+
+    // Assert that input is visible and placeholder is for active document scoping
+    const textInput = screen.getByPlaceholderText('Ask a question about your documents...');
+    expect(textInput).toBeDefined();
+
+    // Verify Plus icon button is rendered (button with aria-label="Add context or actions")
+    const plusButton = screen.getByLabelText('Add context or actions');
+    expect(plusButton).toBeDefined();
+  });
 });
