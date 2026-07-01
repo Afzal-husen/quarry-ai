@@ -91,7 +91,6 @@ Plans:
   3. Checked documents scope active chat queries, and checklist items have preview links.
 
 **Plans**: 1 plan
-
 Plans:
 
 - [ ] 39-01: Implement input Plus popover menu and context document checklist selection modal.
