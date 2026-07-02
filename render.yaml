@@ -1,0 +1,64 @@
+# render.yaml — Render Blueprint for Document RAG Backend
+# https://render.com/docs/blueprint-spec
+#
+# This deploys the FastAPI backend as a Render Web Service with a persistent
+# disk for SQLite, uploaded files, and Chroma vector indexes.
+#
+# To use:
+#   1. Push this file to your repository root
+#   2. Go to render.com → New → Blueprint → select this repo
+#   3. Fill in the prompted secret values (GROQ_API_KEY, JWT_SECRET_KEY)
+#   4. After deploy, set CORS_ORIGINS to your Vercel frontend URL
+
+services:
+  - type: web
+    name: document-rag-backend
+    runtime: python
+    rootDir: backend
+    region: oregon          # Change to: frankfurt, singapore, ohio, virginia
+    plan: starter           # free tier available; upgrade for no sleep
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+
+    # Persistent disk — mounts at /data inside the container.
+    # This keeps SQLite, uploaded files, and Chroma indexes across deploys.
+    disk:
+      name: document-rag-data
+      mountPath: /data
+      sizeGB: 10            # 10 GB is enough for most document collections
+
+    envVars:
+      # ── Required secrets (set sync: false → Render prompts you for values) ──
+      - key: GROQ_API_KEY
+        sync: false
+
+      - key: JWT_SECRET_KEY
+        generateValue: true  # Auto-generates a secure random secret
+
+      # ── CORS: set to your Vercel frontend URL after first deploy ──
+      - key: CORS_ORIGINS
+        value: http://localhost:3000  # Update after Vercel deploy
+
+      # ── Storage paths pointing at the persistent disk mount ──
+      - key: DATA_DIR
+        value: /data
+
+      # ── Embedding & chunking config (defaults match local dev) ──
+      - key: EMBEDDING_MODEL
+        value: sentence-transformers/all-MiniLM-L6-v2
+
+      - key: CHUNK_SIZE
+        value: "500"
+
+      - key: CHUNK_OVERLAP
+        value: "50"
+
+      - key: RERANK_MODEL
+        value: ms-marco-MiniLM-L-12-v2
+
+      # ── Hybrid search RRF weights ──
+      - key: HYBRID_LEXICAL_WEIGHT
+        value: "0.5"
+
+      - key: HYBRID_SEMANTIC_WEIGHT
+        value: "0.5"

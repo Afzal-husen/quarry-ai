@@ -2,8 +2,10 @@ import sqlite3
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 
-# Resolve database path under the data/ folder of the backend root
-DB_DIR = Path(__file__).resolve().parent.parent.parent / "data"
+from app.core.paths import get_data_dir
+
+# Resolve database path under the configured data directory
+DB_DIR = get_data_dir()
 DB_PATH = DB_DIR / "users.db"
 
 

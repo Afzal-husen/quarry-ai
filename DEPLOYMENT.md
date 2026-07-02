@@ -53,17 +53,49 @@ Choose one of the following persistent hosting options.
 
 7. Deploy and note the generated Railway URL (e.g., `https://your-app.railway.app`)
 
-### Option B: Render (Free Tier Available)
+### Option B: Render
 
-1. Create an account at [render.com](https://render.com)
-2. Click **New → Web Service → Connect a GitHub repository**
-3. Set **Root Directory** to `backend`
-4. Set **Build Command**: `pip install -r requirements.txt`
-5. Set **Start Command**: `uvicorn main:app --host 0.0.0.0 --port $PORT`
-6. Add the same environment variables as listed in Option A above
-7. Deploy and note your Render URL (e.g., `https://your-app.onrender.com`)
+1. Push your repository to GitHub (if not already done)
+2. Go to [dashboard.render.com](https://dashboard.render.com) and sign in
+3. Click **New → Blueprint** and connect your repository
+   - Render will auto-detect `render.yaml` at the repo root and configure the service
+4. During setup, Render will prompt you to fill in secret values:
+   - `GROQ_API_KEY` → Your Groq API key from [console.groq.com](https://console.groq.com)
+   - (All other values are pre-configured in `render.yaml`)
+5. Click **Apply** — Render creates the Web Service + attaches the 10 GB persistent disk
+6. Wait for the first deploy to complete (5–10 min on first build; model weights download)
+7. Note your Render URL (e.g., `https://document-rag-backend.onrender.com`)
 
-> ⚠️ Render free tier spins down after inactivity — expect ~30s cold starts.
+**Alternatively, deploy manually (without render.yaml):**
+
+1. Click **New → Web Service** → connect your repository
+2. Configure:
+
+   | Setting | Value |
+   |---------|-------|
+   | **Language** | Python 3 |
+   | **Root Directory** | `backend` |
+   | **Build Command** | `pip install -r requirements.txt` |
+   | **Start Command** | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
+
+3. Add a **Disk** under the service's **Disks** tab:
+   - **Mount Path**: `/data`
+   - **Size**: 10 GB (or more for large document collections)
+
+4. Add the following **Environment Variables**:
+
+   | Variable | Value |
+   |----------|-------|
+   | `GROQ_API_KEY` | Your Groq API key |
+   | `JWT_SECRET_KEY` | Random 64-char string |
+   | `CORS_ORIGINS` | *(set after Vercel deploy)* |
+   | `DATA_DIR` | `/data` |
+   | `EMBEDDING_MODEL` | `sentence-transformers/all-MiniLM-L6-v2` |
+   | `CHUNK_SIZE` | `500` |
+   | `CHUNK_OVERLAP` | `50` |
+
+> ⚠️ Render's **free tier** spins down after 15 minutes of inactivity — expect ~30s cold starts.
+> Upgrade to the **Starter plan** ($7/mo) for always-on instances.
 
 ### Option C: Keep Backend Local / On a VPS
 

@@ -12,13 +12,14 @@ from app.core.auth import get_current_user
 from app.core.chunker import DocumentChunker
 from app.core.parsers import DocumentParser, DocumentParsingError
 from app.core.vectorstore import VectorStoreManager, VectorStoreError, ChromaConnectionCache
+from app.core.paths import get_data_dir
 
 router = APIRouter()
 
-# Resolve storage directories relative to backend root
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-UPLOADS_DIR = BASE_DIR / "data" / "uploads"
-CHUNKS_DIR = BASE_DIR / "data" / "chunks"
+# Resolve storage directories from configured data root (DATA_DIR env or local fallback)
+_DATA_DIR = get_data_dir()
+UPLOADS_DIR = _DATA_DIR / "uploads"
+CHUNKS_DIR = _DATA_DIR / "chunks"
 
 ALLOWED_EXTENSIONS = {".pdf", ".doc", ".docx"}
 

@@ -28,6 +28,7 @@ import time
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import StreamingResponse
 from app.core.logging_config import setup_structured_logging
+from app.core.paths import get_data_dir
 
 # Load environment configurations relative to the module root
 env_path = Path(__file__).parent / ".env"
@@ -40,10 +41,11 @@ setup_structured_logging()
 UserDatabaseManager.initialize_db()
 
 # Ensure local storage directories exist on server startup
-BASE_DIR = Path(__file__).resolve().parent
-(BASE_DIR / "data" / "uploads").mkdir(parents=True, exist_ok=True)
-(BASE_DIR / "data" / "chunks").mkdir(parents=True, exist_ok=True)
-(BASE_DIR / "data" / "vectorstore").mkdir(parents=True, exist_ok=True)
+# DATA_DIR env var points to Render's persistent disk mount (/data) in production
+_DATA_DIR = get_data_dir()
+(_DATA_DIR / "uploads").mkdir(parents=True, exist_ok=True)
+(_DATA_DIR / "chunks").mkdir(parents=True, exist_ok=True)
+(_DATA_DIR / "vectorstore").mkdir(parents=True, exist_ok=True)
 
 
 @asynccontextmanager

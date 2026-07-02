@@ -7,6 +7,8 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
+from app.core.paths import get_data_dir
+
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_core.vectorstores import VectorStoreRetriever
@@ -142,9 +144,9 @@ class VectorStoreManager:
 
     def __init__(self):
         """Initializes the VectorStoreManager resolving backend data directories."""
-        self.base_dir = Path(__file__).resolve().parent.parent.parent
-        self.chunks_dir = self.base_dir / "data" / "chunks"
-        self.vectorstore_dir = self.base_dir / "data" / "vectorstore"
+        data_dir = get_data_dir()
+        self.chunks_dir = data_dir / "chunks"
+        self.vectorstore_dir = data_dir / "vectorstore"
 
     def index_document(self, user_id: str, document_id: str, source_filename: str) -> Path:
         """Reads serialized JSON chunks and indexes them inside an isolated Chroma DB folder on disk.
