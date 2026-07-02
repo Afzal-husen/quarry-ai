@@ -1,77 +1,72 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-06-22
+**Analysis Date:** 2026-07-02
 
 ## Naming Patterns
 
-**Files:**
-- `snake_case.py` for Python modules (`main.py`, `vectorstore.py`, `reranker.py`)
-- kebab-case for config files, assets, and documentation
+### Backend (Python):
+- **Files:** `snake_case.py` for Python modules (`main.py`, `vectorstore.py`).
+- **Functions:** `snake_case` for all functions (`main()`, `get_hybrid_retriever()`).
+- **Variables:** `snake_case` for variables (`document_path`, `chunk_size`).
+- **Constants:** `UPPER_SNAKE_CASE` for global constants (`DEFAULT_CHUNK_SIZE`).
+- **Classes:** PascalCase for custom classes (`VectorStoreManager`, `UserDatabaseManager`).
+- **Exceptions:** PascalCase ending in `Error` for domain exceptions (`VectorStoreError`).
 
-**Functions:**
-- `snake_case` for all functions (`main()`, `get_hybrid_retriever()`, `get_current_user()`)
-
-**Variables:**
-- `snake_case` for variables (`document_path`, `chunk_size`, `user_id`)
-- `UPPER_SNAKE_CASE` for global constants (`DEFAULT_CHUNK_SIZE`, `MAX_TOKENS`)
-
-**Classes:**
-- PascalCase for custom classes (`VectorStoreManager`, `RerankManager`, `QAPipeline`, `UserDatabaseManager`)
-
-**Custom Exceptions:**
-- PascalCase ending in `Error` for domain-specific exceptions (`VectorStoreError`, `EmbeddingsError`, `RerankerError`, `GroqConnectionError`, `InferenceError`)
+### Frontend (TypeScript / React):
+- **Component Files:** PascalCase for React component modules (`ChatShell.tsx`, `Sidebar.tsx`).
+- **Utility Files:** kebab-case or camelCase for utility scripts (`api-client.ts`, `utils.ts`).
+- **React Components:** PascalCase for React function definitions (`ChatShell`, `Sidebar`).
+- **Functions:** camelCase for helper methods (`apiGet()`, `parseMarkdown()`).
+- **Variables:** camelCase for variables and states (`initialDocuments`, `username`, `setMessages`).
+- **Interfaces & Types:** PascalCase for definitions (`SessionItem`, `Message`, `UploadModalProps`).
 
 ## Code Style
 
-**Formatting:**
-- Standard PEP8 style formatting for Python scripts
-- 4-space indentation for blocks and nesting
-- Double quotes preferred for strings, unless nested inside single-quoted expressions
+### Backend (Python):
+- Standard PEP8 style formatting.
+- 4-space indentation for blocks.
+- Double quotes preferred for strings.
+- Explicit type hints on public interfaces and route functions.
 
-**Linting:**
-- None configured. Recommended: Ruff for fast, unified formatting and lint rules.
+### Frontend (TypeScript / React):
+- 2-space indentation.
+- Double quotes preferred for string literals.
+- Semi-colons included at line endings.
+- Explicit TypeScript types for all component properties (`props`) and state variables.
+- Direct use of Tailwind CSS classes for layout and visual styling.
 
 ## Import Organization
 
-**Order:**
-1. Python standard library imports (e.g., `os`, `sys`, `pathlib`, `threading`, `json`)
-2. External third-party package imports (e.g., `fastapi`, `pydantic`, `langchain_chroma`)
-3. Project local module imports (e.g., `from app.core.vectorstore import VectorStoreManager`)
+### Backend (Python):
+1. Standard library imports.
+2. Third-party package imports.
+3. Project local module imports.
+*Keep blank lines between each of the three import categories.*
 
-**Grouping:**
-- Keep blank lines between each of the three import categories.
-- Alphabetize within import blocks where possible.
+### Frontend (TypeScript / React):
+1. Core react imports (`react`, `useState`, `useEffect`).
+2. Third-party library imports (`lucide-react`, `next/navigation`).
+3. Next.js actions and local utilities (`../lib/api-client`, `../app/actions/cookies`).
+4. Local components (`./Sidebar`, `./PreviewModal`).
+5. Shared UI base elements (`@/components/ui/button`, `@/components/ui/dialog`).
 
-## Singleton Pattern
+## Singleton Pattern (Backend)
 
-- Thread-safe singletons are used for all expensive model-loading operations.
+- Thread-safe singletons are used for expensive model loaders (embeddings, reranker).
 - Pattern: class-level `_instance` + `threading.Lock()` with double-checked locking inside a `@classmethod get_*()` method.
-- Applied to: `EmbeddingsManager`, `RerankManager`, `GroqConnectionManager`.
 
 ## Error Handling
 
-**Patterns:**
-- Use explicit `try/except` exception blocks when interfacing with I/O systems (file reading, network queries).
-- Raise custom domain-specific exceptions (e.g., `DocumentIngestionError`) instead of raw generic `Exception` types where context is critical.
-- In route handlers, catch domain exceptions and re-raise as `HTTPException` with appropriate status codes (500 for infrastructure, 404/403 for ownership/existence).
+### Backend:
+- Explicit `try/except` exception blocks for I/O operations (filesystem and Groq queries).
+- Domain-specific exceptions mapping to standard HTTP response exceptions at the router level.
 
-## Logging
+### Frontend:
+- UI alerts wrapped in `try/catch` handlers.
+- Safe backend calls using the `api-client.ts` wrapper which intercepts common errors.
+- Visual alerts rendered via `sonner` toasts for user-facing validation/network errors.
 
-- None configured. Recommended: Use Python standard `logging` library instead of `print()` for production server logs.
+## Comments & Documentation
 
-## Comments
-
-- Focus comments on explaining the "Why" rather than the "What"
-- Avoid obvious comments that restate the code expression
-- Use standard docstrings for class declarations and key public functions with `Args:`, `Returns:`, and `Raises:` sections
-
-## Pydantic Models
-
-- Request schemas are defined as `BaseModel` subclasses co-located in route files.
-- Field validators use `@field_validator` (Pydantic v2 style).
-- All fields include `description=` strings for auto-generated OpenAPI documentation.
-
----
-
-*Convention analysis: 2026-06-22*
-*Update when patterns change*
+- Docstrings for public class/function definitions (Python: PEP257 style, TS: JSDoc style).
+- Focus on the "Why" instead of the "What" in code block comments.

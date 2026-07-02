@@ -1,75 +1,101 @@
 # Architecture
 
-**Analysis Date:** 2026-06-22
+**Analysis Date:** 2026-07-02
 
 ## Pattern Overview
 
-**Overall:** Modular REST API Architecture for Retrieval-Augmented Generation (RAG) with User Multi-Tenancy, Hybrid Retrieval, and Candidate Re-ranking
+**Overall:** Decoupled Client-Server SPA Architecture. Next.js web frontend interacts with a Python modular REST API backend utilizing multi-tenancy, hybrid document retrieval, re-ranking, and streaming generation.
 
-**Key Characteristics:**
-- FastAPI REST endpoint handlers with automatic OpenAPI spec documentation.
-- JWT-based authorization guard/dependency for file access isolation and endpoint security.
-- Decoupled parser and chunking pipelines.
-- Isolated, multi-tenant folder structure for local vector database indices, separated by authenticated user ID.
-- Service orchestration wrapper classes for Embeddings, Vector Stores, and LLM Inference.
-- Local SQLite database management for persistent user registration records.
-- Hybrid Retrieval: Combined lexical (BM25) and semantic (Chroma) search via Reciprocal Rank Fusion (RRF).
-- Contextual Compression: Candidate re-ranking using an on-device Cross-Encoder model (FlashRank).
+```mermaid
+graph TD
+    subgraph Frontend [Next.js Web Client]
+        UI[React Components - Dashboard, ChatShell]
+        AC[API Client - fetch, SSE]
+        Cookie[Secure Cookies - Auth Store]
+    end
+
+    subgraph Backend [FastAPI REST Service]
+        Routes[API Routes - Auth, Upload, Query, Docs]
+        Parser[Document Parser & Chunker]
+        Vector[Vectorstore Manager & BM25]
+        Rerank[FlashRank Reranker]
+        LLM[QAPipeline & ChatGroq]
+    end
+
+    subgraph Storage [Persistence Layer]
+        SQLite[(SQLite users.db)]
+        Uploads[(Raw Uploads)]
+        Chunks[(JSON Chunks)]
+        Chroma[(Chroma DB folders)]
+    end
+
+    UI --> AC
+    AC -->|HTTP / SSE| Routes
+    Cookie --> AC
+    Routes --> Parser
+    Routes --> Vector
+    Routes --> Rerank
+    Routes --> LLM
+    Routes --> SQLite
+    Parser --> Uploads
+    Parser --> Chunks
+    Vector --> Chroma
+    Vector --> Chunks
+```
 
 ## Layers
 
-The application follows a clean layered structure separating route logic, core business processors, and persistent file/relational database stores.
+### 1. Presentation Layer (Frontend Next.js)
+- **Routing & Server Pages (`frontend/src/app/`)**: Handles path management (Home dashboard `/`, login screen `/login`, register screen `/register`). Server-side checks extract the active session token from cookies to pre-fetch documents.
+- **Component Layouts (`frontend/src/components/`)**:
+  - `DashboardShell.tsx`: High-level wrapper containing the authenticated app experience.
+  - `Sidebar.tsx`: Manages active user document selection, listing uploads, and displaying log out action.
+  - `ChatShell.tsx`: Orchestrates chat sessions, message rendering (with markdown parsing), citations list, and user question inputs.
+  - `UploadModal.tsx`: Controls drag-and-drop file ingestion, file-type filtering, and upload progress alerts.
+  - `PreviewModal.tsx`: Renders selected document text and metadata preview.
+- **Client utilities (`frontend/src/lib/`)**:
+  - `api-client.ts`: Standardized error catching and authorization-header injection wrapper for client fetch calls.
+  - `markdown-parser.tsx`: Helper to convert AI answers containing markdown/citation tags into styled JSX nodes.
 
-### 1. Route Layer (API Controllers)
-- **Purpose:** Declare REST endpoints, handle HTTP requests, validate request bodies via Pydantic, enforce user authorization, and return JSON payloads.
+### 2. Service Layer (Backend REST Controllers)
+- Exposes async HTTP endpoints, handles payload schema parsing with Pydantic, and coordinates auth guards.
 - **Components:**
-  - `backend/app/routes/auth.py`: Exposes endpoints for user registration (`POST /register`) and login (`POST /login` producing bearer tokens).
-  - `backend/app/routes/upload.py`: Handles file uploading, verification, validation, parsing, and vector indexing triggers. Requires authentication.
-  - `backend/app/routes/query.py`: Handles incoming search query POST requests, triggers hybrid retrieval and reranking, generates answers, and returns formatted citations. Requires authentication and checks ownership.
-- **Depends on:** Core logic modules, FastAPI, Pydantic.
+  - `backend/app/routes/auth.py`: Authentication routes (`POST /register`, `POST /login`).
+  - `backend/app/routes/upload.py`: Document upload pipeline controller (`POST /upload`).
+  - `backend/app/routes/query.py`: Synchronous (`POST /query`) and streaming (`GET /query/stream`) RAG endpoints.
+  - `backend/app/routes/documents.py`: Document listing (`GET /documents`) and deletion (`DELETE /documents/{id}`) endpoints.
 
-### 2. Core Logic Layer (RAG & Security Engines)
-- **Purpose:** Abstract document parsing, text chunking, local vector storage operations, user management/database operations, JWT parsing, and LLM API integrations.
+### 3. Business Logic Layer (RAG & Security Engines)
+- Coordinates security operations, parses text, and conducts hybrid lookup pipelines.
 - **Components:**
-  - `backend/app/core/auth.py`: Manages JWT signature encoding/decoding, password hashing and verification using bcrypt, and user extraction via standard HTTP Bearer token injection.
-  - `backend/app/core/database.py`: Manages the raw SQLite connection pool and operations for user registration and retrieval.
-  - `backend/app/core/parsers.py`: Encapsulates PDF and Word parsing using LangChain community loaders.
-  - `backend/app/core/chunker.py`: Performs structured text chunking using character splitters.
-  - `backend/app/core/vectorstore.py`: Thread-safe Singleton for caching Hugging Face embedding models, indexing parsed chunks to Chroma, and running semantic similarity searches. Exposes a hybrid retriever that blends BM25 lexical search and Chroma semantic search.
-  - `backend/app/core/reranker.py`: Thread-safe Singleton manager for caching the local FlashRank cross-encoder model.
-  - `backend/app/core/qa.py`: Formulates prompt templates and communicates with ChatGroq to generate grounded responses with citations.
+  - `backend/app/core/auth.py`: JWT key signing, hash verification, and dependency security guards.
+  - `backend/app/core/database.py`: Handles low-level SQLite queries for user persistence.
+  - `backend/app/core/parsers.py` / `chunker.py`: Document parsing and character/semantic splitting logic.
+  - `backend/app/core/vectorstore.py`: Embedded-index building (Chroma) and hybrid retrieval matching.
+  - `backend/app/core/reranker.py`: Candidate sorting using the local FlashRank model.
+  - `backend/app/core/qa.py`: LLM prompt-building and answer generation.
 
-### 3. Data & Storage Layer (Persistence)
-- **Purpose:** Persist user account records, raw uploads, text chunks metadata, and vector database indices on disk.
+### 4. Storage & Persistence Layer
+- Holds files, indexes, and user accounts.
 - **Locations:**
-  - `backend/data/users.db`: Relational SQLite database file.
-  - `backend/data/uploads/`: Raw uploaded files, isolated by user ID (e.g. `backend/data/uploads/{user_id}/`).
-  - `backend/data/chunks/`: Serialized JSON metadata chunks, isolated by user ID (e.g. `backend/data/chunks/{user_id}/`).
-  - `backend/data/vectorstore/`: Folder-isolated Chroma SQLite databases, isolated by user ID (e.g. `backend/data/vectorstore/{user_id}/{document_id}/`).
+  - SQLite Database (`backend/data/users.db`)
+  - User Document Vault (`backend/data/uploads/{user_id}/`)
+  - Document Chunks Folder (`backend/data/chunks/{user_id}/{document_id}.json`)
+  - Chroma Collections (`backend/data/vectorstore/{user_id}/{document_id}/`)
 
 ## Data Flow
 
-### Authentication Flow:
-1. Client calls `POST /register` with a username and password. `UserDatabaseManager` hashes the password using bcrypt and stores a new UUID user record in `users.db`.
-2. Client calls `POST /login` with credentials. The backend verifies the password hash, generates a JWT token containing the username (as `sub` claim), and returns the Bearer token.
+### 1. Ingestion Flow:
+1. User uploads a PDF/DOCX file in `UploadModal.tsx`.
+2. The file is sent via `api-client.ts` (`POST /upload`) containing the Bearer token.
+3. FastAPI's upload router saves the file, parses it, chunks it, and saves metadata.
+4. Chunks are embedded and indexed into the user's isolated Chroma database directory.
+5. Frontend receives the completion alert and updates the document sidebar list.
 
-### Ingestion Flow:
-1. Client uploads document via `POST /upload` containing the JWT token.
-2. The router authenticates the request using `get_current_user` dependency, retrieving the user record.
-3. Router saves the uploaded file to `backend/data/uploads/{user_id}/{document_id}{suffix}`, extracts the text via `DocumentParser`, and chunks it via `DocumentChunker` using either nested character character splitting or semantic sentence-boundary splitting.
-4. Chunks are saved as parent-child hierarchical JSON metadata under `backend/data/chunks/{user_id}/{document_id}.json`, then only the child chunks are embedded and indexed into the isolated directory `backend/data/vectorstore/{user_id}/{document_id}/` using `VectorStoreManager`.
-5. Returns the generated unique `document_id`.
-
-### Query, Hybrid Search, Reranking & Generation Flow:
-1. Client calls `POST /query` with `document_id`, `question`, and optional `top_k`, containing the JWT token.
-2. The router authenticates the request, resolves `user_id`, and verifies that the `document_id` exists. It runs ownership validation, returning HTTP 403 Forbidden if the directory belongs to another user, or 404 if not found.
-3. Hybrid Retrieval: The router invokes `VectorStoreManager.get_hybrid_retriever()` to create an `EnsembleRetriever` combining lexical search (BM25) and semantic search (Chroma) using Reciprocal Rank Fusion (RRF). It pulls a larger pool of candidate chunks (clamped to `top_k * 3`, between 10 and 25).
-4. Candidate Re-ranking: Chunks from the candidate pool are passed through a `ContextualCompressionRetriever` using the cached `FlashRank` model (`RerankManager`). The model re-ranks the candidates based on relevance, returning the top-N (specified by `top_k`) highest scoring chunks.
-5. Parent Resolution Swap: If the parent-document retriever strategy is active, the retrieved child chunks are mapped to their containing parent chunk text via `VectorStoreManager.resolve_parent_documents`. The page content of the child chunks is dynamically swapped with their parent's full text content before generation.
-6. The selected chunks (with resolved parent contexts) are passed to `QAPipeline`, which builds the grounded prompt and queries ChatGroq.
-7. Returns a JSON payload containing the grounded "answer" and source "citations" (filenames and page indexes).
-
----
-
-*Architecture analysis: 2026-06-22*
-*Update when major patterns change*
+### 2. Streaming Q&A Flow:
+1. User enters a question in `ChatShell.tsx`.
+2. Client issues a `GET /query/stream?question=...&document_ids=...` request using an `EventSource`-style fetch.
+3. The server runs hybrid retrieval on the active indices, sorts candidates via FlashRank, and swaps chunks for parent documents.
+4. Server constructs the prompt and requests a streaming completion from ChatGroq.
+5. Server yields tokens chunk-by-chunk using `Server-Sent Events (SSE)`.
+6. `ChatShell.tsx` listens to the stream, updates message state in real-time, and resolves citations once the stream closes.

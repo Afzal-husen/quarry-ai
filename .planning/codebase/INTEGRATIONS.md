@@ -1,10 +1,10 @@
 # External Integrations
 
-**Analysis Date:** 2026-06-22
+**Analysis Date:** 2026-07-02
 
 ## Overview
 
-This backend application integrates a local file-based vector database for caching/retrieving document embeddings, a local SQLite database for user account storage, local Cross-Encoder models for re-ranking search results, and makes high-speed external API calls to Groq's cloud LLM services for contextual answer generation.
+This project consists of a Python REST API backend and a Next.js frontend web application. The backend integrates a local file-based vector database (Chroma), a local relational SQLite database for user credentials, local cross-encoders for re-ranking search results, and external API queries to Groq cloud services. The frontend integrates with the backend API for data flow, authentication sessions, and document management.
 
 ## Databases
 
@@ -20,10 +20,12 @@ This backend application integrates a local file-based vector database for cachi
 ## Auth Providers
 
 - **Local JWT Authentication**: Fully custom JWT-based authentication system using HS256 algorithm. Password hashes are generated and verified via bcrypt. JWT tokens expire after a configurable duration (default 30 minutes).
+- **Session Management**: JWT tokens are transmitted to the frontend upon successful login/registration, where they are stored as secure cookies for Next.js SSR and client-side page authentication.
 
 ## External APIs & SDKs
 
 - **Groq API (`ChatGroq` via LangChain)**: Used for cloud-based large language model inference (e.g. `llama-3.1-8b-instant`). Relies on the `GROQ_API_KEY` environment variable.
+- **Frontend-Backend API Connection**: Next.js client-side actions and API requests query the backend service (default `http://localhost:8000`) using the JWT bearer authorization header.
 
 ## Local Machine Learning Models
 
@@ -32,9 +34,4 @@ This backend application integrates a local file-based vector database for cachi
 
 ## Webhooks & Event Streams
 
-- None.
-
----
-
-*Integrations analysis: 2026-06-22*
-*Update when external integrations are introduced*
+- **Server-Sent Events (SSE)**: The backend serves a token streaming endpoint `GET /query/stream` which the frontend consumes to render real-time streaming AI answers chunk-by-chunk.

@@ -1,27 +1,17 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-06-22
+**Analysis Date:** 2026-07-02
 
 ## Tech Debt
 
-**`langchain-community` deprecation:**
-- Issue: `parsers.py` imports `Docx2txtLoader` and `PyPDFLoader` from `langchain-community`, which is being sunsetted.
-- Files: `backend/app/core/parsers.py`
-- Why: These loaders were selected before standalone packages were stable.
-- Impact: Medium — no breakage today, but future `langchain` upgrades may drop support.
-- Fix approach: Migrate to standalone `langchain-docx2txt` / `langchain-pypdf` packages when available and stable.
+### Backend:
+- **`langchain-community` deprecation:** `parsers.py` imports loaders from `langchain-community`, which is being sunsetted. Migrate to standalone packages when stable.
+- **`httpx` + Starlette TestClient warning:** Starlette warns that using `httpx` directly is deprecated; `httpx2` is the recommended path.
+- **`asyncio.iscoroutinefunction` in Chroma:** Upstream `chromadb` calls deprecated async check, which will fail in Python 3.16.
 
-**`httpx` + Starlette TestClient deprecation:**
-- Issue: `fastapi.testclient` now warns that using `httpx` directly with `starlette.testclient` is deprecated; `httpx2` is the recommended replacement.
-- Files: All test files using `TestClient`.
-- Impact: Low — non-breaking warning today; may break on next major `httpx` major version bump.
-- Fix approach: Migrate to `httpx2` once the FastAPI ecosystem has migrated.
-
-**`asyncio.iscoroutinefunction` in Chroma:**
-- Issue: `chromadb` internally calls `asyncio.iscoroutinefunction`, deprecated in Python 3.16.
-- Files: Upstream (`chromadb` package) — not actionable in this repo.
-- Impact: Low — scheduled for Python 3.16; tracked by Chroma upstream.
-- Fix approach: Monitor `chromadb` releases for a fix; upgrade when available.
+### Frontend:
+- **Large Component Files:** `ChatShell.tsx` (~34KB) and `DashboardShell.tsx` (~26KB) mix complex state management, fetch calls, SSE listeners, markdown parsing, and layout presentation. They should be refactored into smaller sub-components and custom hooks.
+- **Tailwind v4 PostCSS compilation:** The project utilizes the new Tailwind CSS v4 compiler. Build pipelines must be closely monitored for styling discrepancies.
 
 ## Known Bugs
 
@@ -29,57 +19,36 @@
 
 ## Security Considerations
 
-**JWT secret hardening:**
-- Risk: If `JWT_SECRET_KEY` is not set in `.env`, the server falls back to a weak or missing default. Exfiltration of the key allows forged tokens.
-- Recommendation: Enforce that `JWT_SECRET_KEY` is non-empty at startup; raise a `ValueError` if absent.
-
-**Path traversal on document_id:**
-- Risk: Document paths are constructed using `document_id` as a directory segment. A non-UUID value could escape the expected directory.
-- Status: Mitigated — `QueryRequest.validate_document_uuid` enforces strict UUID format via `uuid.UUID()` parsing, and upload generates UUID at server side.
-
-**`.env` committed to repository:**
-- Risk: `backend/.env` is in `.gitignore` at root, but the backend `.gitignore` must also exclude it.
-- Recommendation: Verify `.env` is excluded from all tracked git paths; never commit real API keys.
+- **JWT Secret fallback:** Backend server falls back to weak defaults if `JWT_SECRET_KEY` is not defined. Key validation at startup is recommended.
+- **Client Auth Key storage:** JWT token is stored in browser cookies. Ensure cookies are configured with `Secure`, `SameSite=Strict`, and `HttpOnly` attributes where possible to reduce XSS/CSRF exposure.
+- **Cross-Origin Resource Sharing (CORS):** Ensure backend CORS middleware has strict domain constraints in production instead of wildcards.
 
 ## Performance Bottlenecks
 
-**Synchronous model loading at first request:**
-- Issue: `EmbeddingsManager` and `RerankManager` use double-checked locking to lazy-load models on first request. Cold-start latency may exceed 10–30 seconds.
-- Impact: Medium — affects the first request after server boot.
-- Fix approach: Eagerly pre-warm both models in a startup event handler in `main.py`.
-
-**Repeated Chroma instantiation per request:**
-- Issue: `retrieve_relevant_chunks` and `get_hybrid_retriever` open and close a `Chroma` connection on every request. No connection pool is used.
-- Impact: Medium — disk I/O + SQLite open/close overhead on each query.
-- Fix approach: Cache open Chroma instances per `document_id` behind an LRU or keyed dict, with proper Windows file-descriptor management.
+- **Synchronous Model Cold-Start:** `EmbeddingsManager` and `RerankManager` lazy-load models on the first API request, causing a cold start latency of 10–30 seconds.
+- **Chroma Re-instantiation:** Re-opening SQLite connections in Chroma on each search query adds disk I/O overhead.
+- **Lexical BM25 Rebuilds:** The BM25 index is reconstructed from raw chunk JSONs on every incoming query, which scales poorly for large datasets.
 
 ## Fragile Areas
 
-**Windows WinError 32 file locking:**
-- Issue: Chroma holds SQLite file locks on Windows. All `index_document`, `retrieve_relevant_chunks`, and `get_hybrid_retriever` methods explicitly call `client.close()` to release file descriptors. If an exception path skips cleanup, file locking issues can occur.
-- Risk: Moderate — currently handled, but fragile under concurrent access.
+- **Windows File Locking (WinError 32):** SQLite backend for Chroma holds file handles on Windows. Explicit `.close()` calls are required to prevent file locking locks under concurrent writes.
+- **SSE Stream Closure:** Real-time token streaming depends on stable SSE event handlers. Interrupted networks can leave abandoned server processes or incomplete client messages.
 
 ## Scaling Limits
 
-- Single-process Uvicorn: No worker process pooling. Concurrent upload+query load will contend on the single Python interpreter and local file I/O.
-- In-memory BM25: BM25 index is rebuilt from the JSON chunk file on every query. For very large documents (thousands of chunks), this becomes expensive per request.
+- **Single-Process Async:** Concurrency is limited by single-process Python execution.
+- **Disk Storage:** Multi-tenant document uploads and Chroma SQLite directories are stored on the local file system. Storage scales with user growth.
 
 ## Dependencies at Risk
 
 | Package | Risk | Reason |
 |---|---|---|
 | `langchain-community` | Medium | Being sunsetted; migration path announced |
-| `chromadb` | Low | Python 3.16 deprecation in asyncio internals |
-| `httpx` | Low | `httpx2` migration needed for test client |
-| `flashrank` | Low | Relatively niche package; monitor maintenance activity |
+| `chromadb` | Low | Python 3.16 deprecation warning in async loop |
+| `tailwind` v4 | Low | Rapidly evolving; keep watch on build loader compatibility |
+| `flashrank` | Low | Monitor maintenance activity |
 
 ## Test Coverage Gaps
 
-- No dedicated unit tests for `DocumentParser` or `DocumentChunker` edge cases (empty files, malformed PDFs, very large documents).
-- No performance / load tests exist.
-- Live Groq API tests are skipped by default when `GROQ_API_KEY` is absent.
-
----
-
-*Concerns audit: 2026-06-22*
-*Update as issues are fixed or new ones discovered*
+- No unit tests for parser edge cases (password-locked PDFs, nested directories, large files).
+- Frontend tests are limited to `DashboardShell.test.tsx` and `api-client.test.ts`. There are no dedicated tests for `ChatShell.tsx` SSE streaming handlers, or `UploadModal.tsx` file validation rules.
