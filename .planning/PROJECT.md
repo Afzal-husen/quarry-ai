@@ -10,19 +10,22 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ---
 
-## Current Milestone: v5.0 Document Preview & Unified Sidebar
+## Current Milestone: v6.0 Path Parameters & Session Routing
 
-**Goal:** Redesign the document dashboard with interactive preview cards, unify the application sidebars, support inline document selection in chat via a context modal, and improve chat response rendering.
+**Goal:** Transition from URL query parameter session tracking (`/chat?session_id=id`) to clean Next.js App Router dynamic route segments (`/chat/[sessionId]`), resolve sidebar active states for nested subroutes, and stabilize new session creation.
 
 **Target features:**
-- Dashboard showing uploaded documents in a card layout instead of chunk lists, with click-to-preview capability.
-- Unified sidebar merging dashboard links, user profile, and conversational chat history.
-- Input context menu (Plus icon) allowing chat scoping with document checklist selection and file previews.
-- Rich-text and markdown response renderer configuration for chat answers.
+- Next.js dynamic routing path parameters mapping session IDs to `/chat/[sessionId]` pages.
+- Base `/chat` page serving as the entrypoint for initializing new conversations (Welcome Viewport).
+- Active link tracking and dynamic router path transitions in Sidebar.
+- Clean session initialization checks to resolve API load errors.
 
 ---
 
 ## Shipped Milestones
+
+### v5.0 Document Preview & Unified Sidebar (Shipped 2026-07-02)
+**Goal:** Redesign the document dashboard with interactive preview cards, unify the application sidebars, support inline document selection in chat via a context modal, and improve chat response rendering.
 
 ### v4.1 Dark Mode Toggle (Shipped 2026-06-29)
 **Goal:** Enable user-controlled theme switching between light, dark, and system color schemes using `next-themes` and a polished toggle button.
