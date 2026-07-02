@@ -10,19 +10,22 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ---
 
-## Current Milestone: v6.0 Path Parameters & Session Routing
+## Current Milestone: v7.0 Vercel Cloud Deployment & Serverless Integration
 
-**Goal:** Transition from URL query parameter session tracking (`/chat?session_id=id`) to clean Next.js App Router dynamic route segments (`/chat/[sessionId]`), resolve sidebar active states for nested subroutes, and stabilize new session creation.
+**Goal:** Configure the Next.js frontend and FastAPI backend for seamless, zero-config deployment to Vercel Serverless Functions. Establish dynamic, writable `/tmp/` directories for SQLite and Chroma indices, resolve absolute backend import paths, and generate Vercel-compatible dependency configurations.
 
 **Target features:**
-- Next.js dynamic routing path parameters mapping session IDs to `/chat/[sessionId]` pages.
-- Base `/chat` page serving as the entrypoint for initializing new conversations (Welcome Viewport).
-- Active link tracking and dynamic router path transitions in Sidebar.
-- Clean session initialization checks to resolve API load errors.
+- Configure Next.js and FastAPI monorepo routing parameters in Vercel settings.
+- Writable `/tmp/data` paths fallback for SQLite and Chroma databases when running on Vercel (`VERCEL=1`).
+- Export absolute imports and clean paths in server runtime.
+- Generate `requirements.txt` from pyproject.toml for Vercel pip package compilation.
 
 ---
 
 ## Shipped Milestones
+
+### v6.0 Path Parameters & Session Routing (Shipped 2026-07-02)
+**Goal:** Transition from URL query parameter session tracking (`/chat?session_id=id`) to clean Next.js App Router dynamic route segments (`/chat/[sessionId]`), resolve sidebar active states for nested subroutes, and stabilize new session creation.
 
 ### v5.0 Document Preview & Unified Sidebar (Shipped 2026-07-02)
 **Goal:** Redesign the document dashboard with interactive preview cards, unify the application sidebars, support inline document selection in chat via a context modal, and improve chat response rendering.
@@ -142,5 +145,5 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-30 — Milestone v5.0 started*
+*Last updated: 2026-07-02 — Milestone v7.0 started*
 
