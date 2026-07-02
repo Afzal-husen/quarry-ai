@@ -30,3 +30,8 @@ dependencies = [
 markers = [
     "enable_rate_limiting: enable slowapi rate limiting for this test case",
 ]
+
+[tool.vercel]
+# Vercel entrypoint: points to the FastAPI app object in main.py
+# Used when deploying the backend to a platform that reads pyproject.toml
+entrypoint = "main:app"
