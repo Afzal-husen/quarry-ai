@@ -8,6 +8,7 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 ## Milestones
 
+- ✅ **v7.0 Vercel Cloud Deployment & Serverless Integration** — Phase 42 (shipped 2026-07-02): [v7.0 ROADMAP](file:///.planning/ROADMAP.md)
 - ✅ **v6.0 Path Parameters & Session Routing** — Phase 41 (shipped 2026-07-02): [v6.0 ROADMAP](file:///.planning/milestones/v6.0-ROADMAP.md)
 - ✅ **v5.0 Document Preview & Unified Sidebar** — Phases 36-40 (shipped 2026-07-02): [v5.0 ROADMAP](file:///.planning/milestones/v5.0-ROADMAP.md)
 - ✅ **v4.1 Dark Mode Toggle** — Phases 34-35 (shipped 2026-06-29): [v4.1 ROADMAP](file:///.planning/milestones/v4.1-ROADMAP.md)
@@ -23,6 +24,27 @@ This roadmap details completed milestones and future plans for the Document RAG 
 ---
 
 ## Phases
+
+- [x] **Phase 42: Vercel Cloud Deployment & Serverless Integration** — Prepare monorepo for Vercel deployment with dynamic tmp directories, absolute imports, and requirements files.
+
+## Phase Details
+
+### Phase 42: Vercel Cloud Deployment & Serverless Integration
+
+**Goal**: Prepare the monorepo for direct, zero-configuration deployment to Vercel. Implement writable directory pathways under `/tmp/` and generate necessary dependency definitions.
+**Depends on**: Phase 41
+**Requirements**: BE-DEPLOY-01, BE-DEPLOY-02, BE-DEPLOY-03, FE-DEPLOY-01
+**Success Criteria**:
+  1. Local SQLite and Chroma directories initialize successfully under Vercel Serverless `/tmp/` directories.
+  2. A generated `requirements.txt` is exported to the backend folder.
+  3. Vercel development server run (`vercel dev` or custom mock env) simulates routing correctly without startup crashes.
+
+**Plans**: 1 plan
+Plans:
+
+- [ ] 42-01: Support writable fallback paths in database and vectorstore managers, create requirements exporter, and add Vercel project deployment documentation.
+
+---
 
 <details>
 <summary>✅ v6.0 Path Parameters & Session Routing (Phase 41) — SHIPPED 2026-07-02</summary>
@@ -67,7 +89,7 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| *(none)* | | | | |
+| 42. Vercel Cloud Deployment & Serverless Integration | v7.0 | 1/1 | Complete | 2026-07-02 |
 
 ---
-*Roadmap updated: 2026-07-02 after v6.0 milestone completion*
+*Roadmap updated: 2026-07-02 after v7.0 milestone completion*
