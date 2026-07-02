@@ -10,10 +10,10 @@ import { toast } from "sonner";
 interface DocumentItem {
   document_id: string;
   filename: string;
-  upload_date: string;
+  upload_date?: string;
   chunk_count: number;
   status: string;
-  can_reindex: boolean;
+  can_reindex?: boolean;
 }
 
 interface PreviewModalProps {
@@ -151,18 +151,18 @@ export default function PreviewModal({ isOpen, onClose, document }: PreviewModal
     .sort((a, b) => a - b);
 
   return (
-    <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-md flex flex-col h-screen w-screen overflow-hidden animate-in fade-in-50 duration-200 select-none">
+    <div className="fixed inset-0 z-50 bg-background flex flex-col h-screen w-screen overflow-hidden animate-in fade-in-50 duration-200 select-none">
       {/* Header Context Bar */}
       <header className="border-b border-border h-16 shrink-0 flex items-center justify-between px-6 md:px-8 bg-card/50 backdrop-blur">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-400 shrink-0 border border-indigo-500/20">
+          <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-neutral-100 dark:bg-neutral-800 text-primary shrink-0 border border-border">
             <FileText className="w-5 h-5" />
           </div>
           <div className="truncate">
             <h3 className="text-sm font-semibold text-foreground truncate max-w-md sm:max-w-xl md:max-w-3xl">
               {document.filename}
             </h3>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+            <p className="text-xs text-muted-foreground">
               {isPdf ? "PDF Document" : "Word Document Preview"}
             </p>
           </div>
@@ -173,7 +173,7 @@ export default function PreviewModal({ isOpen, onClose, document }: PreviewModal
             variant="outline"
             size="sm"
             onClick={handleDownload}
-            className="flex items-center gap-1.5 text-xs h-9 border-border bg-card hover:bg-accent text-foreground font-medium rounded-lg"
+            className="flex items-center gap-1.5 text-xs h-9 border-border bg-card hover:bg-accent text-foreground font-medium rounded-sm"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Download</span>
@@ -183,7 +183,7 @@ export default function PreviewModal({ isOpen, onClose, document }: PreviewModal
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="h-9 w-9 text-muted-foreground hover:text-foreground rounded-lg"
+            className="h-9 w-9 text-muted-foreground hover:text-foreground rounded-sm"
           >
             <X className="w-5 h-5" />
           </Button>
@@ -194,7 +194,7 @@ export default function PreviewModal({ isOpen, onClose, document }: PreviewModal
       <div className="flex-1 overflow-hidden relative bg-muted/20">
         {loading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background/50 z-10 select-none">
-            <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
             <p className="text-xs text-muted-foreground font-medium animate-pulse">
               Parsing and loading preview...
             </p>
@@ -203,7 +203,7 @@ export default function PreviewModal({ isOpen, onClose, document }: PreviewModal
 
         {error && (
           <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center select-none">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-500/10 text-red-500 mb-4 border border-red-500/20">
+            <div className="flex h-12 w-12 items-center justify-center rounded-sm bg-red-500/10 text-red-500 mb-4 border border-red-500/20">
               <FileText className="w-6 h-6" />
             </div>
             <h4 className="text-md font-semibold text-foreground mb-2">
@@ -216,7 +216,7 @@ export default function PreviewModal({ isOpen, onClose, document }: PreviewModal
               variant="outline"
               size="sm"
               onClick={handleDownload}
-              className="flex items-center gap-1.5 text-xs font-semibold h-9"
+              className="flex items-center gap-1.5 text-xs font-semibold h-9 rounded-sm"
             >
               <Download className="w-3.5 h-3.5" />
               Download Raw Document
@@ -243,9 +243,9 @@ export default function PreviewModal({ isOpen, onClose, document }: PreviewModal
                     {sortedPageIndices.map((pageIndex) => (
                       <div
                         key={pageIndex}
-                        className="bg-card border border-border shadow-xl rounded-xl p-8 md:p-12 min-h-[700px] relative font-serif text-card-foreground select-text"
+                        className="bg-card border border-border rounded-md p-8 md:p-12 min-h-[700px] relative font-serif text-card-foreground select-text"
                       >
-                        <div className="absolute top-4 right-6 text-[10px] text-muted-foreground uppercase tracking-widest font-bold font-sans select-none border-b border-border/30 pb-0.5">
+                        <div className="absolute top-4 right-6 text-xs text-muted-foreground font-sans select-none pb-0.5">
                           Page {pageIndex + 1}
                         </div>
                         <div className="space-y-5 mt-8 leading-relaxed text-sm md:text-base select-text">

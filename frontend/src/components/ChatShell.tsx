@@ -13,6 +13,7 @@ import {
   Plus,
   Eye,
   X,
+  Menu,
 } from "lucide-react";
 import { apiGet, apiDelete, apiPost } from "../lib/api-client";
 import { getTokenAction } from "../app/actions/cookies";
@@ -58,10 +59,13 @@ interface DocumentItem {
   filename: string;
   status: string;
   chunk_count: number;
+  upload_date?: string;
+  can_reindex?: boolean;
 }
 
 interface ChatShellProps {
   username: string;
+  initialActiveSessionId?: string | null;
 }
 
 function CitationBadge({
@@ -75,19 +79,23 @@ function CitationBadge({
     <button
       type="button"
       onClick={onSelect}
-      className="bg-indigo-900/40 hover:bg-indigo-800 border border-indigo-700/30 text-indigo-300 px-1 py-0.5 rounded text-xs font-mono select-none cursor-pointer transition-colors focus:outline-none"
+      className="bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 px-1.5 py-0.5 rounded-sm text-xs font-mono select-none cursor-pointer transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
     >
       [{index}]
     </button>
   );
 }
 
-export default function ChatShell({ username }: ChatShellProps) {
+export default function ChatShell({
+  username,
+  initialActiveSessionId,
+}: ChatShellProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const [sessions, setSessions] = useState<SessionItem[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(() => {
+    if (initialActiveSessionId !== undefined) return initialActiveSessionId;
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
       const queryId = urlParams.get("session_id");
@@ -96,6 +104,12 @@ export default function ChatShell({ username }: ChatShellProps) {
     }
     return null;
   });
+
+  useEffect(() => {
+    if (initialActiveSessionId !== undefined) {
+      setActiveSessionId(initialActiveSessionId);
+    }
+  }, [initialActiveSessionId]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
@@ -113,12 +127,13 @@ export default function ChatShell({ username }: ChatShellProps) {
     page_index: number;
     text: string;
   } | null>(null);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
 
   const feedContainerRef = useRef<HTMLDivElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const isScrollAtBottom = (container: HTMLDivElement) => {
     const threshold = 100;
@@ -132,19 +147,7 @@ export default function ChatShell({ username }: ChatShellProps) {
     container.scrollTop = container.scrollHeight;
   };
 
-  // Close dropdown on click outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsDocDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+
 
   const fetchSessions = useCallback(async () => {
     try {
@@ -225,6 +228,10 @@ export default function ChatShell({ username }: ChatShellProps) {
     }, 0);
 
     const loadMessages = async () => {
+      if (!activeSessionId) {
+        setMessages([]);
+        return;
+      }
       try {
         const res = await apiGet(`/sessions/${activeSessionId}`);
         if (res && res.messages) {
@@ -250,6 +257,18 @@ export default function ChatShell({ username }: ChatShellProps) {
         feedContainerRef.current.scrollHeight;
     }
   }, [messages, loading]);
+
+  // Focus the chat input box automatically on mount, session switch, or completion
+  useEffect(() => {
+    if (!loading && activeSessionId && inputRef.current) {
+      const timer = setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [activeSessionId, loading]);
 
   const handleNewChatClick = useCallback(async () => {
     try {
@@ -321,7 +340,7 @@ export default function ChatShell({ username }: ChatShellProps) {
         }
         setSelectedDocIds(tempSelectedDocIds);
         setActiveSessionId(res.id);
-        router.push(`/chat?session_id=${res.id}`);
+        router.push(`/chat/${res.id}`);
         setIsContextModalOpen(false);
         await fetchSessions();
       }
@@ -354,7 +373,7 @@ export default function ChatShell({ username }: ChatShellProps) {
 
   const selectSession = (sessionId: string) => {
     setActiveSessionId(sessionId);
-    router.push(`/chat?session_id=${sessionId}`);
+    router.push(`/chat/${sessionId}`);
   };
 
   const confirmDeleteSession = async () => {
@@ -544,7 +563,7 @@ export default function ChatShell({ username }: ChatShellProps) {
       <div className="space-y-1.5 break-words">
         {parseMarkdown(content, handleRenderCitation)}
         {isStreaming && (
-          <span className="inline-block w-2.5 h-4 ml-1 bg-indigo-400 animate-pulse select-none align-middle" />
+          <span className="inline-block w-2.5 h-4 ml-1 bg-primary animate-pulse select-none align-middle" />
         )}
       </div>
     );
@@ -552,7 +571,6 @@ export default function ChatShell({ username }: ChatShellProps) {
 
   return (
     <div className="flex h-screen bg-background text-foreground font-sans overflow-hidden w-full">
-      {/* Collapsible Left Sidebar */}
       <Sidebar
         username={username}
         currentPath="/chat"
@@ -561,6 +579,8 @@ export default function ChatShell({ username }: ChatShellProps) {
         onSelectSession={selectSession}
         onCreateSession={handleNewChatClick}
         onDeleteSession={setSessionToDelete}
+        isMobileOpen={isMobileSidebarOpen}
+        onMobileClose={() => setIsMobileSidebarOpen(false)}
       />
 
       {/* Main Q&A viewport */}
@@ -569,10 +589,21 @@ export default function ChatShell({ username }: ChatShellProps) {
           <>
             {/* Header context bar */}
             <header className="border-b border-border bg-background/40 backdrop-blur px-6 py-4 flex items-center justify-between h-16 shrink-0 sticky top-0 z-30">
-              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2 truncate">
-                <Sparkles className="w-4 h-4 text-indigo-400 shrink-0" />
-                <span>Active Conversation</span>
-              </h2>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsMobileSidebarOpen(true)}
+                  className="md:hidden h-9 w-9 text-muted-foreground hover:text-foreground shrink-0 rounded-sm"
+                  aria-label="Open sidebar menu"
+                >
+                  <Menu className="w-5 h-5" />
+                </Button>
+                <h2 className="text-md font-bold tracking-tight text-foreground flex items-center gap-2 truncate">
+                  <Sparkles className="w-4 h-4 text-primary shrink-0" />
+                  <span>Active Conversation</span>
+                </h2>
+              </div>
 
               <div className="flex items-center gap-3">
                 <ThemeToggle />
@@ -586,16 +617,18 @@ export default function ChatShell({ username }: ChatShellProps) {
               className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth min-h-0"
             >
               {messages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
-                  <MessageSquare className="w-12 h-12 text-muted-foreground/30" />
-                  <h3 className="text-base font-medium text-muted-foreground font-sans">
-                    Welcome to your new chat
-                  </h3>
-                  <p className="text-muted-foreground text-xs max-w-sm leading-relaxed">
-                    Ask any question about your target documents. The AI
-                    assistant will retrieve relevant references and cite them in
-                    real-time.
-                  </p>
+                <div className="h-full flex flex-col items-center justify-center text-center max-w-sm mx-auto space-y-4">
+                  <div className="h-12 w-12 rounded-sm bg-neutral-100 dark:bg-neutral-800 border border-border flex items-center justify-center mx-auto">
+                    <Sparkles className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-xl font-extrabold tracking-tight text-foreground animate-pulse">
+                      Active Workspace Ready
+                    </h3>
+                    <p className="text-muted-foreground text-xs leading-relaxed">
+                      Ask any question about your referenced documents to begin context retrieval.
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-5 max-w-3xl mx-auto">
@@ -609,16 +642,16 @@ export default function ChatShell({ username }: ChatShellProps) {
                         className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                       >
                         <div
-                          className={`p-4 rounded-2xl shadow-sm border ${
+                          className={`p-4 rounded-md border ${
                             msg.role === "user"
-                              ? "bg-muted border border-border rounded-tr-none text-foreground"
+                              ? "bg-muted border-border rounded-tr-none text-foreground"
                               : "bg-transparent border-transparent rounded-tl-none text-foreground"
                           }`}
                         >
                           {msg.role === "assistant" && (
-                            <div className="flex items-center gap-1.5 text-indigo-400 mb-2 select-none">
+                            <div className="flex items-center gap-1.5 text-foreground mb-2 select-none">
                               <Sparkles className="w-3.5 h-3.5 shrink-0" />
-                              <span className="text-[10px] font-bold uppercase tracking-wider">
+                              <span className="text-xs font-semibold tracking-tight">
                                 Quarry AI
                               </span>
                             </div>
@@ -653,7 +686,7 @@ export default function ChatShell({ username }: ChatShellProps) {
                     return (
                       <div
                         key={id}
-                        className="flex items-center gap-1 bg-indigo-950/40 hover:bg-indigo-900/50 border border-indigo-700/30 text-indigo-300 px-2 py-0.5 rounded-lg text-[10px] transition-colors"
+                        className="flex items-center gap-1 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 px-2 py-0.5 rounded-sm text-xs transition-colors"
                       >
                         <span className="truncate max-w-[150px]">{doc.filename}</span>
                         <button
@@ -687,35 +720,37 @@ export default function ChatShell({ username }: ChatShellProps) {
                 onSubmit={handleSend}
                 className="max-w-3xl mx-auto flex items-center gap-3"
               >
-                <div className="flex items-center gap-2 flex-1 bg-muted border border-border rounded-xl px-3 py-1.5 focus-within:border-indigo-600 focus-within:ring-1 focus-within:ring-indigo-600 transition-all">
+                <div className="flex items-center gap-2 flex-1 bg-muted border border-border rounded-md px-3 py-1.5 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
                   <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                     <PopoverTrigger
                       type="button"
-                      className="h-8 w-8 hover:bg-accent text-muted-foreground hover:text-foreground shrink-0 rounded-lg flex items-center justify-center cursor-pointer"
+                      className="h-8 w-8 hover:bg-accent text-muted-foreground hover:text-foreground shrink-0 rounded-sm flex items-center justify-center cursor-pointer"
                       aria-label="Add context or actions"
                     >
                       <Plus className="w-4 h-4" />
                     </PopoverTrigger>
-                    <PopoverContent align="start" className="w-40 p-1 bg-card border-border text-foreground shadow-xl">
+                    <PopoverContent align="start" className="w-40 p-1 bg-card border-border text-foreground shadow-none rounded-md">
                       <button
                         type="button"
                         onClick={() => {
                           setIsPopoverOpen(false);
                           handleOpenContextModal();
                         }}
-                        className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs hover:bg-accent cursor-pointer text-left text-muted-foreground hover:text-foreground transition-colors"
+                        className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-sm text-xs hover:bg-accent cursor-pointer text-left text-muted-foreground hover:text-foreground transition-colors"
                       >
-                        <BookOpen className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                        <BookOpen className="w-3.5 h-3.5 text-primary shrink-0" />
                         <span>Context</span>
                       </button>
                     </PopoverContent>
                   </Popover>
 
                   <input
+                    ref={inputRef}
                     type="text"
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     disabled={loading || selectedDocIds.length === 0}
+                    aria-label="Ask a question about your documents"
                     placeholder={
                       selectedDocIds.length === 0
                         ? "Add document context via + menu..."
@@ -727,7 +762,7 @@ export default function ChatShell({ username }: ChatShellProps) {
                   <Button
                     type="submit"
                     disabled={!question.trim() || loading || selectedDocIds.length === 0}
-                    className="h-8 w-8 p-0 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors disabled:bg-muted disabled:text-muted-foreground flex items-center justify-center shadow-sm shrink-0"
+                    className="h-8 w-8 p-0 bg-primary hover:bg-neutral-800 dark:hover:bg-neutral-200 text-primary-foreground rounded-sm transition-colors disabled:bg-muted disabled:text-muted-foreground flex items-center justify-center shrink-0"
                   >
                     <Send className="w-3.5 h-3.5" />
                   </Button>
@@ -744,21 +779,43 @@ export default function ChatShell({ username }: ChatShellProps) {
           </>
         ) : (
           /* Welcome Viewport */
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-4">
-            <MessageSquare className="w-16 h-16 text-muted-foreground/30" />
-            <h2 className="text-lg font-bold text-foreground">
-              Start Q&A Conversational Rooms
-            </h2>
-            <p className="text-muted-foreground text-sm max-w-sm leading-normal">
-              Create a new chat session, bind your target vector documents
-              context, and stream model responses in real-time.
-            </p>
-            <Button
-              onClick={handleNewChatClick}
-              className="bg-indigo-600 hover:bg-indigo-500 shadow-md"
-            >
-              Start Chatting
-            </Button>
+          <div className="flex-1 flex flex-col h-full bg-background relative min-w-0">
+            {/* Mobile Welcome Header */}
+            <header className="border-b border-border bg-background/40 backdrop-blur px-6 py-4 flex md:hidden items-center justify-between h-16 shrink-0 sticky top-0 z-30">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsMobileSidebarOpen(true)}
+                className="h-9 w-9 text-muted-foreground hover:text-foreground shrink-0 rounded-sm"
+                aria-label="Open sidebar menu"
+              >
+                <Menu className="w-5 h-5" />
+              </Button>
+              <h2 className="text-sm font-semibold text-foreground">
+                Quarry
+              </h2>
+              <div className="w-9" /> {/* balance layout offset */}
+            </header>
+
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 max-w-md mx-auto space-y-6">
+              <div className="h-12 w-12 rounded-sm bg-neutral-100 dark:bg-neutral-800 border border-border flex items-center justify-center">
+                <MessageSquare className="w-6 h-6 text-primary" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-3xl font-extrabold tracking-tight text-foreground">
+                  No active session.
+                </h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  Start a new Q&A conversation, select your document context resources, and stream reference answers in real-time.
+                </p>
+              </div>
+              <Button
+                onClick={handleNewChatClick}
+                className="bg-primary hover:bg-neutral-800 dark:hover:bg-neutral-200 text-primary-foreground font-medium text-sm h-10 px-6 rounded-sm shadow-none animate-in fade-in duration-200"
+              >
+                Start Chatting
+              </Button>
+            </div>
           </div>
         )}
       </main>
@@ -772,8 +829,8 @@ export default function ChatShell({ username }: ChatShellProps) {
         {selectedCitation && (
           <div className="flex flex-col h-full w-80">
             <div className="p-4 border-b border-border flex items-center justify-between h-16 shrink-0">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-indigo-500" />
+              <span className="text-sm font-semibold text-muted-foreground flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4 text-primary" />
                 Source Reference
               </span>
               <Button
@@ -788,11 +845,11 @@ export default function ChatShell({ username }: ChatShellProps) {
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               <div className="space-y-1">
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="text-xs font-medium text-muted-foreground">
                   Document Name
                 </span>
-                <div className="flex items-center gap-2 p-2 rounded-lg bg-muted border border-border">
-                  <FileText className="w-4 h-4 text-indigo-400 shrink-0" />
+                <div className="flex items-center gap-2 p-2 rounded-sm bg-muted border border-border">
+                  <FileText className="w-4 h-4 text-primary shrink-0" />
                   <p
                     className="text-xs text-foreground font-medium truncate"
                     title={selectedCitation.source_filename}
@@ -803,10 +860,10 @@ export default function ChatShell({ username }: ChatShellProps) {
               </div>
 
               <div className="space-y-1">
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="text-xs font-medium text-muted-foreground">
                   Reference Location
                 </span>
-                <div className="p-2 rounded-lg bg-muted border border-border">
+                <div className="p-2 rounded-sm bg-muted border border-border">
                   <p className="text-xs text-foreground font-medium">
                     Page{" "}
                     {selectedCitation.page_index !== undefined
@@ -817,10 +874,10 @@ export default function ChatShell({ username }: ChatShellProps) {
               </div>
 
               <div className="space-y-1.5">
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                <span className="text-xs font-medium text-muted-foreground">
                   Matched Text Segment
                 </span>
-                <div className="p-3 rounded-lg bg-muted/30 border border-border text-xs text-foreground font-sans leading-relaxed whitespace-pre-wrap select-text max-h-[300px] overflow-y-auto">
+                <div className="p-3 rounded-sm bg-muted/30 border border-border text-xs text-foreground font-sans leading-relaxed whitespace-pre-wrap select-text max-h-[300px] overflow-y-auto">
                   &quot;{selectedCitation.text}&quot;
                 </div>
               </div>
@@ -834,10 +891,10 @@ export default function ChatShell({ username }: ChatShellProps) {
         open={isContextModalOpen}
         onOpenChange={(open) => !open && setIsContextModalOpen(false)}
       >
-        <DialogContent className="border-border bg-card max-w-md text-foreground">
+        <DialogContent className="border-border bg-card max-w-md text-foreground rounded-md">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-indigo-500" />
+              <BookOpen className="w-5 h-5 text-primary" />
               Select Ingestion Context
             </DialogTitle>
             <DialogDescription className="text-muted-foreground text-xs mt-1">
@@ -847,7 +904,7 @@ export default function ChatShell({ username }: ChatShellProps) {
           </DialogHeader>
 
           <div className="py-4">
-            <div className="max-h-60 overflow-y-auto space-y-1 border border-border p-2.5 rounded-lg bg-muted/40">
+            <div className="max-h-60 overflow-y-auto space-y-1 border border-border p-2.5 rounded-md bg-muted/40">
               {documents.length === 0 ? (
                 <p className="text-xs text-muted-foreground p-2 text-center">
                   No documents found
@@ -858,9 +915,10 @@ export default function ChatShell({ username }: ChatShellProps) {
                   return (
                     <div
                       key={doc.document_id}
-                      className="flex items-center justify-between p-1.5 rounded-lg hover:bg-accent/50 text-xs text-muted-foreground hover:text-foreground transition-colors group"
+                      className="flex items-center justify-between p-1.5 rounded-sm hover:bg-accent/50 text-xs text-muted-foreground hover:text-foreground transition-colors group"
                     >
-                      <div
+                      <button
+                        type="button"
                         onClick={() => {
                           if (isChecked) {
                             setTempSelectedDocIds(
@@ -875,12 +933,12 @@ export default function ChatShell({ username }: ChatShellProps) {
                             ]);
                           }
                         }}
-                        className="flex-1 flex items-center gap-2.5 cursor-pointer py-1 select-none"
+                        className="flex-1 flex items-center gap-2.5 text-left py-1 select-none focus:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-sm"
                       >
                         <div
-                          className={`w-4 h-4 rounded border flex items-center justify-center transition-colors shrink-0 ${
+                          className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-colors shrink-0 ${
                             isChecked
-                              ? "bg-indigo-600 border-indigo-600 text-white"
+                              ? "bg-primary border-primary text-white"
                               : "border-border bg-muted"
                           }`}
                         >
@@ -889,7 +947,7 @@ export default function ChatShell({ username }: ChatShellProps) {
                         <span className="truncate max-w-[240px] font-medium">
                           {doc.filename}
                         </span>
-                      </div>
+                      </button>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -898,7 +956,7 @@ export default function ChatShell({ username }: ChatShellProps) {
                           setActivePreviewDoc(doc);
                           setIsPreviewOpen(true);
                         }}
-                        className="h-7 w-7 text-muted-foreground hover:text-indigo-400 hover:bg-indigo-950/30 rounded-md shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                        className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-accent rounded-sm shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
                         title="Preview Document"
                       >
                         <Eye className="w-3.5 h-3.5" />
@@ -914,14 +972,14 @@ export default function ChatShell({ username }: ChatShellProps) {
             <Button
               variant="ghost"
               onClick={() => setIsContextModalOpen(false)}
-              className="text-muted-foreground hover:text-foreground hover:bg-accent"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-sm"
             >
               Cancel
             </Button>
             <Button
               onClick={handleSaveContext}
               disabled={tempSelectedDocIds.length === 0}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium"
+              className="bg-primary hover:bg-neutral-800 dark:hover:bg-neutral-200 text-primary-foreground font-medium rounded-sm"
             >
               Save Context
             </Button>

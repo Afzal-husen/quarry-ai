@@ -6,5 +6,5 @@ export default async function ChatPage() {
   const cookieStore = await cookies();
   const username = cookieStore.get("username")?.value || "User";
 
-  return <ChatShell username={username} />;
+  return <ChatShell username={username} initialActiveSessionId={null} />;
 }

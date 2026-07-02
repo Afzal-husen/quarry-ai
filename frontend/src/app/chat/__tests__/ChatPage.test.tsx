@@ -61,7 +61,7 @@ describe('Chat Interface Component', () => {
     render(<ChatShell username="test-user" />);
 
     // Renders the header and welcome prompts
-    expect(screen.getByText('Start Q&A Conversational Rooms')).toBeDefined();
+    expect(screen.getByText('No active session.')).toBeDefined();
     expect(screen.getByText('Start Chatting')).toBeDefined();
     expect(screen.getByText('New Chat')).toBeDefined();
 

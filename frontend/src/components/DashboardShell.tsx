@@ -6,6 +6,7 @@ import {
   FileText,
   Trash2,
   Clock,
+  Menu,
 } from "lucide-react";
 import { apiGet, apiDelete, apiPost } from "../lib/api-client";
 import { ThemeToggle } from "./ThemeToggle";
@@ -64,6 +65,7 @@ export default function DashboardShell({
   const [docToDelete, setDocToDelete] = useState<{ id: string; filename: string } | null>(null);
   const [activePreviewDoc, setActivePreviewDoc] = useState<DocumentItem | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const dragCounter = useRef(0);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
@@ -326,27 +328,43 @@ export default function DashboardShell({
     <div className="flex min-h-screen bg-background text-foreground font-sans w-full">
       {/* Page-wide Drag target overlay */}
       {isDragging && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-md flex flex-col items-center justify-center border-4 border-dashed border-indigo-500/50 m-6 rounded-2xl pointer-events-none select-none animate-in fade-in-50 duration-200">
-          <Upload className="w-16 h-16 text-indigo-400 animate-bounce mb-4" />
+        <div className="fixed inset-0 z-50 bg-background/90 flex flex-col items-center justify-center border-2 border-dashed border-primary m-6 rounded-md pointer-events-none select-none animate-in fade-in-50 duration-200">
+          <Upload className="w-16 h-16 text-primary animate-bounce mb-4" />
           <h3 className="text-2xl font-bold text-foreground">Drop files here to upload</h3>
           <p className="text-sm text-muted-foreground mt-2">PDF and DOCX only (Max 50MB)</p>
         </div>
       )}
 
       {/* Collapsible Left Sidebar */}
-      <Sidebar username={username} currentPath="/" />
+      <Sidebar
+        username={username}
+        currentPath="/"
+        isMobileOpen={isMobileSidebarOpen}
+        onMobileClose={() => setIsMobileSidebarOpen(false)}
+      />
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 bg-background overflow-y-auto">
         <header className="border-b border-border h-16 flex items-center justify-between px-6 md:px-8 bg-background/40 backdrop-blur sticky top-0 z-30">
-          <h2 className="text-lg font-semibold tracking-tight text-foreground">
-            Dashboard
-          </h2>
+          <div className="flex items-center gap-3 min-w-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="md:hidden h-9 w-9 text-muted-foreground hover:text-foreground shrink-0 rounded-sm"
+              aria-label="Open sidebar menu"
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+            <h2 className="text-lg font-semibold tracking-tight text-foreground truncate">
+              Dashboard
+            </h2>
+          </div>
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <Button
               onClick={() => setIsUploadOpen(true)}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs h-9 flex items-center gap-1.5 shadow-md shadow-indigo-600/10"
+              className="bg-primary hover:bg-neutral-800 dark:hover:bg-neutral-200 text-primary-foreground font-medium text-xs h-9 flex items-center gap-1.5 rounded-sm"
             >
               <Upload className="w-3.5 h-3.5" />
               Upload Document
@@ -357,48 +375,48 @@ export default function DashboardShell({
         <main className="p-6 md:p-8 space-y-6 max-w-6xl w-full mx-auto">
           {/* Stats Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <Card className="border-border bg-card shadow-sm">
+            <Card className="border-border bg-card rounded-md shadow-none">
               <CardHeader className="pb-2">
-                <CardDescription className="text-muted-foreground text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                <CardDescription className="text-xs font-semibold text-neutral-500 tracking-tight flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-neutral-600"></span>
                   Total Documents
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-extrabold text-foreground">{completedDocsCount}</div>
+                <div className="text-5xl font-extrabold tracking-tight text-foreground">{completedDocsCount}</div>
               </CardContent>
             </Card>
 
-            <Card className="border-border bg-card shadow-sm">
+            <Card className="border-border bg-card rounded-md shadow-none">
               <CardHeader className="pb-2">
-                <CardDescription className="text-muted-foreground text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <CardDescription className="text-xs font-semibold text-neutral-500 tracking-tight flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-neutral-400"></span>
                   Indexed Chunks
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-extrabold text-foreground">{totalChunks}</div>
+                <div className="text-5xl font-extrabold tracking-tight text-foreground">{totalChunks}</div>
               </CardContent>
             </Card>
 
-            <Card className="border-border bg-card shadow-sm">
+            <Card className="border-border bg-card rounded-md shadow-none">
               <CardHeader className="pb-2">
-                <CardDescription className="text-muted-foreground text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                <CardDescription className="text-xs font-semibold text-neutral-500 tracking-tight flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-neutral-200 dark:bg-neutral-700"></span>
                   Pending Ingestions
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-extrabold text-foreground">{pendingCount}</div>
+                <div className="text-5xl font-extrabold tracking-tight text-foreground">{pendingCount}</div>
               </CardContent>
             </Card>
           </div>
 
           {/* Catalog Listing */}
-          <Card className="border-border bg-card overflow-hidden shadow-md">
+          <Card className="border-border bg-card overflow-hidden rounded-md shadow-none">
             <CardHeader className="border-b border-border/50 py-4 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold text-foreground font-sans">Your Documents</CardTitle>
+                <CardTitle className="text-xl font-extrabold tracking-tight text-foreground font-sans">Your Documents</CardTitle>
                 <CardDescription className="text-muted-foreground text-xs mt-1">
                   Manage and monitor indexed ingestion jobs
                 </CardDescription>
@@ -406,14 +424,23 @@ export default function DashboardShell({
             </CardHeader>
             <CardContent className="p-0">
               {documents.length === 0 && activeJobs.length === 0 ? (
-                <div className="py-20 flex flex-col items-center justify-center text-center px-4 space-y-4">
-                  <FileText className="w-16 h-16 text-muted-foreground" />
-                  <h3 className="text-lg font-medium text-muted-foreground">No documents yet</h3>
-                  <p className="text-muted-foreground text-sm max-w-sm">
-                    Drag and drop a PDF or DOCX file anywhere onto the page to start indexing.
-                  </p>
-                  <Button onClick={() => setIsUploadOpen(true)} className="bg-indigo-600 hover:bg-indigo-500">
-                    Browse File
+                <div className="py-24 flex flex-col items-center justify-center text-center px-6 max-w-md mx-auto space-y-6">
+                  <div className="h-12 w-12 rounded-sm bg-neutral-100 dark:bg-neutral-800 border border-border flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-3xl font-extrabold tracking-tight text-foreground">
+                      Document index is empty.
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      Drag and drop a PDF or DOCX file anywhere onto the page, or browse your local files to start indexing chunk nodes.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setIsUploadOpen(true)}
+                    className="bg-primary hover:bg-neutral-800 dark:hover:bg-neutral-200 text-primary-foreground font-medium text-sm h-10 px-6 rounded-sm shadow-none"
+                  >
+                    Browse Local Files
                   </Button>
                 </div>
               ) : (
@@ -423,13 +450,13 @@ export default function DashboardShell({
                     {activeJobs.map((job) => (
                       <div
                         key={job.job_id}
-                        className="bg-card/40 border border-border/80 border-dashed backdrop-blur-md rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-300 relative group flex flex-col justify-between h-48 select-none animate-pulse"
+                        className="bg-card border border-border border-dashed rounded-md p-5 transition-colors duration-200 relative group flex flex-col justify-between h-48 select-none animate-pulse"
                       >
                         <div className="flex items-start justify-between min-w-0">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10 text-amber-500 shrink-0 border border-amber-500/20">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-neutral-100 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 shrink-0 border border-border">
                             <Clock className="w-5 h-5 animate-spin" />
                           </div>
-                          <Badge className="bg-amber-500/10 text-amber-500 hover:bg-amber-500/10 border border-amber-500/20 text-[10px] uppercase tracking-wider font-bold py-0.5 rounded-full">
+                          <Badge className="bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-border text-xs py-0.5 rounded-sm">
                             Processing
                           </Badge>
                         </div>
@@ -437,11 +464,11 @@ export default function DashboardShell({
                           <h4 className="text-sm font-semibold text-foreground truncate" title={job.filename}>
                             {job.filename}
                           </h4>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             Parsing document chunks...
                           </p>
                         </div>
-                        <div className="mt-4 pt-3 border-t border-border/40 flex justify-between items-center text-[10px] text-muted-foreground select-none">
+                        <div className="mt-4 pt-3 border-t border-border/40 flex justify-between items-center text-xs text-muted-foreground select-none">
                           <span>Size: --</span>
                           <span>Uploaded: --</span>
                         </div>
@@ -469,20 +496,20 @@ export default function DashboardShell({
                             setActivePreviewDoc(doc);
                             setIsPreviewOpen(true);
                           }}
-                          className="bg-card hover:bg-card/90 border border-border/80 hover:border-indigo-500/50 rounded-xl p-5 shadow-sm hover:shadow-lg transition-all duration-300 relative group flex flex-col justify-between h-48 cursor-pointer select-none transform hover:-translate-y-1"
+                          className="bg-card hover:bg-neutral-50 dark:hover:bg-neutral-800/40 border border-border hover:border-primary rounded-md p-5 transition-colors duration-200 relative group flex flex-col justify-between h-48 cursor-pointer select-none"
                         >
                           <div className="flex items-start justify-between min-w-0 w-full">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 shrink-0 border border-indigo-500/20">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-neutral-100 dark:bg-neutral-800 text-primary shrink-0 border border-border">
                               <FileText className="w-5 h-5" />
                             </div>
                             
                             <div className="flex items-center gap-2">
                               {doc.status === "complete" ? (
-                                <Badge className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/10 border border-emerald-500/20 text-[10px] uppercase tracking-wider font-bold py-0.5 rounded-full">
+                                <Badge className="bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-border text-xs py-0.5 rounded-sm">
                                   Complete
                                 </Badge>
                               ) : (
-                                <Badge className="bg-red-500/10 text-red-500 hover:bg-red-500/10 border border-red-500/20 text-[10px] uppercase tracking-wider font-bold py-0.5 rounded-full">
+                                <Badge className="bg-red-500/10 text-red-500 hover:bg-red-500/10 border border-red-500/20 text-xs py-0.5 rounded-sm">
                                   Failed
                                 </Badge>
                               )}
@@ -494,7 +521,7 @@ export default function DashboardShell({
                                   e.stopPropagation();
                                   setDocToDelete({ id: doc.document_id, filename: doc.filename });
                                 }}
-                                className="opacity-0 group-hover:opacity-100 h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-md transition-all shrink-0"
+                                className="opacity-0 group-hover:opacity-100 h-7 w-7 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-sm transition-all shrink-0"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -502,15 +529,15 @@ export default function DashboardShell({
                           </div>
                           
                           <div className="min-w-0 mt-4 flex-1">
-                            <h4 className="text-sm font-semibold text-foreground truncate" title={doc.filename}>
+                            <h4 className="text-md font-bold tracking-tight text-foreground truncate" title={doc.filename}>
                               {doc.filename}
                             </h4>
-                            <p className="text-[10px] text-indigo-400 font-bold tracking-wider uppercase mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                               {isPdf ? "PDF Document" : "Word Document"}
                             </p>
                           </div>
                           
-                          <div className="mt-4 pt-3 border-t border-border/40 flex justify-between items-center text-[10px] text-muted-foreground select-none">
+                          <div className="mt-4 pt-3 border-t border-border/40 flex justify-between items-center text-xs text-muted-foreground select-none">
                             <span>Size: {formatSize(doc.file_size)}</span>
                             <span>Uploaded: {
                               doc.upload_date !== "unknown"
@@ -547,10 +574,10 @@ export default function DashboardShell({
         open={isUploadOpen}
         onOpenChange={(open) => !open && !isUploading && (setIsUploadOpen(false), setUploadFile(null))}
       >
-        <DialogContent className="border-border bg-card max-w-md text-foreground">
+        <DialogContent className="border-border bg-card max-w-md text-foreground rounded-md">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
-              <Upload className="w-5 h-5 text-indigo-500" />
+              <Upload className="w-5 h-5 text-primary" />
               Upload Document
             </DialogTitle>
             <DialogDescription className="text-muted-foreground text-xs mt-1">
@@ -569,11 +596,11 @@ export default function DashboardShell({
             />
             <div
               onClick={triggerFileInput}
-              className="border-2 border-dashed border-border bg-muted/20 hover:border-indigo-500/50 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors"
+              className="border-2 border-dashed border-border bg-muted/20 hover:border-primary rounded-md p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors"
             >
               {uploadFile ? (
                 <div className="space-y-2">
-                  <FileText className="w-10 h-10 text-indigo-400 mx-auto animate-pulse" />
+                  <FileText className="w-10 h-10 text-primary mx-auto animate-pulse" />
                   <p className="text-sm font-medium text-foreground truncate max-w-xs">{uploadFile.name}</p>
                   <p className="text-xs text-muted-foreground">{(uploadFile.size / (1024 * 1024)).toFixed(2)} MB</p>
                 </div>
@@ -595,14 +622,14 @@ export default function DashboardShell({
                 setUploadFile(null);
               }}
               disabled={isUploading}
-              className="text-muted-foreground hover:text-foreground hover:bg-accent"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-sm"
             >
               Cancel
             </Button>
             <Button
               onClick={handleManualUpload}
               disabled={!uploadFile || isUploading}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-md shadow-indigo-600/10"
+              className="bg-primary hover:bg-neutral-800 dark:hover:bg-neutral-200 text-primary-foreground font-medium rounded-sm"
             >
               {isUploading ? "Uploading..." : "Upload File"}
             </Button>
@@ -612,7 +639,7 @@ export default function DashboardShell({
 
       {/* Delete Confirmation Alert Dialog */}
       <Dialog open={docToDelete !== null} onOpenChange={(open) => !open && setDocToDelete(null)}>
-        <DialogContent className="border-border bg-card max-w-sm text-foreground">
+        <DialogContent className="border-border bg-card max-w-sm text-foreground rounded-md">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-foreground">Delete Document</DialogTitle>
             <DialogDescription className="text-muted-foreground text-xs mt-2">
@@ -624,11 +651,11 @@ export default function DashboardShell({
             <Button
               variant="ghost"
               onClick={() => setDocToDelete(null)}
-              className="text-muted-foreground hover:text-foreground hover:bg-accent"
+              className="text-muted-foreground hover:text-foreground hover:bg-accent rounded-sm"
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmDelete}>
+            <Button variant="destructive" onClick={confirmDelete} className="rounded-sm">
               Delete
             </Button>
           </DialogFooter>

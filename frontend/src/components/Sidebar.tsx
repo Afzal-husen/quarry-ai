@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Database,
   LogOut,
+  X,
 } from "lucide-react";
 import { apiGet, apiDelete } from "../lib/api-client";
 import { logoutAction } from "../app/actions/auth";
@@ -41,6 +42,8 @@ interface SidebarProps {
   onSelectSession?: (sessionId: string) => void;
   onCreateSession?: () => void;
   onDeleteSession?: (session: { id: string; title: string }) => void;
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 export default function Sidebar({
@@ -51,6 +54,8 @@ export default function Sidebar({
   onSelectSession,
   onCreateSession,
   onDeleteSession,
+  isMobileOpen = false,
+  onMobileClose = () => {},
 }: SidebarProps) {
   const router = useRouter();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -118,16 +123,16 @@ export default function Sidebar({
   };
 
   const handleSessionClick = (sessionId: string) => {
-    if (currentPath === "/chat") {
+    if (currentPath === "/chat" || currentPath.startsWith("/chat")) {
       if (onSelectSession) {
         onSelectSession(sessionId);
       }
     } else {
-      // Transition from dashboard to chat view with search parameters
+      // Transition from dashboard to chat view
       if (typeof window !== "undefined") {
         localStorage.setItem("document_rag_active_session_id", sessionId);
       }
-      router.push(`/chat?session_id=${sessionId}`);
+      router.push(`/chat/${sessionId}`);
     }
   };
 
@@ -176,33 +181,56 @@ export default function Sidebar({
 
   return (
     <>
-      <div
-        className={`border-r border-border bg-card flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0 h-screen ${
-          isSidebarCollapsed ? "w-16" : "w-64"
-        }`}
+      {/* Mobile backdrop overlay */}
+      {isMobileOpen && (
+        <button
+          type="button"
+          onClick={onMobileClose}
+          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden animate-in fade-in duration-200 cursor-default border-none outline-none"
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`border-r border-border bg-card flex flex-col justify-between transition-all duration-300 ease-in-out h-screen z-45
+          fixed inset-y-0 left-0 md:relative md:translate-x-0 shrink-0
+          ${isSidebarCollapsed ? "w-16" : "w-64"}
+          ${isMobileOpen ? "translate-x-0 w-64" : "-translate-x-full md:translate-x-0"}
+        `}
       >
         {/* Sidebar Header */}
         <div className="p-4 flex items-center justify-between border-b border-border h-16 shrink-0">
           {!isSidebarCollapsed && (
             <div className="flex items-center gap-2 text-md font-semibold tracking-tight text-foreground select-none">
-              <FileSpreadsheet className="w-5 h-5 text-indigo-500" />
+              <FileSpreadsheet className="w-5 h-5 text-primary" />
               <span>Quarry</span>
             </div>
           )}
           {isSidebarCollapsed && (
-            <FileSpreadsheet className="w-5 h-5 text-indigo-500 mx-auto" />
+            <FileSpreadsheet className="w-5 h-5 text-primary mx-auto" />
           )}
           <Button
             variant="ghost"
             size="icon"
-            onClick={toggleSidebar}
+            onClick={() => {
+              if (typeof window !== "undefined" && window.innerWidth < 768) {
+                onMobileClose();
+              } else {
+                toggleSidebar();
+              }
+            }}
             className="text-muted-foreground hover:text-foreground h-8 w-8 ml-auto shrink-0"
           >
-            {isSidebarCollapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
-            )}
+            <span className="md:hidden animate-in fade-in zoom-in duration-200">
+              <X className="h-4 w-4" />
+            </span>
+            <span className="hidden md:block">
+              {isSidebarCollapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </span>
           </Button>
         </div>
 
@@ -210,16 +238,16 @@ export default function Sidebar({
         <div className="p-3 space-y-2 shrink-0">
           <Link href="/">
             <div
-              className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors cursor-pointer group relative ${
+              className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-sm transition-colors cursor-pointer group relative ${
                 currentPath === "/"
-                  ? "bg-indigo-500/10 text-indigo-400 border-l-2 border-indigo-500"
+                  ? "bg-neutral-100 dark:bg-neutral-800 text-foreground border-l-2 border-primary"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent"
               }`}
             >
               <Database className="w-5 h-5 shrink-0" />
               {!isSidebarCollapsed && <span>Dashboard</span>}
               {isSidebarCollapsed && (
-                <div className="absolute left-16 bg-popover text-popover-foreground text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none shadow-md border border-border">
+                <div className="absolute left-16 bg-popover text-popover-foreground text-xs rounded-sm py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none shadow-none border border-border">
                   Dashboard
                 </div>
               )}
@@ -228,14 +256,14 @@ export default function Sidebar({
 
           <Button
             onClick={handleNewChatClick}
-            className={`w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm flex items-center justify-center gap-2 h-9 shadow-md shadow-indigo-600/10 shrink-0 group relative ${
+            className={`w-full bg-primary hover:bg-neutral-800 dark:hover:bg-neutral-200 text-primary-foreground font-medium text-sm flex items-center justify-center gap-2 h-9 rounded-sm shrink-0 group relative ${
               isSidebarCollapsed ? "px-0" : ""
             }`}
           >
             <Plus className="w-4 h-4 shrink-0" />
             {!isSidebarCollapsed && <span>New Chat</span>}
             {isSidebarCollapsed && (
-              <div className="absolute left-16 bg-popover text-popover-foreground text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none shadow-md border border-border">
+              <div className="absolute left-16 bg-popover text-popover-foreground text-xs rounded-sm py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none shadow-none border border-border">
                 New Chat
               </div>
             )}
@@ -246,7 +274,7 @@ export default function Sidebar({
         <div className="px-4 py-2 flex items-center gap-2 shrink-0">
           <div className="flex-1 border-t border-border" />
           {!isSidebarCollapsed && (
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground select-none">
+            <span className="text-xs font-medium text-muted-foreground select-none">
               Chat History
             </span>
           )}
@@ -266,14 +294,14 @@ export default function Sidebar({
                 <div
                   key={s.id}
                   onClick={() => handleSessionClick(s.id)}
-                  className={`w-full text-left py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-between group cursor-pointer transition-colors relative ${
+                  className={`w-full text-left py-2 px-3 rounded-sm text-sm font-medium flex items-center justify-between group cursor-pointer transition-colors relative ${
                     isSelected
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
                   }`}
                 >
                   <div className="flex items-center gap-2.5 truncate">
-                    <MessageSquare className="w-4 h-4 shrink-0 text-indigo-400" />
+                    <MessageSquare className="w-4 h-4 shrink-0 text-primary" />
                     {!isSidebarCollapsed && (
                       <span className="truncate">{s.title}</span>
                     )}
@@ -284,14 +312,14 @@ export default function Sidebar({
                       variant="ghost"
                       size="icon"
                       onClick={(e) => handleDeleteClick(e, s)}
-                      className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all rounded focus:outline-none"
+                      className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all rounded-sm focus:outline-none"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
                   )}
 
                   {isSidebarCollapsed && (
-                    <div className="absolute left-16 bg-popover text-popover-foreground text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none shadow-md border border-border">
+                    <div className="absolute left-16 bg-popover text-popover-foreground text-xs rounded-sm py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none shadow-none border border-border">
                       {s.title}
                     </div>
                   )}
@@ -307,11 +335,11 @@ export default function Sidebar({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-bold uppercase shrink-0">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-neutral-100 dark:bg-neutral-800 text-primary text-xs font-bold uppercase shrink-0">
                     {username.slice(0, 2)}
                   </div>
                   <div className="truncate">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">
+                    <p className="text-xs text-muted-foreground">
                       User
                     </p>
                     <p className="text-sm font-medium text-foreground truncate">
@@ -328,7 +356,7 @@ export default function Sidebar({
                   type="submit"
                   variant="destructive"
                   size="sm"
-                  className="w-full flex items-center justify-center gap-1.5 h-8 font-medium text-xs shadow-md shadow-red-900/10"
+                  className="w-full flex items-center justify-center gap-1.5 h-8 font-medium text-xs rounded-sm"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   Sign Out
@@ -338,9 +366,9 @@ export default function Sidebar({
           ) : (
             <div className="flex flex-col items-center gap-4">
               <ThemeToggle />
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-bold uppercase group relative">
+              <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-neutral-100 dark:bg-neutral-800 text-primary text-xs font-bold uppercase group relative">
                 {username.slice(0, 2)}
-                <div className="absolute left-16 bg-popover text-popover-foreground text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none shadow-md border border-border">
+                <div className="absolute left-16 bg-popover text-popover-foreground text-xs rounded-sm py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none shadow-none border border-border">
                   Logged in as: {username}
                 </div>
               </div>
@@ -349,10 +377,10 @@ export default function Sidebar({
                   type="submit"
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-destructive/10 hover:text-destructive group relative"
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-destructive/10 hover:text-destructive group relative rounded-sm"
                 >
                   <LogOut className="w-4 h-4" />
-                  <div className="absolute left-16 bg-popover text-popover-foreground text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none shadow-md border border-border">
+                  <div className="absolute left-16 bg-popover text-popover-foreground text-xs rounded-sm py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none shadow-none border border-border">
                     Sign Out
                   </div>
                 </Button>
@@ -360,7 +388,7 @@ export default function Sidebar({
             </div>
           )}
         </div>
-      </div>
+      </aside>
 
       {/* Delete confirmation dialog for dashboard mode */}
       <Dialog
@@ -369,7 +397,7 @@ export default function Sidebar({
           if (!open) setSessionToDelete(null);
         }}
       >
-        <DialogContent>
+        <DialogContent className="border-border bg-card max-w-sm text-foreground rounded-md">
           <DialogHeader>
             <DialogTitle>Delete Conversation</DialogTitle>
             <DialogDescription>
@@ -381,10 +409,10 @@ export default function Sidebar({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="ghost" onClick={() => setSessionToDelete(null)}>
+            <Button variant="ghost" onClick={() => setSessionToDelete(null)} className="rounded-sm">
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleConfirmDelete}>
+            <Button variant="destructive" onClick={handleConfirmDelete} className="rounded-sm">
               Delete Permanent
             </Button>
           </DialogFooter>
