@@ -23,9 +23,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### User Interface Integration (SUM-UI)
 
-- [ ] **SUM-UI-01**: Display a truncated summary on the dashboard document grid cards for quick scanning.
-- [ ] **SUM-UI-02**: Refactor the Document Preview Modal to a 2-column split-pane layout, displaying the raw document preview on the left and the full markdown-rendered summary on the right.
-- [ ] **SUM-UI-03**: Add a visual status indicator badge ("Summarizing", "Failed", "View Summary") on both the dashboard cards and preview modal, and provide a "Retry" button for failed/missing summaries.
+- [x] **SUM-UI-01**: Display a truncated summary on the dashboard document grid cards for quick scanning.
+- [x] **SUM-UI-02**: Refactor the Document Preview Modal to a 2-column split-pane layout, displaying the raw document preview on the left and the full markdown-rendered summary on the right.
+- [x] **SUM-UI-03**: Add a visual status indicator badge ("Summarizing", "Failed", "View Summary") on both the dashboard cards and preview modal, and provide a "Retry" button for failed/missing summaries.
 
 ## v2 Requirements
 

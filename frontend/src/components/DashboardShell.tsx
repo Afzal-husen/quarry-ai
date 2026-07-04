@@ -26,6 +26,8 @@ interface DocumentItem {
   status: string;
   can_reindex: boolean;
   file_size?: number;
+  summary?: string;
+  summary_status?: string;
 }
 
 interface ActiveJob {
@@ -505,12 +507,28 @@ export default function DashboardShell({
                             
                             <div className="flex items-center gap-2">
                               {doc.status === "complete" ? (
-                                <Badge className="bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-border text-xs py-0.5 rounded-sm">
+                                <Badge className="bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-border text-[10px] py-0.5 rounded-sm">
                                   Complete
                                 </Badge>
                               ) : (
-                                <Badge className="bg-red-500/10 text-red-500 hover:bg-red-500/10 border border-red-500/20 text-xs py-0.5 rounded-sm">
+                                <Badge className="bg-red-500/10 text-red-500 hover:bg-red-500/10 border border-red-500/20 text-[10px] py-0.5 rounded-sm">
                                   Failed
+                                </Badge>
+                              )}
+
+                              {doc.summary_status === "completed" && (
+                                <Badge className="bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/10 border border-indigo-500/20 text-[10px] py-0.5 rounded-sm">
+                                  Digest
+                                </Badge>
+                              )}
+                              {doc.summary_status === "pending" && (
+                                <Badge className="bg-amber-500/10 text-amber-500 hover:bg-amber-500/10 border border-amber-500/20 text-[10px] py-0.5 rounded-sm animate-pulse">
+                                  Digest pending
+                                </Badge>
+                              )}
+                              {doc.summary_status === "failed" && (
+                                <Badge className="bg-neutral-500/10 text-neutral-500 hover:bg-neutral-500/10 border border-neutral-500/20 text-[10px] py-0.5 rounded-sm">
+                                  No Digest
                                 </Badge>
                               )}
                               
@@ -528,12 +546,12 @@ export default function DashboardShell({
                             </div>
                           </div>
                           
-                          <div className="min-w-0 mt-4 flex-1">
-                            <h4 className="text-md font-bold tracking-tight text-foreground truncate" title={doc.filename}>
+                          <div className="min-w-0 mt-3 flex-1 overflow-hidden">
+                            <h4 className="text-sm font-bold tracking-tight text-foreground truncate" title={doc.filename}>
                               {doc.filename}
                             </h4>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {isPdf ? "PDF Document" : "Word Document"}
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2 select-text" title={doc.summary}>
+                              {doc.summary ? doc.summary.replace(/[#*`\-]/g, "").trim() : (isPdf ? "PDF Document" : "Word Document")}
                             </p>
                           </div>
                           
