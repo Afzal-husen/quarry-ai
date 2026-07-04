@@ -27,7 +27,7 @@ This roadmap details completed milestones and future plans for the Document RAG 
 ## Phases
 
 - [x] **Phase 43: Backend Summarization Engine** — Create the summarizer service, integrate with async ingestion pipeline, handle truncation, and persist summary metadata in JSON chunks. (completed 2026-07-04)
-- [ ] **Phase 44: Summarization REST API Endpoints** — Modify the document list API to include summary metadata, and expose endpoints to retrieve the full summary or regenerate it.
+- [x] **Phase 44: Summarization REST API Endpoints** — Modify the document list API to include summary metadata, and expose endpoints to retrieve the full summary or regenerate it. (completed 2026-07-04)
 - [ ] **Phase 45: User Interface Integration** — Integrate summaries into dashboard cards, redesign preview modal to split-pane, and handle retry flow with status badges.
 
 ## Phase Details
@@ -63,7 +63,7 @@ Plans:
 **Plans**: 1 plan
 Plans:
 
-- [ ] 44-01: Update GET /api/documents response schema, implement retrieve endpoint, and implement manual regenerate endpoint.
+- [x] 44-01: Update GET /api/documents response schema, implement retrieve endpoint, and implement manual regenerate endpoint.
 
 ### Phase 45: User Interface Integration
 
@@ -136,7 +136,7 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 42. Vercel Cloud Deployment & Serverless Integration | v7.0 | 1/1 | Complete | 2026-07-02 |
 | 43. Backend Summarization Engine | v8.0 | 1/1 | Complete    | 2026-07-04 |
-| 44. Summarization REST API Endpoints | v8.0 | 0/1 | Planned | — |
+| 44. Summarization REST API Endpoints | v8.0 | 1/1 | Complete    | 2026-07-04 |
 | 45. User Interface Integration | v8.0 | 0/1 | Planned | — |
 
 ---

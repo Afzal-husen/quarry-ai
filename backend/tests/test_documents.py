@@ -348,3 +348,85 @@ def test_get_document_chunks_not_found(auth_headers):
     response = client.get(f"/documents/{doc_id}/chunks", headers=auth_headers)
     assert response.status_code == 404
 
+
+def test_get_document_summary_success(auth_headers):
+    """Verify that an authenticated user can retrieve the summary from metadata JSON."""
+    doc_id = "12345678-1234-1234-1234-123456789012"
+    user_chunks = CHUNKS_DIR / "user-123"
+    user_chunks.mkdir(parents=True, exist_ok=True)
+    chunks_path = user_chunks / f"{doc_id}.json"
+    metadata = {
+        "document_id": doc_id,
+        "source_filename": "test.pdf",
+        "summary": "This is a mock summary text.",
+        "summary_status": "completed"
+    }
+    with open(chunks_path, "w", encoding="utf-8") as f:
+        json.dump(metadata, f)
+
+    try:
+        response = client.get(f"/documents/{doc_id}/summary", headers=auth_headers)
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["document_id"] == doc_id
+        assert payload["summary"] == "This is a mock summary text."
+        assert payload["summary_status"] == "completed"
+    finally:
+        if chunks_path.exists():
+            chunks_path.unlink()
+
+
+def test_get_document_summary_not_found(auth_headers):
+    """Verify that summary retrieval for a non-existent document returns 404."""
+    doc_id = "99999999-9999-9999-9999-999999999999"
+    response = client.get(f"/documents/{doc_id}/summary", headers=auth_headers)
+    assert response.status_code == 404
+
+
+def test_regenerate_document_summary_success(auth_headers):
+    """Verify that summary regeneration returns 202 and runs background task."""
+    doc_id = "12345678-1234-1234-1234-123456789012"
+    user_chunks = CHUNKS_DIR / "user-123"
+    user_chunks.mkdir(parents=True, exist_ok=True)
+    chunks_path = user_chunks / f"{doc_id}.json"
+    metadata = {
+        "document_id": doc_id,
+        "source_filename": "test.pdf",
+        "parents": [{"text": "Parent text chunk content"}],
+        "summary": "Old summary",
+        "summary_status": "completed"
+    }
+    with open(chunks_path, "w", encoding="utf-8") as f:
+        json.dump(metadata, f)
+
+    from unittest.mock import MagicMock, patch
+    from langchain_core.messages import AIMessage
+
+    with patch("app.core.qa.GroqConnectionManager.get_chat_model") as mock_get_model:
+        mock_model = MagicMock()
+        mock_model.return_value = AIMessage(content="Newly generated summary takeaways")
+        mock_model.invoke.return_value = AIMessage(content="Newly generated summary takeaways")
+        mock_get_model.return_value = mock_model
+
+        try:
+            # We want to check that the API returns 202 accepted
+            response = client.post(f"/documents/{doc_id}/summary/regenerate", headers=auth_headers)
+            assert response.status_code == 202
+            payload = response.json()
+            assert payload["document_id"] == doc_id
+            assert payload["status"] == "pending"
+
+            # Wait briefly for background task to execute
+            time.sleep(0.5)
+
+            # Check that chunks file was updated with new summary
+            with open(chunks_path, "r", encoding="utf-8") as f:
+                updated_payload = json.load(f)
+            assert updated_payload["summary"] == "Newly generated summary takeaways"
+            assert updated_payload["summary_status"] == "completed"
+
+        finally:
+            if chunks_path.exists():
+                chunks_path.unlink()
+
+

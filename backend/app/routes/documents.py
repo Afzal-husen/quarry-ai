@@ -4,7 +4,7 @@ import uuid
 from pathlib import Path
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status, BackgroundTasks
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
@@ -41,6 +41,21 @@ class DocumentItem(BaseModel):
     status: str = Field(..., description="Lifecycle status: 'complete' or 'partial'.")
     can_reindex: bool = Field(..., description="True if the raw upload file is present to support re-indexing.")
     file_size: Optional[int] = Field(None, description="The size of the raw upload file in bytes.")
+    summary: str = Field("", description="Concise markdown summary.")
+    summary_status: str = Field("pending", description="Status of the summary: 'pending', 'completed', 'failed'")
+
+
+class DocumentSummaryResponse(BaseModel):
+    """Pydantic model representing the response for retrieving document summary."""
+    document_id: str = Field(..., description="The unique UUID of the document.")
+    summary: str = Field(..., description="The markdown-formatted summary.")
+    summary_status: str = Field(..., description="Status of the summary: 'pending', 'completed', 'failed'")
+
+
+class DocumentSummaryRegenerateResponse(BaseModel):
+    """Pydantic model representing the response for triggering summarization regeneration."""
+    document_id: str = Field(..., description="The unique UUID of the document.")
+    status: str = Field(..., description="Status of the request (should be 'pending').")
 
 
 class ReindexResponse(BaseModel):
@@ -141,6 +156,9 @@ async def list_documents(
         else:
             status_val = "partial"
 
+        summary = payload.get("summary", "")
+        summary_status = payload.get("summary_status", "pending")
+
         results.append(DocumentItem(
             document_id=document_id,
             filename=filename,
@@ -148,7 +166,9 @@ async def list_documents(
             chunk_count=chunk_count,
             status=status_val,
             can_reindex=raw_file_exists,
-            file_size=file_size
+            file_size=file_size,
+            summary=summary,
+            summary_status=summary_status
         ))
 
     total = len(results)
@@ -417,6 +437,47 @@ async def reindex_document(
             detail=f"Document reindexed on disk but vector indexing failed: {str(e)}"
         ) from e
 
+    # Regenerate document summary inline (failed summarization doesn't fail re-indexing)
+    try:
+        from app.core.summarizer import DocumentSummarizer
+        if chunks_file.exists():
+            with open(chunks_file, "r", encoding="utf-8") as f:
+                payload = json.load(f)
+
+            parents = payload.get("parents", [])
+            if parents:
+                parent_texts = [p.get("text", "") for p in parents if p.get("text")]
+                combined_text = "\n\n".join(parent_texts)
+
+                if len(combined_text) > 10000:
+                    truncated_parent_texts = parent_texts[:5]
+                    combined_text = "\n\n".join(truncated_parent_texts)
+
+                summarizer = DocumentSummarizer()
+                summary_text = summarizer.summarize_text(combined_text)
+
+                payload["summary"] = summary_text
+                payload["summary_status"] = "completed"
+            else:
+                payload["summary"] = "No content available to summarize."
+                payload["summary_status"] = "completed"
+
+            with open(chunks_file, "w", encoding="utf-8") as f:
+                json.dump(payload, f, indent=4, ensure_ascii=False)
+    except Exception as summarization_err:
+        import logging
+        logging.error(f"Failed to regenerate summary for document {document_id} during reindexing: {str(summarization_err)}")
+        try:
+            if chunks_file.exists():
+                with open(chunks_file, "r", encoding="utf-8") as f:
+                    payload = json.load(f)
+                payload["summary"] = ""
+                payload["summary_status"] = "failed"
+                with open(chunks_file, "w", encoding="utf-8") as f:
+                    json.dump(payload, f, indent=4, ensure_ascii=False)
+        except Exception:
+            pass
+
     return ReindexResponse(
         document_id=document_id,
         filename=original_filename,
@@ -565,4 +626,154 @@ async def get_document_chunks(
             status_code=500,
             detail=f"Failed to read chunks metadata: {str(e)}"
         )
+
+
+def run_regeneration_job(user_id: str, document_id: str):
+    """Background task to regenerate a document summary asynchronously."""
+    import logging
+    import json
+    from app.core.summarizer import DocumentSummarizer
+
+    chunks_file_path = CHUNKS_DIR / user_id / f"{document_id}.json"
+    try:
+        if chunks_file_path.exists():
+            with open(chunks_file_path, "r", encoding="utf-8") as f:
+                payload = json.load(f)
+
+            parents = payload.get("parents", [])
+            if parents:
+                parent_texts = [p.get("text", "") for p in parents if p.get("text")]
+                combined_text = "\n\n".join(parent_texts)
+
+                if len(combined_text) > 10000:
+                    truncated_parent_texts = parent_texts[:5]
+                    combined_text = "\n\n".join(truncated_parent_texts)
+
+                summarizer = DocumentSummarizer()
+                summary_text = summarizer.summarize_text(combined_text)
+
+                payload["summary"] = summary_text
+                payload["summary_status"] = "completed"
+            else:
+                payload["summary"] = "No content available to summarize."
+                payload["summary_status"] = "completed"
+
+            with open(chunks_file_path, "w", encoding="utf-8") as f:
+                json.dump(payload, f, indent=4, ensure_ascii=False)
+
+    except Exception as summarization_err:
+        logging.error(f"Failed to regenerate summary for document {document_id}: {str(summarization_err)}")
+        try:
+            if chunks_file_path.exists():
+                with open(chunks_file_path, "r", encoding="utf-8") as f:
+                    payload = json.load(f)
+                payload["summary"] = ""
+                payload["summary_status"] = "failed"
+                with open(chunks_file_path, "w", encoding="utf-8") as f:
+                    json.dump(payload, f, indent=4, ensure_ascii=False)
+        except Exception:
+            pass
+
+
+@router.get(
+    "/{document_id}/summary",
+    response_model=DocumentSummaryResponse,
+    summary="Get Document Summary",
+    description="Retrieves the concise summary of the document, if available.",
+    response_description="A JSON object containing document summary details."
+)
+async def get_document_summary(
+    document_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Retrieves the summary for the specified document ID owned by the user."""
+    try:
+        uuid.UUID(document_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=422,
+            detail="document_id must be a valid UUID string."
+        )
+
+    user_id = current_user["id"]
+    chunks_file = CHUNKS_DIR / user_id / f"{document_id}.json"
+
+    if not chunks_file.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found or chunks metadata file missing."
+        )
+
+    try:
+        with open(chunks_file, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to read document chunks metadata: {str(e)}"
+        )
+
+    summary = payload.get("summary", "")
+    summary_status = payload.get("summary_status", "pending")
+
+    return DocumentSummaryResponse(
+        document_id=document_id,
+        summary=summary,
+        summary_status=summary_status
+    )
+
+
+@router.post(
+    "/{document_id}/summary/regenerate",
+    status_code=202,
+    response_model=DocumentSummaryRegenerateResponse,
+    summary="Regenerate Document Summary",
+    description="Asynchronously triggers summary regeneration for the specified document.",
+    response_description="Returns regeneration job status."
+)
+async def regenerate_document_summary(
+    document_id: str,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user)
+):
+    """Triggers background document summarization regeneration task."""
+    try:
+        uuid.UUID(document_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=422,
+            detail="document_id must be a valid UUID string."
+        )
+
+    user_id = current_user["id"]
+    chunks_file = CHUNKS_DIR / user_id / f"{document_id}.json"
+
+    if not chunks_file.exists():
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found or chunks metadata file missing."
+        )
+
+    try:
+        with open(chunks_file, "r", encoding="utf-8") as f:
+            payload = json.load(f)
+        payload["summary_status"] = "pending"
+        with open(chunks_file, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=4, ensure_ascii=False)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update document summary status: {str(e)}"
+        )
+
+    background_tasks.add_task(
+        run_regeneration_job,
+        user_id,
+        document_id
+    )
+
+    return DocumentSummaryRegenerateResponse(
+        document_id=document_id,
+        status="pending"
+    )
 

@@ -17,9 +17,9 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### REST API Endpoints (SUM-API)
 
-- [ ] **SUM-API-01**: Modify `GET /api/documents` to return the document summary and summary status inside the `DocumentItem` response payload.
-- [ ] **SUM-API-02**: Expose `GET /api/documents/{document_id}/summary` to retrieve the full markdown summary.
-- [ ] **SUM-API-03**: Expose `POST /api/documents/{document_id}/summary/regenerate` to allow manually triggering or retrying summarization.
+- [x] **SUM-API-01**: Modify `GET /api/documents` to return the document summary and summary status inside the `DocumentItem` response payload.
+- [x] **SUM-API-02**: Expose `GET /api/documents/{document_id}/summary` to retrieve the full markdown summary.
+- [x] **SUM-API-03**: Expose `POST /api/documents/{document_id}/summary/regenerate` to allow manually triggering or retrying summarization.
 
 ### User Interface Integration (SUM-UI)
 
