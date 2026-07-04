@@ -10,19 +10,22 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ---
 
-## Current Milestone: v7.0 Vercel Cloud Deployment & Serverless Integration
+## Current Milestone: v8.0 Document Summarization & Quick Digests
 
-**Goal:** Configure the Next.js frontend and FastAPI backend for seamless, zero-config deployment to Vercel Serverless Functions. Establish dynamic, writable `/tmp/` directories for SQLite and Chroma indices, resolve absolute backend import paths, and generate Vercel-compatible dependency configurations.
+**Goal:** Integrate automatic document summarization into the ingestion pipeline, persist summaries in the database, and display these quick digests within the document dashboard cards and preview modal.
 
 **Target features:**
-- Configure Next.js and FastAPI monorepo routing parameters in Vercel settings.
-- Writable `/tmp/data` paths fallback for SQLite and Chroma databases when running on Vercel (`VERCEL=1`).
-- Export absolute imports and clean paths in server runtime.
-- Generate `requirements.txt` from pyproject.toml for Vercel pip package compilation.
+- Implement a background summarization step in the async ingestion pipeline using a Groq LLM prompt.
+- Store summaries in the database alongside document metadata.
+- Expose endpoints to retrieve or manually regenerate document summaries.
+- Display a concise summary in the document preview grid cards and inside the full preview modal.
 
 ---
 
 ## Shipped Milestones
+
+### v7.0 Vercel Cloud Deployment & Serverless Integration (Shipped 2026-07-02)
+**Goal:** Configure the Next.js frontend and FastAPI backend for seamless, zero-config deployment to Vercel Serverless Functions. Establish dynamic, writable `/tmp/` directories for SQLite and Chroma indices, resolve absolute backend import paths, and generate Vercel-compatible dependency configurations.
 
 ### v6.0 Path Parameters & Session Routing (Shipped 2026-07-02)
 **Goal:** Transition from URL query parameter session tracking (`/chat?session_id=id`) to clean Next.js App Router dynamic route segments (`/chat/[sessionId]`), resolve sidebar active states for nested subroutes, and stabilize new session creation.
