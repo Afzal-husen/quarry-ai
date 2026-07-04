@@ -55,12 +55,23 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| SUM-01      | Phase 43 | Planned |
+| SUM-02      | Phase 43 | Planned |
+| SUM-03      | Phase 43 | Planned |
+| SUM-04      | Phase 43 | Planned |
+| SUM-05      | Phase 43 | Planned |
+| SUM-API-01  | Phase 44 | Planned |
+| SUM-API-02  | Phase 44 | Planned |
+| SUM-API-03  | Phase 44 | Planned |
+| SUM-UI-01   | Phase 45 | Planned |
+| SUM-UI-02   | Phase 45 | Planned |
+| SUM-UI-03   | Phase 45 | Planned |
 
 **Coverage:**
 
 - v1 requirements: 11 total
-- Mapped to phases: 0
-- Unmapped: 11 ⚠️
+- Mapped to phases: 11
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-07-04*
