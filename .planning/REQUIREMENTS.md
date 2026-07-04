@@ -1,18 +1,31 @@
 # Requirements: Document RAG REST API
 
-**Defined:** 2026-07-02
+**Defined:** 2026-07-04
 **Core Value:** Enable seamless, low-latency document parsing and precise Q&A retrieval via a programmatic REST API using local embeddings and high-speed cloud LLM inference.
 
 ## v1 Requirements
 
 Requirements for this milestone. Each maps to roadmap phases.
 
-### Vercel Serverless Integration (DEPLOY)
+### Document Summarization Engine (SUM)
 
-- [ ] **BE-DEPLOY-01**: Support dynamic, writable folder directories using `/tmp/` fallback under Vercel Serverless environment.
-- [ ] **BE-DEPLOY-02**: Establish clean absolute import pathways inside the server routing pipeline to comply with Vercel function requirements.
-- [ ] **BE-DEPLOY-03**: Create a `requirements.txt` file automatically outputted from `pyproject.toml` so Vercel can resolve Python dependencies.
-- [ ] **FE-DEPLOY-01**: Configure Vercel monorepo root settings for Next.js app build instructions and environment proxy settings.
+- [ ] **SUM-01**: Implement a backend `DocumentSummarizer` service class using the LangChain `ChatGroq` model.
+- [ ] **SUM-02**: Decouple summarization execution by wrapping the summarizer invocation in a non-blocking background task.
+- [ ] **SUM-03**: Fall back gracefully by truncating the source document to the first 5 parent chunks (~7,500-10,000 characters) if the document is large, protecting against context window limits.
+- [ ] **SUM-04**: Save the generated summary and summary status (`pending`, `completed`, `failed`) inside the document chunks JSON file metadata (`data/chunks/{user_id}/{document_id}.json`).
+- [ ] **SUM-05**: Ensure RAG indexing succeeds even if summarization fails (fault isolation), marking status as `failed` and allowing recovery.
+
+### REST API Endpoints (SUM-API)
+
+- [ ] **SUM-API-01**: Modify `GET /api/documents` to return the document summary and summary status inside the `DocumentItem` response payload.
+- [ ] **SUM-API-02**: Expose `GET /api/documents/{document_id}/summary` to retrieve the full markdown summary.
+- [ ] **SUM-API-03**: Expose `POST /api/documents/{document_id}/summary/regenerate` to allow manually triggering or retrying summarization.
+
+### User Interface Integration (SUM-UI)
+
+- [ ] **SUM-UI-01**: Display a truncated summary on the dashboard document grid cards for quick scanning.
+- [ ] **SUM-UI-02**: Refactor the Document Preview Modal to a 2-column split-pane layout, displaying the raw document preview on the left and the full markdown-rendered summary on the right.
+- [ ] **SUM-UI-03**: Add a visual status indicator badge ("Summarizing", "Failed", "View Summary") on both the dashboard cards and preview modal, and provide a "Retry" button for failed/missing summaries.
 
 ## v2 Requirements
 
@@ -22,14 +35,19 @@ Deferred to future release. Tracked but not in current roadmap.
 
 - **FE-JUMP-01**: Click on a citation reference link inside a chat bubble to automatically open the preview modal and jump/scroll to the cited page or paragraph.
 
+### Guided Focus Summaries (SUM-GUIDED)
+
+- **SUM-GUIDED-01**: Support custom prompt-guided summaries (focusing summaries on user-defined topics).
+
 ## Out of Scope
 
 Explicitly excluded. Documented to prevent scope creep.
 
 | Feature | Reason |
 |---------|--------|
-| Native Mobile PDF viewer engine | Heavy dependency overhead; standard iframe and native download buttons are sufficient. |
-| In-browser DOCX layout rendering | Direct rendering of original pagination, fonts, tables, margins is brittle and slow on client side. Clean paragraph chunk text rendering is more reliable. |
+| Custom database schema migration | SQLite schema changes are risky for zero-config deployments. Using the existing JSON metadata files is safer and keeps the architecture file-based. |
+| Uncapped Map-Reduce loop summaries | Summarizing extremely large documents (e.g. >100 pages) without limits causes API timeouts and high token costs. Truncation preserves speed and rate limits. |
+| Synchronous upload summarization | Blocking uploads while waiting for LLM summarization causes user-facing timeouts and degrades UX. Async background tasks ensure fast responses. |
 
 ## Traceability
 
@@ -37,16 +55,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BE-DEPLOY-01 | Phase 42 | Not started |
-| BE-DEPLOY-02 | Phase 42 | Not started |
-| BE-DEPLOY-03 | Phase 42 | Not started |
-| FE-DEPLOY-01 | Phase 42 | Not started |
 
 **Coverage:**
 
-- v1 requirements: 4 total
-- Mapped to phases: 4
-- Unmapped: 0 ✅
+- v1 requirements: 11 total
+- Mapped to phases: 0
+- Unmapped: 11 ⚠️
 
 ---
-*Requirements defined: 2026-07-02*
+*Requirements defined: 2026-07-04*
