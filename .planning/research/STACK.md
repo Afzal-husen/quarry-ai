@@ -1,7 +1,7 @@
 # Stack Research
 
-**Domain:** Document Preview & Unified Sidebar Layout
-**Researched:** 2026-06-30
+**Domain:** Document Summarization & Quick Digests
+**Researched:** 2026-07-04
 **Confidence:** HIGH
 
 ## Recommended Stack
@@ -9,33 +9,34 @@
 ### Core Technologies
 
 | Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| FastAPI (FileResponse) | 0.111.0+ | Serve static document files | Native support for streaming file buffers with custom content-types. |
-| React-Markdown | ^9.0.0 | Render markdown responses | Standard, highly secure, extensible markdown parsing and rendering in React. |
-| Remark-Gfm | ^4.0.0 | Support GitHub Flavored Markdown | Enables rendering markdown tables, checklists, strikethroughs, and autolinks. |
+| :--- | :--- | :--- | :--- |
+| **LangChain (Chains & Prompts)** | Already in stack (0.1.0+) | Orchestrate the summarization pipelines and prompt structures. | Offers standardized patterns for processing text chunks and composing prompts. Supports both single-pass stuffing and split-merge (Map-Reduce) methodologies. |
+| **ChatGroq (langchain-groq)** | Already in stack (0.1.0+) | Perform high-speed generative summarization using Groq's host models. | Connects to state-of-the-art models like `llama-3.1-70b-versatile` or `llama-3.1-8b-instant`. Large context windows (128k tokens) allow most documents to be summarized in a single "stuff" call with low latency. |
+| **FastAPI BackgroundTasks** | Built-in | Offload the summarization generation to a background thread. | Avoids blocking the main HTTP execution thread, ensuring that the document upload API returns immediately with a `202 Accepted` status without timing out. |
 
 ### Supporting Libraries
 
 | Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| Lucide React | ^0.400.0 | Iconography (Plus, Eye, BookOpen, etc.) | High-quality icons for new UI components. |
-| Radix UI Dialog | ^1.0.0 | Modal interfaces | Used for the document preview modal and the chat context configuration modal. |
-| Radix UI Popover | ^1.0.0 | Popover menus | Triggers context actions when the chat input Plus icon is clicked. |
+| :--- | :--- | :--- | :--- |
+| **Native JSON Persistence** | Built-in | Persist the generated executive summaries inside the document metadata. | Append the generated summary directly to the existing chunk metadata file (`data/chunks/{user_id}/{document_id}.json`). Keeps document storage cohesive and file-based. |
+| **Standard Tokenizer** | Already in stack (via `sentence-transformers`) | Count tokens in the parsed text to determine the optimal summarization strategy. | Used to inspect the document size before selecting the chain type (e.g., using `stuff` for under 100k tokens and falling back to `map_reduce` for larger files) to prevent API context errors. |
 
 ## Alternatives Considered
 
 | Recommended | Alternative | When to Use Alternative |
-|-------------|-------------|-------------------------|
-| Native PDF `iframe` | PDF.js / react-pdf | If we need custom drawing overlays, highlight annotations, or mobile browsers without built-in PDF viewer support. Monolith native view is cleaner for our layout. |
-| Text Chunk Previewer | docx-preview (js) | If we require pixel-perfect rendering of headers/footers/images in docx. A text chunk previewer is faster, requires no external file parser, and uses existing pre-extracted data. |
+| :--- | :--- | :--- |
+| **FastAPI BackgroundTasks** | Celery + Redis | If the app needs a persistent task queue that survives application crashes or supports heavy multi-worker distributed summarization jobs. Currently, FastAPI's built-in background task runner is sufficient and keeps infrastructure lightweight. |
+| **LangChain Built-in Chains** | Custom LCEL Chain | If we want lightweight, custom prompt pipelines without the overhead of `load_summarize_chain` legacy structures. Writing a custom LangChain Expression Language (LCEL) chain provides cleaner traceback logs and greater control over prompt format. |
+| **JSON File Storage** | SQLite Table update | If summaries need to be queried, searched, or indexed relationally (e.g., full-text search over summaries). Since metadata is currently stored in dynamic JSON files, adding summaries there is highly consistent. |
 
 ## What NOT to Use
 
 | Avoid | Why | Use Instead |
-|-------|-----|-------------|
-| Google Docs Viewer | Requires public document URLs, leaking user files to third-party endpoints. | Self-contained HTML/Text preview or secure local file stream. |
-| `dangerouslySetInnerHTML` | High risk of XSS vulnerability when rendering LLM outputs or raw text. | Safely sanitized `react-markdown` or React text-nodes. |
+| :--- | :--- | :--- |
+| **Synchronous LLM API Calls** | Calling Groq synchronously inside the FastAPI upload endpoint blocks the server, causing request timeouts for larger files. | `FastAPI BackgroundTasks` or async/await non-blocking coroutines. |
+| **Refine Chain Strategy (`refine`)** | The `refine` method makes sequential LLM calls for each chunk. It cannot be parallelized and results in extremely high latency. | **Stuff** chain (single call for < 100k tokens) or **Map-Reduce** chain (parallel map step, fast execution). |
+| **New Heavy Tokenization Packages** | Installing additional tokenization libraries (e.g. `tiktoken`) adds unnecessary dependencies to the virtual environment. | Character-count heuristics (~4 chars/token) or the tokenizer already provided in the environment by `sentence-transformers`. |
 
 ---
-*Stack research for: Document RAG REST API v5.0*
-*Researched: 2026-06-30*
+*Stack research for: Document RAG REST API v5.1*
+*Researched: 2026-07-04*

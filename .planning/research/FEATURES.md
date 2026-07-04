@@ -1,8 +1,25 @@
-# Feature Research
+# Feature Research: Document Summarization & Quick Digests
 
-**Domain:** Document Preview & Unified Sidebar Layout
-**Researched:** 2026-06-30
+**Domain:** Document Summarization & Quick Digests
+**Researched:** 2026-07-04
 **Confidence:** HIGH
+
+## Overview & Expected Behavior
+
+In a production-ready Retrieval-Augmented Generation (RAG) system, document summarization serves as a high-level bridge between raw data ingestion and user Q&A. Instead of relying purely on local context chunks for granular questions, users need a macroscopic view of their uploaded documents for quick scanning and content verification.
+
+### Typical Workflow in RAG
+1. **Extraction & Chunking**: A document is parsed and split into semantic chunks for vector database indexing.
+2. **Summarization Pipeline**: The extracted text (or key chunks/pages if it exceeds context windows) is sent to a High-Performance LLM (via Groq API) to generate a structured summary.
+3. **Metadata Database Persistence**: The generated summary is saved in the relational database (SQLite) alongside other document metadata.
+4. **UI Display**: The summary is cached and rendered in document overview cards and the preview modal.
+
+### Expected Behavior & UX
+- **Asynchronous Execution**: Summarization runs in the background within the async ingestion pipeline. The API returns an immediate response (HTTP 202), and the frontend shows a "Summarizing..." status badge.
+- **Fail-Safe Ingestion**: If the LLM summarization fails (due to Groq API rate limits, timeouts, or format issues), the document ingestion process must still complete. The document index will still be queryable, and the summary will support manual regeneration.
+- **Caching**: The summary must be persisted locally in SQLite so that viewing files does not trigger continuous LLM calls.
+
+---
 
 ## Feature Landscape
 
@@ -11,50 +28,59 @@
 Features users assume exist. Missing these = product feels incomplete.
 
 | Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Document Preview Card Grid | Easier to scan files visually than a dense table listing. | LOW | Replace list layout with a responsive, modern card grid. |
-| PDF Viewer | PDF is the standard document format; users want to read the file inline. | LOW | Use standard browser iframe rendering on target backend file stream. |
-| Word Document Text Viewer | DOCX previewing is necessary to check files without downloading. | MEDIUM | Fetch the pre-extracted page chunks and display them in a structured text layout. |
-| Unified Navigation Sidebar | Sidebar layout should combine all actions (dashboard, chat history, profile) in a single unified side panel. | MEDIUM | Merge chat and dashboard shells; refactor layout and conditional viewport states. |
-| Context Menu Popover | A Plus icon in the chat input to inject context dynamically. | MEDIUM | Standard input context switcher common in modern AI interfaces (ChatGPT/Claude). |
-| Rich Text Chat Response | Chat answers should render lists, tables, code blocks, and markdown natively. | MEDIUM | Integrate robust react-markdown parsing with Geist font stylings. |
+|:---|:---|:---|:---|
+| **Asynchronous Summarization** | Summarizing takes several seconds; doing it synchronously blocks user uploads and causes timeouts. | MEDIUM | Orchestrated in the background task worker alongside chunking and indexing. |
+| **SQLite Schema Persistence** | Summaries must be cached to prevent unnecessary model inference costs and latency. | LOW | Add a `summary` (text) and `summary_status` (string/enum) to the SQLite document model. |
+| **FastAPI REST Endpoints** | Endpoints are needed to fetch, check status of, or manually trigger summarization. | MEDIUM | Expose `GET /api/documents/{document_id}/summary` and `POST /api/documents/{document_id}/summary/regenerate`. |
+| **Dashboard Grid Card Snippets** | Users want to quickly scan documents without opening them individually. | LOW | Truncate the persisted summary in the frontend card rendering. |
+| **Preview Modal Integration** | A central place to read the full digest when looking at the document inline. | MEDIUM | Render the full summary (using Markdown for formatting) inside the document preview modal. |
+| **Failure Recovery** | Rate limits or API outages should not block core document ingestion. | MEDIUM | Gracefully catch exceptions in the summarization worker, set state to `FAILED`, and allow manual retry. |
 
 ### Differentiators (Competitive Advantage)
 
 Features that set the product apart. Not required, but valuable.
 
 | Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Multi-Document Focus Filter | Filter search scope down to selected context documents on-the-fly during chat. | MEDIUM | Interactive checklists inside the chat input popover context. |
-| Dynamic Preview from Citation | Clicking a source references citation card directly opens the previewer at that specific page. | HIGH | Link citation pages to the iframe page parameter or scroll to that chunk page. |
+|:---|:---|:---|:---|
+| **Prompt-Guided Focus Summary** | Allows users to ask for a custom summary focused on a specific interest (e.g. "Focus on financial metrics"). | MEDIUM | The regeneration endpoint accepts a custom `focus_prompt` string payload. |
+| **Auto-Generated FAQ Prompts** | Automatically suggests 3-5 starting questions for chat based on the document summary. | MEDIUM | During summarization, generate typical user questions and show them as clickable quick-starts in the chat context. |
+| **Hierarchical Search Routing** | Uses document-level summaries to filter or rank chunks before retrieval. | HIGH | Index the generated summary in the Chroma database and use it to score overall document relevance first. |
+| **Multi-Document Comparative Summaries** | Synthesis of commonalities and differences across multiple selected documents. | HIGH | UI allows selecting multiple files to request a combined cross-document comparative digest. |
 
 ### Anti-Features (Commonly Requested, Often Problematic)
 
 Features that seem good but create problems.
 
 | Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| Full Word Document Layout Conversion | Display headers, footers, tables, fonts identically. | High JS library overhead, slow parsing, broken layouts. | Display the structured, cleaned paragraph text chunk by chunk. |
-| Mobile Native PDF rendering | Custom zooming/swiping controls on mobile devices. | Complex dependency footprint; buggy on iOS/Android. | Allow native device PDF download fallback on mobile screens. |
+|:---|:---|:---|:---|
+| **Synchronous Ingestion Summarizing** | Get the summary instantly upon file upload return. | Blocks the UI, causes gateway timeouts (especially with larger files), and degrades UX. | Return upload confirmation immediately; poll status or stream state changes. |
+| **Uncapped Map-Reduce Summaries** | Summarize extremely large documents (e.g. 500+ pages) without token boundaries. | Exponential increase in Groq API costs, high rate-limiting frequency, and long queue times. | Truncate incoming text to first N chunks or main pages for summary generation. |
+| **On-demand Summary Generation** | Generate the summary fresh every time the user clicks "Preview". | Very slow UI load times (1-5s delay per file view) and high token costs. | Generate once during ingestion and persist in SQLite; support manual regeneration only. |
+| **Summary-Only RAG Retrieval** | Store only summaries in the vector database to save space. | Prevents exact retrieval for specific, detailed questions, breaking grounding. | Keep full document chunking for query retrieval, and use summaries for overview and navigation. |
+
+---
 
 ## Feature Dependencies
 
 ```
-[Card Grid Layout] ──requires──> [File Serving Route]
-[Word Text Viewer] ──requires──> [Document Chunks Route]
-[Context Modal] ──requires──> [Card Grid Layout]
+[UI Card & Preview Modal] ──depends on──> [API Summary Endpoints]
+[API Summary Endpoints]   ──depends on──> [SQLite Persistence Schema]
+[Groq Ingestion Task]     ──depends on──> [Async Background Worker]
 ```
 
 ## MVP Definition
 
-### Launch With (v5.0)
+### Launch With (v8.0)
 
-- [ ] Document card grid layout (showing Date, Size, Name, Status).
-- [ ] Inline document preview modal for PDFs (iframe) and Word documents (text chunk lists).
-- [ ] Unified Sidebar integrating Navigation, Chat History, Separator, and Profile.
-- [ ] Plus icon triggers context selector checklist modal.
-- [ ] Correctly formatted markdown, list, table, code renderers for chat response text.
+- [ ] Add `summary` and `summary_status` (pending, completed, failed) fields to the SQLite Document database model.
+- [ ] Implement a LangChain-based Groq summarization step in the background ingestion pipeline.
+- [ ] Expose FastAPI endpoints:
+  - `GET /api/documents/{document_id}/summary`
+  - `POST /api/documents/{document_id}/summary/regenerate`
+- [ ] Update frontend API client to fetch and trigger summaries.
+- [ ] Display a truncated summary on the dashboard document grid cards.
+- [ ] Update the Document Preview Modal to show the full summary (rendered in Markdown) with a "Regenerate" button for failed or outdated summaries.
 
 ---
-*Feature research for: Document RAG REST API v5.0*
-*Researched: 2026-06-30*
+*Feature research for: Document RAG REST API v8.0*
+*Researched: 2026-07-04*
