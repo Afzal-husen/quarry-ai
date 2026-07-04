@@ -26,7 +26,7 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 ## Phases
 
-- [ ] **Phase 43: Backend Summarization Engine** — Create the summarizer service, integrate with async ingestion pipeline, handle truncation, and persist summary metadata in JSON chunks.
+- [x] **Phase 43: Backend Summarization Engine** — Create the summarizer service, integrate with async ingestion pipeline, handle truncation, and persist summary metadata in JSON chunks. (completed 2026-07-04)
 - [ ] **Phase 44: Summarization REST API Endpoints** — Modify the document list API to include summary metadata, and expose endpoints to retrieve the full summary or regenerate it.
 - [ ] **Phase 45: User Interface Integration** — Integrate summaries into dashboard cards, redesign preview modal to split-pane, and handle retry flow with status badges.
 
@@ -38,6 +38,7 @@ This roadmap details completed milestones and future plans for the Document RAG 
 **Depends on**: Phase 42
 **Requirements**: SUM-01, SUM-02, SUM-03, SUM-04, SUM-05
 **Success Criteria**:
+
   1. `DocumentSummarizer` class is created and successfully invokes Groq LLM through LangChain.
   2. Input text is safely truncated to the first 5 parent chunks to prevent context overflow.
   3. Summarization is run asynchronously via background tasks during the ingestion flow.
@@ -46,7 +47,7 @@ This roadmap details completed milestones and future plans for the Document RAG 
 **Plans**: 1 plan
 Plans:
 
-- [ ] 43-01: Create DocumentSummarizer service, integrate async task wrapper in ingestion flow, configure fallback truncation, and handle metadata persistence.
+- [x] 43-01: Create DocumentSummarizer service, integrate async task wrapper in ingestion flow, configure fallback truncation, and handle metadata persistence.
 
 ### Phase 44: Summarization REST API Endpoints
 
@@ -54,6 +55,7 @@ Plans:
 **Depends on**: Phase 43
 **Requirements**: SUM-API-01, SUM-API-02, SUM-API-03
 **Success Criteria**:
+
   1. `GET /api/documents` contains summary and summary status.
   2. `GET /api/documents/{document_id}/summary` returns the full markdown summary.
   3. `POST /api/documents/{document_id}/summary/regenerate` spawns a background job to regenerate the summary.
@@ -70,6 +72,7 @@ Plans:
 **Requirements**: SUM-UI-01, SUM-UI-02, SUM-UI-03
 **UI hint**: yes
 **Success Criteria**:
+
   1. Dashboard cards render a truncated text snippet of the summary with line clamp.
   2. Document Preview Modal splits into a two-column layout with preview on the left and full markdown summary on the right.
   3. Dashboard cards and preview modal display the correct status badges ("Summarizing", "Failed", "View Summary"), with a retry button working for failed summaries.
@@ -132,7 +135,7 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 42. Vercel Cloud Deployment & Serverless Integration | v7.0 | 1/1 | Complete | 2026-07-02 |
-| 43. Backend Summarization Engine | v8.0 | 0/1 | Planned | — |
+| 43. Backend Summarization Engine | v8.0 | 1/1 | Complete    | 2026-07-04 |
 | 44. Summarization REST API Endpoints | v8.0 | 0/1 | Planned | — |
 | 45. User Interface Integration | v8.0 | 0/1 | Planned | — |
 

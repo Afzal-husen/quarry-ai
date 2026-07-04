@@ -236,7 +236,9 @@ class DocumentChunker:
             "total_parents": len(parents_map),
             "total_chunks": len(serialized_chunks),
             "parents": list(parents_map.values()),
-            "chunks": serialized_chunks
+            "chunks": serialized_chunks,
+            "summary": "",
+            "summary_status": "pending"
         }
 
         with open(destination_path, "w", encoding="utf-8") as f:

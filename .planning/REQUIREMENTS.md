@@ -9,11 +9,11 @@ Requirements for this milestone. Each maps to roadmap phases.
 
 ### Document Summarization Engine (SUM)
 
-- [ ] **SUM-01**: Implement a backend `DocumentSummarizer` service class using the LangChain `ChatGroq` model.
-- [ ] **SUM-02**: Decouple summarization execution by wrapping the summarizer invocation in a non-blocking background task.
-- [ ] **SUM-03**: Fall back gracefully by truncating the source document to the first 5 parent chunks (~7,500-10,000 characters) if the document is large, protecting against context window limits.
-- [ ] **SUM-04**: Save the generated summary and summary status (`pending`, `completed`, `failed`) inside the document chunks JSON file metadata (`data/chunks/{user_id}/{document_id}.json`).
-- [ ] **SUM-05**: Ensure RAG indexing succeeds even if summarization fails (fault isolation), marking status as `failed` and allowing recovery.
+- [x] **SUM-01**: Implement a backend `DocumentSummarizer` service class using the LangChain `ChatGroq` model.
+- [x] **SUM-02**: Decouple summarization execution by wrapping the summarizer invocation in a non-blocking background task.
+- [x] **SUM-03**: Fall back gracefully by truncating the source document to the first 5 parent chunks (~7,500-10,000 characters) if the document is large, protecting against context window limits.
+- [x] **SUM-04**: Save the generated summary and summary status (`pending`, `completed`, `failed`) inside the document chunks JSON file metadata (`data/chunks/{user_id}/{document_id}.json`).
+- [x] **SUM-05**: Ensure RAG indexing succeeds even if summarization fails (fault isolation), marking status as `failed` and allowing recovery.
 
 ### REST API Endpoints (SUM-API)
 

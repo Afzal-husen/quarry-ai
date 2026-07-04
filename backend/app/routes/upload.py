@@ -102,6 +102,58 @@ def run_ingestion_job(
             source_filename=original_filename
         )
 
+        # 5. Generate document summary asynchronously inline (fault isolated)
+        try:
+            import json
+            import logging
+            from app.core.summarizer import DocumentSummarizer
+            chunks_file_path = CHUNKS_DIR / user_id / f"{document_id}.json"
+            if chunks_file_path.exists():
+                with open(chunks_file_path, "r", encoding="utf-8") as f:
+                    payload = json.load(f)
+
+                parents = payload.get("parents", [])
+                if parents:
+                    # Join parent texts
+                    parent_texts = [p.get("text", "") for p in parents if p.get("text")]
+                    combined_text = "\n\n".join(parent_texts)
+
+                    # Safeguard truncation limit: 10,000 characters
+                    if len(combined_text) > 10000:
+                        # Truncate to first 5 parent chunks
+                        truncated_parent_texts = parent_texts[:5]
+                        combined_text = "\n\n".join(truncated_parent_texts)
+
+                    # Perform summarization
+                    summarizer = DocumentSummarizer()
+                    summary_text = summarizer.summarize_text(combined_text)
+
+                    # Update and save payload
+                    payload["summary"] = summary_text
+                    payload["summary_status"] = "completed"
+                else:
+                    payload["summary"] = "No content available to summarize."
+                    payload["summary_status"] = "completed"
+
+                with open(chunks_file_path, "w", encoding="utf-8") as f:
+                    json.dump(payload, f, indent=4, ensure_ascii=False)
+
+        except Exception as summarization_err:
+            import json
+            import logging
+            logging.error(f"Failed to generate summary for document {document_id}: {str(summarization_err)}")
+            try:
+                chunks_file_path = CHUNKS_DIR / user_id / f"{document_id}.json"
+                if chunks_file_path.exists():
+                    with open(chunks_file_path, "r", encoding="utf-8") as f:
+                        payload = json.load(f)
+                    payload["summary"] = ""
+                    payload["summary_status"] = "failed"
+                    with open(chunks_file_path, "w", encoding="utf-8") as f:
+                        json.dump(payload, f, indent=4, ensure_ascii=False)
+            except Exception:
+                pass
+
         # Update job status to complete
         with jobs_lock:
             if document_id in ingestion_jobs:
