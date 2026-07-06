@@ -1,0 +1,78 @@
+# Requirements: Document RAG REST API
+
+**Defined:** 2026-07-06
+**Core Value:** Enable seamless, low-latency document parsing and precise Q&A retrieval via a programmatic REST API using local embeddings and high-speed cloud LLM inference.
+
+## v1 Requirements
+
+Requirements for this milestone. Each maps to roadmap phases.
+
+### Backend Dockerization (DKR-BE)
+
+- [ ] **DKR-BE-01**: Create a `Dockerfile` for the Python backend in the `backend/` directory targeting Python 3.14.
+- [ ] **DKR-BE-02**: Install application dependencies securely via `uv` or pip utilizing `pyproject.toml` definitions.
+- [ ] **DKR-BE-03**: Configure port exposure (8000) and support environment overrides for runtime configuration.
+- [ ] **DKR-BE-04**: Support persistent volume mounts for Chroma DB and SQLite database files.
+
+### Frontend Dockerization (DKR-FE)
+
+- [ ] **DKR-FE-01**: Create a multi-stage `Dockerfile` in the `frontend/` directory targeting Node 20+ to compile and host the Next.js application.
+- [ ] **DKR-FE-02**: Leverage Next.js standalone output configuration to produce highly optimized, lightweight runtime images.
+- [ ] **DKR-FE-03**: Configure port exposure (3000) and environment mapping for proxy backend API paths.
+
+### Compose Orchestration (DKR-CMP)
+
+- [ ] **DKR-CMP-01**: Create a root-level `docker-compose.yml` orchestrating both the `frontend` and `backend` services.
+- [ ] **DKR-CMP-02**: Define a shared network configuration enabling service discovery (e.g. frontend calling `http://backend:8000`).
+- [ ] **DKR-CMP-03**: Establish persistent named volumes for the SQLite database and Chroma index on the host filesystem.
+- [ ] **DKR-CMP-04**: Map standard configuration environment variables (`GROQ_API_KEY`, host bindings) securely into the container runtimes.
+
+## v2 Requirements
+
+Deferred to future release. Tracked but not in current roadmap.
+
+### Interactive Citation Jump (FE-JUMP)
+
+- **FE-JUMP-01**: Click on a citation reference link inside a chat bubble to automatically open the preview modal and jump/scroll to the cited page or paragraph.
+
+### Guided Focus Summaries (SUM-GUIDED)
+
+- **SUM-GUIDED-01**: Support custom prompt-guided summaries (focusing summaries on user-defined topics).
+
+## Out of Scope
+
+Explicitly excluded. Documented to prevent scope creep.
+
+| Feature | Reason |
+|---------|--------|
+| Multi-tenant container sandbox execution | Executing document parsing inside separate per-user sandbox containers is out of scope. Local directory-based database partitioning is sufficient. |
+| Production Kubernetes Manifests / Helm charts | Complex cluster orchestration is out of scope. Docker Compose is the target deployment mechanism for self-hosting. |
+| Building Docker images for non-x86/ARM platforms | Multi-platform build tooling setup is out of scope. The images will target standard x86_64/ARM64 architectures. |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| DKR-BE-01   | Phase 46 | Planned |
+| DKR-BE-02   | Phase 46 | Planned |
+| DKR-BE-03   | Phase 46 | Planned |
+| DKR-BE-04   | Phase 46 | Planned |
+| DKR-FE-01   | Phase 47 | Planned |
+| DKR-FE-02   | Phase 47 | Planned |
+| DKR-FE-03   | Phase 47 | Planned |
+| DKR-CMP-01  | Phase 48 | Planned |
+| DKR-CMP-02  | Phase 48 | Planned |
+| DKR-CMP-03  | Phase 48 | Planned |
+| DKR-CMP-04  | Phase 48 | Planned |
+
+**Coverage:**
+
+- v1 requirements: 11 total
+- Mapped to phases: 11
+- Unmapped: 0
+
+---
+*Requirements defined: 2026-07-06*
+*Last updated: 2026-07-06 after milestone v9.0 start*

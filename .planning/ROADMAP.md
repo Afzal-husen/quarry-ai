@@ -2,82 +2,72 @@
 
 ## Overview
 
-This roadmap details completed milestones and future plans for the Document RAG REST API frontend user interface remake using shadcn/ui and impeccable design standards.
+This roadmap details completed milestones and future plans for the Document RAG REST API Dockerization & Containerization.
 
 ---
 
 ## Milestones
 
-- ✅ **v8.0 Document Summarization & Quick Digests** — Phases 43-45 (shipped 2026-07-06): [v8.0 ROADMAP](file:///.planning/milestones/v8.0-ROADMAP.md)
-- ✅ **v7.0 Vercel Cloud Deployment & Serverless Integration** — Phase 42 (shipped 2026-07-02): [v7.0 ROADMAP](file:///.planning/ROADMAP.md)
+- ⏳ **v9.0 Dockerization & Containerization** — Phases 46-48 (planning): [v9.0 ROADMAP](file:///.planning/ROADMAP.md)
+- ✅ **v8.0 Document Summarization & Quick Digests** — Phases 43-45 (shipped 2026-07-04): [v8.0 ROADMAP](file:///.planning/milestones/v8.0-ROADMAP.md)
+- ✅ **v7.0 Vercel Cloud Deployment & Serverless Integration** — Phase 42 (shipped 2026-07-02): [v7.0 ROADMAP](file:///.planning/milestones/v7.0-ROADMAP.md)
 - ✅ **v6.0 Path Parameters & Session Routing** — Phase 41 (shipped 2026-07-02): [v6.0 ROADMAP](file:///.planning/milestones/v6.0-ROADMAP.md)
 - ✅ **v5.0 Document Preview & Unified Sidebar** — Phases 36-40 (shipped 2026-07-02): [v5.0 ROADMAP](file:///.planning/milestones/v5.0-ROADMAP.md)
 - ✅ **v4.1 Dark Mode Toggle** — Phases 34-35 (shipped 2026-06-29): [v4.1 ROADMAP](file:///.planning/milestones/v4.1-ROADMAP.md)
 - ✅ **v4.0 Shadcn UI Remake** — Phases 29-33 (shipped 2026-06-29): [v4.0 ROADMAP](file:///.planning/milestones/v4.0-ROADMAP.md)
-- ✅ **v3.1 Debugging & Stabilization** — Phase 28 (shipped 2026-06-28): [v3.1 ROADMAP](file:///.planning/milestones/v3.1-ROADMAP.md)
-- ✅ **v3.0 LLM Response & Retrieval Enhancements** — Phase 27 (shipped 2026-06-28): [v3.0 ROADMAP](file:///.planning/milestones/v3.0-ROADMAP.md)
-- ✅ **v2.0 Web Frontend Integration** — Phases 23-26 (shipped 2026-06-27): [v2.0 ROADMAP](file:///.planning/milestones/v2.0-ROADMAP.md)
-- ✅ **v1.5 Q&A History & Conversational Memory** — Phases 20-22 (shipped 2026-06-27): [v1.5 ROADMAP](file:///.planning/milestones/v1.5-ROADMAP.md)
-- ✅ **v1.4 Production Readiness & Full Document Lifecycle** — Phases 12-19 (shipped 2026-06-25): [v1.4 ROADMAP](file:///.planning/milestones/v1.4-ROADMAP.md)
-- ✅ **v1.1 LangChain & Clean Code Standards** — Phases 6-7 (shipped 2026-06-18): [v1.1 ROADMAP](file:///.planning/milestones/v1.1-ROADMAP.md)
-- ✅ **v1.0 MVP Core RAG Pipeline** — Phases 1-5 (shipped 2026-06-18): [v1.0 ROADMAP](file:///.planning/milestones/v1.0-ROADMAP.md)
 
 ---
 
 ## Phases
 
-<details>
-<summary>✅ v8.0 Document Summarization & Quick Digests (Phases 43-45) — SHIPPED 2026-07-06</summary>
+- [ ] **Phase 46: Backend Dockerization** — Author backend Dockerfile utilizing Python 3.14, configure dependencies installation via `pyproject.toml`, expose port 8000, and setup local SQLite/Chroma DB volume mounts.
+- [ ] **Phase 47: Frontend Dockerization** — Author multi-stage Dockerfile for Next.js App Router, leverage standalone output mode for a lightweight image, expose port 3000, and support dynamic proxy variables.
+- [ ] **Phase 48: Docker Compose Orchestration** — Orchestrate both containers using `docker-compose.yml` with host-mounted persistent data paths, unified network routing, and environment configurations.
 
-- [x] Phase 43: Backend Summarization Engine (1/1 plans) — completed 2026-07-04
-- [x] Phase 44: Summarization REST API Endpoints (1/1 plans) — completed 2026-07-04
-- [x] Phase 45: User Interface Integration (1/1 plans) — completed 2026-07-04
+## Phase Details
 
-</details>
+### Phase 46: Backend Dockerization
 
-<details>
-<summary>✅ v7.0 Vercel Cloud Deployment & Serverless Integration (Phase 42) — SHIPPED 2026-07-02</summary>
+**Goal**: Package the backend application into a Docker container.
+**Depends on**: Phase 42
+**Requirements**: DKR-BE-01, DKR-BE-02, DKR-BE-03, DKR-BE-04
+**Success Criteria**:
+  1. `backend/Dockerfile` builds successfully without cache issues.
+  2. Runs Python 3.14 runtime cleanly.
+  3. Binds SQLite database and Chroma files to a persistent path in container that survives restarts.
+  4. Exposes REST API on port 8000.
 
-- [x] Phase 42: Vercel Cloud Deployment & Serverless Integration (1/1 plans) — completed 2026-07-02
+**Plans**: 1 plan
+Plans:
+- [ ] 46-01: Create backend/Dockerfile, setup environment configurations, and verify local container boot.
 
-</details>
+### Phase 47: Frontend Dockerization
 
-<details>
-<summary>✅ v6.0 Path Parameters & Session Routing (Phase 41) — SHIPPED 2026-07-02</summary>
+**Goal**: Build a secure, minimal Docker image for the Next.js frontend.
+**Depends on**: Phase 46
+**Requirements**: DKR-FE-01, DKR-FE-02, DKR-FE-03
+**Success Criteria**:
+  1. `frontend/Dockerfile` builds successfully using multi-stage node runtime.
+  2. Standalone output mode reduces image size significantly.
+  3. Frontend correctly proxy-routes API requests to the backend container URL.
 
-- [x] Phase 41: Dynamic Path Routing & Session Navigation (1/1 plans) — completed 2026-07-02
+**Plans**: 1 plan
+Plans:
+- [ ] 47-01: Configure next.config.ts for standalone output, create frontend/Dockerfile, and verify local container boot.
 
-</details>
+### Phase 48: Docker Compose Orchestration
 
-<details>
-<summary>✅ v5.0 Document Preview & Unified Sidebar (Phases 36-40) — SHIPPED 2026-07-02</summary>
+**Goal**: Run both services together seamlessly with simple compose commands.
+**Depends on**: Phase 47
+**Requirements**: DKR-CMP-01, DKR-CMP-02, DKR-CMP-03, DKR-CMP-04
+**Success Criteria**:
+  1. Root `docker-compose.yml` successfully boots both backend and frontend containers.
+  2. Data persists locally on host machine through mapped volumes.
+  3. Entire flow (upload, index, query, stream) functions correctly inside container environment.
 
-- [x] Phase 36: Backend Preview Support (1/1 plans) — completed 2026-06-30
-- [x] Phase 37: Unified Navigation Sidebar (1/1 plans) — completed 2026-06-30
-- [x] Phase 38: Document Cards Grid & Preview Modal (1/1 plans) — completed 2026-06-30
-- [x] Phase 39: Input Context Menu Popover & Selection Modal (1/1 plans) — completed 2026-07-01
-- [x] Phase 40: Rich Text & Markdown Rendering Polish (1/1 plans) — completed 2026-07-01
-
-</details>
-
-<details>
-<summary>✅ v4.1 Dark Mode Toggle (Phases 34-35) — SHIPPED 2026-06-29</summary>
-
-- [x] Phase 34: Theme Switching Integration (1/1 plans) — completed 2026-06-29
-- [x] Phase 35: Contrast Auditing & Color Polish (1/1 plans) — completed 2026-06-29
-
-</details>
-
-<details>
-<summary>✅ v4.0 Shadcn UI Remake (Phases 29-33) — SHIPPED 2026-06-29</summary>
-
-- [x] Phase 29: Shadcn UI Setup & Foundations (1/1 plans) — completed 2026-06-29
-- [x] Phase 30: Authentication Screens Refactoring (1/1 plans) — completed 2026-06-29
-- [x] Phase 31: Dashboard & Ingestion Interface (1/1 plans) — completed 2026-06-29
-- [x] Phase 32: Q&A Chat Feed & SSE Streaming (1/1 plans) — completed 2026-06-29
-- [x] Phase 33: Design Polish & Visual Verification (1/1 plans) — completed 2026-06-29
-
-</details>
+**Plans**: 1 plan
+Plans:
+- [ ] 48-01: Create root docker-compose.yml, link services on docker bridge network, configure local persistence volumes, and verify end-to-end flow.
 
 ---
 
@@ -85,10 +75,9 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 42. Vercel Cloud Deployment & Serverless Integration | v7.0 | 1/1 | Complete | 2026-07-02 |
-| 43. Backend Summarization Engine | v8.0 | 1/1 | Complete    | 2026-07-04 |
-| 44. Summarization REST API Endpoints | v8.0 | 1/1 | Complete    | 2026-07-04 |
-| 45. User Interface Integration | v8.0 | 1/1 | Complete    | 2026-07-04 |
+| 46. Backend Dockerization | v9.0 | 0/1 | Planned | — |
+| 47. Frontend Dockerization | v9.0 | 0/1 | Planned | — |
+| 48. Docker Compose Orchestration | v9.0 | 0/1 | Planned | — |
 
 ---
-*Roadmap updated: 2026-07-06 after v8.0 milestone completion*
+*Roadmap updated: 2026-07-06 after v9.0 milestone planning*

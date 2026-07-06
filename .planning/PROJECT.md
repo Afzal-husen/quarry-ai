@@ -10,9 +10,15 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ---
 
-## Current Milestone: Planning next milestone
+## Current Milestone: v9.0 Dockerization & Containerization
 
-**Goal:** Defining requirements and roadmap for the next release.
+**Goal:** Dockerize both frontend and backend separately and enable seamless orchestration using Docker Compose.
+
+**Target features:**
+- Create a multi-stage Dockerfile for the Next.js frontend to produce lightweight production images.
+- Create a Dockerfile for the FastAPI backend configured for Python 3.14, handling dynamic local volume persistence for database and Chroma files.
+- Configure a `docker-compose.yml` orchestration file linking frontend and backend, with environment variable mapping and local data volume persistence.
+- Provide clear verification scripts or commands to test production container builds and local developer orchestrations.
 
 ---
 
@@ -151,5 +157,5 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-06 — Milestone v8.0 completed*
+*Last updated: 2026-07-06 — Milestone v9.0 started*
 

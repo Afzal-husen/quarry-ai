@@ -2,13 +2,36 @@
 
 ## v8.0 Document Summarization & Quick Digests (Shipped: 2026-07-06)
 
-**Phases completed:** 3 phases, 3 plans, 0 tasks
+## v8.0 Document Summarization & Quick Digests (Shipped: 2026-07-04)
+
+**Phases completed:** 3 phases (Phase 43, Phase 44, Phase 45), 3 plans, 9 tasks
 
 **Key accomplishments:**
+- Implemented core backend summarization logic (`DocumentSummarizer`) utilizing Groq LLM through LangChain.
+- Decoupled summarization execution into background tasks during ingestion with safety truncation safeguards (first 5 chunks) and fault-isolated chunk metadata storage.
+- Exposed REST API endpoints to fetch, retrieve, and manually regenerate/retry document summaries.
+- Redesigned the frontend dashboard cards with line-clamped summary text and the Preview Modal into a split-pane layout showing raw document preview alongside the full summary.
 
-- Completed
-- Completed
-- Completed
+---
+
+## v7.0 Vercel Cloud Deployment & Serverless Integration (Shipped: 2026-07-02)
+
+**Phases completed:** 1 phase (Phase 42), 1 plan, 3 tasks
+
+**Key accomplishments:**
+- Configured Next.js frontend and FastAPI backend for Vercel Serverless Functions deployment.
+- Established dynamic, writable `/tmp/` directories for SQLite and Chroma indices under Vercel runtime.
+- Resolved backend absolute import paths and generated Vercel-compatible dependency setups.
+
+---
+
+## v6.0 Path Parameters & Session Routing (Shipped: 2026-07-02)
+
+**Phases completed:** 1 phase (Phase 41), 1 plan, 3 tasks
+
+**Key accomplishments:**
+- Transitioned chat routing from query parameters (`/chat?session_id=id`) to clean Next.js App Router dynamic route segments (`/chat/[sessionId]`).
+- Resolved sidebar active navigation highlight states for nested subroutes.
 
 ---
 
