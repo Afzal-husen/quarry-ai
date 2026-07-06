@@ -1,5 +1,17 @@
 # Milestones
 
+## v8.0 Document Summarization & Quick Digests (Shipped: 2026-07-06)
+
+**Phases completed:** 3 phases, 3 plans, 0 tasks
+
+**Key accomplishments:**
+
+- Completed
+- Completed
+- Completed
+
+---
+
 ## v5.0 v5.0 (Shipped: 2026-07-01)
 
 **Phases completed:** 5 phases, 5 plans, 10 tasks
