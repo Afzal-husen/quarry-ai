@@ -1,6 +1,15 @@
 # Milestones
 
-## v8.0 Document Summarization & Quick Digests (Shipped: 2026-07-06)
+## v9.0 Dockerization & Containerization (Shipped: 2026-07-06)
+
+**Phases completed:** 3 phases (Phase 46, Phase 47, Phase 48), 3 plans, 6 tasks
+
+**Key accomplishments:**
+- Authored a Python 3.14 optimized Dockerfile for the backend service using `uv` for package management, supporting non-root execution permissions, and setting up persistent named volumes for SQLite/Chroma DB files.
+- Authored a multi-stage Dockerfile for Next.js App Router using standalone build optimizations to reduce production image footprint under 150MB.
+- Orchestrated the complete stack using `docker-compose.yml` defining port mappings (`8000` for backend, `3000` for frontend) and bridging internal communications.
+
+---
 
 ## v8.0 Document Summarization & Quick Digests (Shipped: 2026-07-04)
 
