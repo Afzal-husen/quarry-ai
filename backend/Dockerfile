@@ -36,4 +36,4 @@ USER appuser
 
 EXPOSE 8000
 
-CMD ["python", "main.py"]
+CMD ["uv", "run", "main.py"]
