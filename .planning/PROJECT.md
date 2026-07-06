@@ -10,19 +10,16 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ---
 
-## Current Milestone: v8.0 Document Summarization & Quick Digests
+## Current Milestone: Planning next milestone
 
-**Goal:** Integrate automatic document summarization into the ingestion pipeline, persist summaries in the database, and display these quick digests within the document dashboard cards and preview modal.
-
-**Target features:**
-- Implement a background summarization step in the async ingestion pipeline using a Groq LLM prompt.
-- Store summaries in the database alongside document metadata.
-- Expose endpoints to retrieve or manually regenerate document summaries.
-- Display a concise summary in the document preview grid cards and inside the full preview modal.
+**Goal:** Defining requirements and roadmap for the next release.
 
 ---
 
 ## Shipped Milestones
+
+### v8.0 Document Summarization & Quick Digests (Shipped 2026-07-06)
+**Goal:** Integrate automatic document summarization into the ingestion pipeline, persist summaries in the database, and display these quick digests within the document dashboard cards and preview modal.
 
 ### v7.0 Vercel Cloud Deployment & Serverless Integration (Shipped 2026-07-02)
 **Goal:** Configure the Next.js frontend and FastAPI backend for seamless, zero-config deployment to Vercel Serverless Functions. Establish dynamic, writable `/tmp/` directories for SQLite and Chroma indices, resolve absolute backend import paths, and generate Vercel-compatible dependency configurations.
@@ -45,6 +42,9 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ### Validated
 
+- ✓ Core background DocumentSummarizer service utilizing ChatGroq model connections (SUM-01, SUM-02, SUM-03, SUM-04, SUM-05). (v8.0)
+- ✓ Document listing and retrieval REST API endpoints with async regeneration trigger support (SUM-API-01, SUM-API-02, SUM-API-03). (v8.0)
+- ✓ UI grid cards summary tags, description snippets, and split-pane summary sidebar preview (SUM-UI-01, SUM-UI-02, SUM-UI-03). (v8.0)
 - ✓ Initialize shadcn/ui configuration, Geist Sans font loading, and global Tooltip/Toaster providers (FE-SETUP-01, FE-SETUP-02). (v4.0)
 - ✓ Authentication cards, Form hook validations, and server cookies action triggers (FE-AUTH-01, FE-AUTH-02). (v4.0)
 - ✓ Dashboard layout with metrics summary cards, files catalog list, and custom delete Dialog modals (FE-DASH-01, FE-DASH-04). (v4.0)
@@ -120,6 +120,9 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
+| Fault-Isolated Async Summarization | Run summarization inside background tasks with try/except wrapping so failure does not block vector indexing/ingestion. | ✓ Validated (v8.0) |
+| Toggleable Preview Split View | Add collapsible side-panel for scrollable markdown summaries alongside document viewer in PreviewModal. | ✓ Validated (v8.0) |
+| Asynchronous Status Polling | Poll backend every 2.5s for pending status and update local state dynamically. | ✓ Validated (v8.0) |
 | Collapsible Right References Sidebar | Replaced hover citation popovers with a collapsible right sidebar panel to show full segment text without line cutoffs. | — Validated (v4.0) |
 | Active Viewport Autoscrolling | Bound scroll-locking useEffect to keep the chat viewport locked to bottom during token output streams. | — Validated (v4.0) |
 | Custom WebKit Scrollbars | Configured global narrow webkit-scrollbar styling in globals.css for dark RAG overflow panels. | — Validated (v4.0) |
@@ -148,5 +151,5 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-02 — Milestone v7.0 started*
+*Last updated: 2026-07-06 — Milestone v8.0 completed*
 

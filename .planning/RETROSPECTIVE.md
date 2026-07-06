@@ -1,5 +1,35 @@
 # Living Retrospective: Document RAG REST API
 
+## Milestone: v8.0 — Document Summarization & Quick Digests
+
+**Shipped:** 2026-07-06
+**Phases:** 3 | **Plans:** 3
+
+### What Was Built
+- Implemented the core backend `DocumentSummarizer` service class using the LangChain `ChatGroq` model.
+- Integrated automatic summarization inline in the background ingestion thread, with token truncation safety limiting inputs to the first 5 parent chunks (~7,500-10,000 characters) if a document exceeds 10,000 characters.
+- Modified the `GET /api/documents` route to return summary data, and exposed dedicated JWT-protected `GET /api/documents/{id}/summary` and async `POST /api/documents/{id}/summary/regenerate` routes.
+- Updated the document re-indexing endpoint to automatically regenerate summaries.
+- Displayed summary status badges (`Digest`, `Digest pending`, or `No Digest`) on document cards and line-clamped summary snippets inside card descriptions.
+- Redesigned the document preview modal into a toggleable split view (document view on the left, AI Document Summary sidebar on the right) with manual regeneration actions.
+
+### What Worked
+- **Fault-Isolated Execution**: Wrapping summarization in a try/except inside the ingestion thread prevents LLM/network failures from failing document indexing.
+- **Next.js Split View**: A toggleable split view sidebar in `PreviewModal` provides a clean, premium visual digest experience without disrupting document viewing.
+- **Asynchronous Polling Loop**: Dynamic 2.5-second polling handles asynchronous background regeneration smoothly.
+
+### What Was Inefficient
+- **Mocking langchain in tests**: LangChain's internal runnable parsing required precise mock responses to avoid Pydantic ValidationError.
+
+### Patterns Established
+- **Asynchronous UI Polling**: Implementing declarative polling loops in React `useEffect` hooks linked to pending state variables.
+
+### Cost Observations
+- Model mix: 100% Gemini Flash (Low/Medium)
+- Sessions: 2 sessions
+
+---
+
 ## Milestone: v4.0 — Shadcn UI Remake
 
 **Shipped:** 2026-06-29
@@ -49,4 +79,4 @@
 - chroma client open/close overhead resolved in latency reviews.
 
 ---
-*Retrospective updated: 2026-06-29*
+*Retrospective updated: 2026-07-06*
