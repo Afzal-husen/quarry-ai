@@ -5,8 +5,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    env_file:
+      - ./backend/.env
     environment:
-      - GROQ_API_KEY=${GROQ_API_KEY}
       - DATA_DIR=/app/data
     volumes:
       - backend_data:/app/data
@@ -15,10 +16,15 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:8000
     ports:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000
+      # Server-side requests (Next.js Server Actions) run inside the container
+      # and must use the Docker service name, not localhost.
+      - BACKEND_INTERNAL_URL=http://backend:8000
     depends_on:
       - backend
 

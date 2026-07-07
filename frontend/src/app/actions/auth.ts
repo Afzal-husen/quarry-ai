@@ -3,7 +3,9 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Server Actions run inside the container — must use the Docker service name, not localhost.
+// BACKEND_INTERNAL_URL is injected by docker-compose as a server-side-only variable.
+const BACKEND_URL = process.env.BACKEND_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export async function loginAction(prevState: any, formData: FormData) {
   const username = formData.get('username') as string;
