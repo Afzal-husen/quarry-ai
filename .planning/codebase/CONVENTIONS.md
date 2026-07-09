@@ -1,72 +1,162 @@
-# Coding Conventions
+# Code Conventions
 
-**Analysis Date:** 2026-07-02
+**Analysis Date:** 2026-07-09
+
+---
 
 ## Naming Patterns
 
-### Backend (Python):
-- **Files:** `snake_case.py` for Python modules (`main.py`, `vectorstore.py`).
-- **Functions:** `snake_case` for all functions (`main()`, `get_hybrid_retriever()`).
-- **Variables:** `snake_case` for variables (`document_path`, `chunk_size`).
-- **Constants:** `UPPER_SNAKE_CASE` for global constants (`DEFAULT_CHUNK_SIZE`).
-- **Classes:** PascalCase for custom classes (`VectorStoreManager`, `UserDatabaseManager`).
-- **Exceptions:** PascalCase ending in `Error` for domain exceptions (`VectorStoreError`).
+| Scope | Convention | Examples |
+|---|---|---|
+| Python modules | `snake_case.py` | `vectorstore.py`, `logging_config.py` |
+| Config/infra files | `kebab-case` or `snake_case` | `docker-compose.yml`, `pyproject.toml` |
+| Python functions | `snake_case` | `get_current_user()`, `index_document()` |
+| Python variables | `snake_case` | `document_id`, `chunk_size`, `db_path` |
+| Python global constants | `UPPER_SNAKE_CASE` | `DB_PATH`, `SECRET_KEY`, `ALGORITHM` |
+| Python classes | `PascalCase` | `DocumentChunker`, `VectorStoreManager`, `ChromaConnectionCache` |
+| Custom exceptions | `PascalCase + Error suffix` | `EmbeddingsError`, `VectorStoreError`, `InferenceError`, `SummarizationError` |
+| TypeScript components | `PascalCase.tsx` | `ChatShell.tsx`, `UploadModal.tsx` |
+| TypeScript utilities/hooks | `camelCase.ts` | `api-client.ts`, `utils.ts`, `use-mobile.ts` |
+| TypeScript functions | `camelCase` | `apiPost()`, `cn()`, `handleUpload()` |
+| TypeScript interfaces | `PascalCase` | `UploadModalProps`, `SessionResponse` |
 
-### Frontend (TypeScript / React):
-- **Component Files:** PascalCase for React component modules (`ChatShell.tsx`, `Sidebar.tsx`).
-- **Utility Files:** kebab-case or camelCase for utility scripts (`api-client.ts`, `utils.ts`).
-- **React Components:** PascalCase for React function definitions (`ChatShell`, `Sidebar`).
-- **Functions:** camelCase for helper methods (`apiGet()`, `parseMarkdown()`).
-- **Variables:** camelCase for variables and states (`initialDocuments`, `username`, `setMessages`).
-- **Interfaces & Types:** PascalCase for definitions (`SessionItem`, `Message`, `UploadModalProps`).
+---
 
-## Code Style
+## Code Style — Python
 
-### Backend (Python):
-- Standard PEP8 style formatting.
-- 4-space indentation for blocks.
-- Double quotes preferred for strings.
-- Explicit type hints on public interfaces and route functions.
+- **PEP 8** formatting throughout
+- **4-space indentation** for all blocks
+- **Double quotes** preferred for strings: `"Document Q&A"`, `"Failed to load"`
+- Single quotes acceptable inside f-strings when nesting
+- Blank lines between each of the three import categories:
+  1. Standard library
+  2. Third-party packages
+  3. Local application imports
+- Alphabetical ordering within import blocks where feasible
 
-### Frontend (TypeScript / React):
-- 2-space indentation.
-- Double quotes preferred for string literals.
-- Semi-colons included at line endings.
-- Explicit TypeScript types for all component properties (`props`) and state variables.
-- Direct use of Tailwind CSS classes for layout and visual styling.
+### Import Organization Example (`vectorstore.py`)
+```python
+import json
+import os
+import re
+import shutil
+import threading
+from collections import OrderedDict
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Sequence
 
-## Import Organization
+from langchain_chroma import Chroma
+from langchain_core.documents import Document
+...
 
-### Backend (Python):
-1. Standard library imports.
-2. Third-party package imports.
-3. Project local module imports.
-*Keep blank lines between each of the three import categories.*
+from app.core.paths import get_data_dir
+```
 
-### Frontend (TypeScript / React):
-1. Core react imports (`react`, `useState`, `useEffect`).
-2. Third-party library imports (`lucide-react`, `next/navigation`).
-3. Next.js actions and local utilities (`../lib/api-client`, `../app/actions/cookies`).
-4. Local components (`./Sidebar`, `./PreviewModal`).
-5. Shared UI base elements (`@/components/ui/button`, `@/components/ui/dialog`).
+---
 
-## Singleton Pattern (Backend)
+## Code Style — TypeScript / React
 
-- Thread-safe singletons are used for expensive model loaders (embeddings, reranker).
-- Pattern: class-level `_instance` + `threading.Lock()` with double-checked locking inside a `@classmethod get_*()` method.
+- `"use client"` directive at top of client components
+- Props interfaces defined immediately before component function
+- `useState`, `useRef`, `useEffect` destructured from React imports
+- JSX: self-closing tags for elements with no children
+- Tailwind utility classes used directly; `cn()` (`clsx` + `tailwind-merge`) for conditional classes
+- Arrow functions for event handlers and callbacks
+
+---
+
+## Docstrings
+
+- Used on all class declarations and key public methods
+- Format: Google-style docstring with `Args:`, `Returns:`, `Raises:` sections
+- Example:
+```python
+def index_document(self, user_id: str, document_id: str, source_filename: str) -> Path:
+    """Reads serialized JSON chunks and indexes them inside an isolated Chroma DB folder on disk.
+
+    Args:
+        user_id: The unique UUID of the authenticated user.
+        document_id: The unique UUID of the uploaded document.
+        source_filename: The original name of the uploaded document.
+
+    Returns:
+        The Path where the isolated Chroma index is persisted.
+
+    Raises:
+        VectorStoreError: If chunks do not exist, or indexing persists incorrectly.
+    """
+```
+
+---
+
+## Comments
+
+- Focus on explaining **why**, not **what**
+- Avoid restating the code expression
+- Use inline comments for non-obvious algorithmic steps
+- Architecture decisions documented in `# Reason:` or block comments
+
+### Examples
+```python
+# Explicitly close the database client to release on-disk file descriptors (critical for Windows)
+# Move to end to mark as recently used
+# Clamp to avoid float precision domain error
+# Initialize user database — DATA_DIR env var points to Render's persistent disk mount (/data) in production
+```
+
+---
 
 ## Error Handling
 
-### Backend:
-- Explicit `try/except` exception blocks for I/O operations (filesystem and Groq queries).
-- Domain-specific exceptions mapping to standard HTTP response exceptions at the router level.
+- **Explicit `try/except` blocks** around all I/O (file reads, DB queries, network calls)
+- **Domain-specific exceptions** raised from all core modules:
+  - `EmbeddingsError` — embedding model failures
+  - `VectorStoreError` — Chroma indexing/retrieval failures
+  - `GroqConnectionError` — Groq API key or client initialization failures
+  - `InferenceError` — LLM answer generation failures
+  - `SummarizationError` — summarization inference failures
+  - `RerankerError` — FlashRank model loading failures
+- Raw `Exception` types only caught at FastAPI exception handlers in `main.py`
+- Routes use `HTTPException` with standardized `{detail, code, field}` payloads
 
-### Frontend:
-- UI alerts wrapped in `try/catch` handlers.
-- Safe backend calls using the `api-client.ts` wrapper which intercepts common errors.
-- Visual alerts rendered via `sonner` toasts for user-facing validation/network errors.
+---
 
-## Comments & Documentation
+## Logging
 
-- Docstrings for public class/function definitions (Python: PEP257 style, TS: JSDoc style).
-- Focus on the "Why" instead of the "What" in code block comments.
+- **Python `logging`** library (no `print()` in production)
+- Loggers scoped by domain: `logging.getLogger("app.request")`, `logging.getLogger("app.exception")`
+- JSON structured logging via `logging_config.py` + `StructuredLoggingMiddleware`
+- Fields logged per request: `method`, `path`, `status_code`, `duration_ms`, `user_id`, `client_ip`
+- Latency breakdown emitted as optional `latency_breakdown` dict
+
+---
+
+## Singleton Pattern
+
+Consistently applied to expensive shared resources:
+
+| Singleton | Class | Lock type |
+|---|---|---|
+| HuggingFace embedding model | `EmbeddingsManager` | `threading.Lock` + double-checked |
+| ChatGroq client | `GroqConnectionManager` | `threading.Lock` + double-checked |
+| FlashRank reranker | `RerankManager` | `threading.Lock` + double-checked |
+| Chroma client cache | `ChromaConnectionCache` | `threading.Lock` (LRU OrderedDict) |
+
+---
+
+## Pydantic Models
+
+- All route request/response schemas use `BaseModel` from Pydantic v2
+- Defined at top of each route module (not in a separate `schemas.py`)
+- `Field()` used for constraints: `min_length`, `max_length`, `ge`, `le`, `description`
+- Route decorators include `response_model`, `response_description`, `summary`, `description` for OpenAPI docs
+
+---
+
+## Testing Conventions
+
+- Test files: `test_{feature}.py` in `backend/tests/`
+- Shared fixtures in `conftest.py` (client, registered users, uploaded documents)
+- Mocking: `pytest.monkeypatch` / `unittest.mock.patch` for external calls (Groq, embeddings)
+- Custom markers: `@pytest.mark.enable_rate_limiting` for rate-limit-specific tests
+- Frontend tests: Vitest in `*.test.tsx` or `*.spec.tsx` inside `__tests__/` directories

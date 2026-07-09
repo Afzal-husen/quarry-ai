@@ -1,101 +1,157 @@
 # Architecture
 
-**Analysis Date:** 2026-07-02
+**Analysis Date:** 2026-07-09
+
+---
 
 ## Pattern Overview
 
-**Overall:** Decoupled Client-Server SPA Architecture. Next.js web frontend interacts with a Python modular REST API backend utilizing multi-tenancy, hybrid document retrieval, re-ranking, and streaming generation.
+- **Backend:** Layered FastAPI monolith — routes delegate to core business logic classes
+- **Frontend:** Next.js App Router with Server Components + Client Components
+- **RAG Pipeline:** Retrieval-Augmented Generation with hybrid search, parent-child chunking, reranking, and streaming
+- **Persistence:** SQLite (relational) + ChromaDB (vector) + local filesystem (files/chunks)
+- **Multi-tenancy:** Full user isolation via UUID-keyed storage directories
 
-```mermaid
-graph TD
-    subgraph Frontend [Next.js Web Client]
-        UI[React Components - Dashboard, ChatShell]
-        AC[API Client - fetch, SSE]
-        Cookie[Secure Cookies - Auth Store]
-    end
+---
 
-    subgraph Backend [FastAPI REST Service]
-        Routes[API Routes - Auth, Upload, Query, Docs]
-        Parser[Document Parser & Chunker]
-        Vector[Vectorstore Manager & BM25]
-        Rerank[FlashRank Reranker]
-        LLM[QAPipeline & ChatGroq]
-    end
+## Backend Layers
 
-    subgraph Storage [Persistence Layer]
-        SQLite[(SQLite users.db)]
-        Uploads[(Raw Uploads)]
-        Chunks[(JSON Chunks)]
-        Chroma[(Chroma DB folders)]
-    end
+```
+main.py (FastAPI app bootstrap)
+  +-- Middleware: StructuredLoggingMiddleware, SlowAPIMiddleware, CORSMiddleware
+  +-- Exception handlers: RequestValidationError, HTTPException, RateLimitExceeded, Exception
+  +-- Lifespan: startup init + shutdown ChromaConnectionCache.clear()
+  +-- Routers:
+       +-- app/routes/auth.py         ? /register, /login
+       +-- app/routes/upload.py       ? /upload, /jobs/{job_id}
+       +-- app/routes/query.py        ? /query, /query/stream, /query/multi
+       +-- app/routes/documents.py    ? /documents/*, /documents/{id}/summarize
+       +-- app/routes/sessions.py     ? /sessions/*, /sessions/{id}
 
-    UI --> AC
-    AC -->|HTTP / SSE| Routes
-    Cookie --> AC
-    Routes --> Parser
-    Routes --> Vector
-    Routes --> Rerank
-    Routes --> LLM
-    Routes --> SQLite
-    Parser --> Uploads
-    Parser --> Chunks
-    Vector --> Chroma
-    Vector --> Chunks
+app/core/ (Business Logic)
+  +-- auth.py            — bcrypt hashing, JWT sign/verify, get_current_user() dependency
+  +-- chunker.py         — DocumentChunker: character & semantic chunking + parent-child nesting
+  +-- database.py        — UserDatabaseManager + ChatDatabaseManager (raw SQLite)
+  +-- limiter.py         — SlowAPI limiter singleton
+  +-- logging_config.py  — JSON structured logging setup
+  +-- parsers.py         — PDF/DOCX text extraction
+  +-- paths.py           — DATA_DIR resolution (env-aware)
+  +-- qa.py              — QAPipeline (sync/async answer generation, condensation, expansion, title)
+  +-- reranker.py        — RerankManager (FlashRank singleton)
+  +-- summarizer.py      — DocumentSummarizer (Groq-backed)
+  +-- vectorstore.py     — EmbeddingsManager, ChromaConnectionCache, VectorStoreManager
 ```
 
-## Layers
+---
 
-### 1. Presentation Layer (Frontend Next.js)
-- **Routing & Server Pages (`frontend/src/app/`)**: Handles path management (Home dashboard `/`, login screen `/login`, register screen `/register`). Server-side checks extract the active session token from cookies to pre-fetch documents.
-- **Component Layouts (`frontend/src/components/`)**:
-  - `DashboardShell.tsx`: High-level wrapper containing the authenticated app experience.
-  - `Sidebar.tsx`: Manages active user document selection, listing uploads, and displaying log out action.
-  - `ChatShell.tsx`: Orchestrates chat sessions, message rendering (with markdown parsing), citations list, and user question inputs.
-  - `UploadModal.tsx`: Controls drag-and-drop file ingestion, file-type filtering, and upload progress alerts.
-  - `PreviewModal.tsx`: Renders selected document text and metadata preview.
-- **Client utilities (`frontend/src/lib/`)**:
-  - `api-client.ts`: Standardized error catching and authorization-header injection wrapper for client fetch calls.
-  - `markdown-parser.tsx`: Helper to convert AI answers containing markdown/citation tags into styled JSX nodes.
+## Frontend Layers
 
-### 2. Service Layer (Backend REST Controllers)
-- Exposes async HTTP endpoints, handles payload schema parsing with Pydantic, and coordinates auth guards.
-- **Components:**
-  - `backend/app/routes/auth.py`: Authentication routes (`POST /register`, `POST /login`).
-  - `backend/app/routes/upload.py`: Document upload pipeline controller (`POST /upload`).
-  - `backend/app/routes/query.py`: Synchronous (`POST /query`) and streaming (`GET /query/stream`) RAG endpoints.
-  - `backend/app/routes/documents.py`: Document listing (`GET /documents`) and deletion (`DELETE /documents/{id}`) endpoints.
+```
+frontend/src/
+  app/ (Next.js App Router)
+    +-- layout.tsx              — Root HTML frame, ThemeProvider wrapper
+    +-- page.tsx                — Dashboard redirect
+    +-- globals.css             — Tailwind v4 global styles
+    +-- actions/                — Server Actions for cookie read/write (auth token management)
+    +-- login/page.tsx          — Sign-in form
+    +-- register/page.tsx       — Sign-up form
+    +-- chat/
+         +-- page.tsx           — Chat index (session list or redirect)
+         +-- [sessionId]/       — Dynamic chat session page
+              +-- page.tsx      — Session-specific chat shell
 
-### 3. Business Logic Layer (RAG & Security Engines)
-- Coordinates security operations, parses text, and conducts hybrid lookup pipelines.
-- **Components:**
-  - `backend/app/core/auth.py`: JWT key signing, hash verification, and dependency security guards.
-  - `backend/app/core/database.py`: Handles low-level SQLite queries for user persistence.
-  - `backend/app/core/parsers.py` / `chunker.py`: Document parsing and character/semantic splitting logic.
-  - `backend/app/core/vectorstore.py`: Embedded-index building (Chroma) and hybrid retrieval matching.
-  - `backend/app/core/reranker.py`: Candidate sorting using the local FlashRank model.
-  - `backend/app/core/qa.py`: LLM prompt-building and answer generation.
+  components/
+    +-- DashboardShell.tsx      — Full-screen app wrapper, navigation, document list
+    +-- ChatShell.tsx           — RAG dialog, SSE streaming consumer, citation panel
+    +-- Sidebar.tsx             — File uploads, user document selection list
+    +-- UploadModal.tsx         — Drag-and-drop upload dialog
+    +-- PreviewModal.tsx        — Document text & metadata reader
+    +-- ThemeToggle.tsx         — Dark/light mode switcher
+    +-- theme-provider.tsx      — next-themes client provider
+    +-- ui/                     — shadcn/ui base components (button, dialog, popover, input, etc.)
 
-### 4. Storage & Persistence Layer
-- Holds files, indexes, and user accounts.
-- **Locations:**
-  - SQLite Database (`backend/data/users.db`)
-  - User Document Vault (`backend/data/uploads/{user_id}/`)
-  - Document Chunks Folder (`backend/data/chunks/{user_id}/{document_id}.json`)
-  - Chroma Collections (`backend/data/vectorstore/{user_id}/{document_id}/`)
+  lib/
+    +-- api-client.ts           — Backend fetch wrappers with Bearer token auto-injection
+    +-- markdown-parser.tsx     — Citation [N] tag rendering logic
+    +-- utils.ts                — clsx/tailwind-merge composer (cn())
 
-## Data Flow
+  context/                      — React Context providers (empty as of 2026-07-09)
+  hooks/                        — Client React hooks (use-mobile.ts)
+  proxy.ts                      — Optional routing proxies for server-side requests
+```
 
-### 1. Ingestion Flow:
-1. User uploads a PDF/DOCX file in `UploadModal.tsx`.
-2. The file is sent via `api-client.ts` (`POST /upload`) containing the Bearer token.
-3. FastAPI's upload router saves the file, parses it, chunks it, and saves metadata.
-4. Chunks are embedded and indexed into the user's isolated Chroma database directory.
-5. Frontend receives the completion alert and updates the document sidebar list.
+---
 
-### 2. Streaming Q&A Flow:
-1. User enters a question in `ChatShell.tsx`.
-2. Client issues a `GET /query/stream?question=...&document_ids=...` request using an `EventSource`-style fetch.
-3. The server runs hybrid retrieval on the active indices, sorts candidates via FlashRank, and swaps chunks for parent documents.
-4. Server constructs the prompt and requests a streaming completion from ChatGroq.
-5. Server yields tokens chunk-by-chunk using `Server-Sent Events (SSE)`.
-6. `ChatShell.tsx` listens to the stream, updates message state in real-time, and resolves citations once the stream closes.
+## RAG Data Flow
+
+```
+1. UPLOAD
+   User file ? /upload ?
+     parsers.py (PDF/DOCX text extraction) ?
+     DocumentChunker (character or semantic chunking with parent-child nesting) ?
+     chunks saved as {document_id}.json ?
+     BackgroundTask: VectorStoreManager.index_document() ?
+     Chroma.from_documents() ? embeddings persisted to disk
+
+2. QUERY (/query or /query/stream)
+   User question ?
+     QAPipeline.generate_alternative_queries() (3 query expansions via Groq) ?
+     VectorStoreManager.get_hybrid_retriever() (BM25 + Chroma EnsembleRetriever) ?
+     Retrieve top-K candidates for each query variant ?
+     Deduplicate merged candidates ?
+     VectorStoreManager.resolve_parent_documents() (child ? parent chunk resolution) ?
+     RerankManager.get_ranker() (FlashRank cross-encoder reranking) ?
+     QAPipeline.generate_answer() or generate_answer_stream() (Groq LLM) ?
+     Structured response with answer + citations
+
+3. SUMMARIZE (/documents/{id}/summarize)
+   Document chunk JSON ?
+     Concatenate all chunk texts ?
+     DocumentSummarizer.summarize_text() (Groq) ?
+     TL;DR + Key Takeaways markdown ?
+     Saved back to chunk JSON (summary_status: "completed")
+
+4. CONVERSATIONAL SESSION
+   POST /sessions ? ChatDatabaseManager.create_session() ?
+   POST /query with session_id ?
+     Load chat_messages history ?
+     QAPipeline.condense_query() (Groq) ?
+     ? standard RAG pipeline ?
+     Save user + assistant messages to chat_messages
+```
+
+---
+
+## Key Design Decisions
+
+| Decision | Rationale |
+|---|---|
+| One Chroma DB per document | Full isolation avoids cross-user data leaks; simpler deletion |
+| LRU ChromaConnectionCache (100 max) | Amortizes SQLite open cost; bounded memory; explicit close on eviction prevents Windows file lock issues |
+| Parent-child chunking | Child chunks retrieved for precision; parent resolved for richer context window |
+| Hybrid BM25 + semantic retrieval | BM25 catches keyword matches missed by dense embeddings; RRF fusion balances both |
+| FlashRank reranking | Cheap cross-encoder reranking step improves answer quality without Groq tokens |
+| Query expansion (3 variants) | Multi-query retrieval increases recall coverage across diverse phrasings |
+| Background ingestion | /upload returns job_id immediately; vectorization happens asynchronously |
+| SQLite for relational data | Zero-infrastructure; data co-located with file storage on persistent disk |
+
+---
+
+## Error Handling
+
+- Domain exceptions: `EmbeddingsError`, `VectorStoreError`, `GroqConnectionError`, `InferenceError`, `SummarizationError`, `RerankerError`, `DocumentIngestionError`
+- FastAPI exception handlers standardize all error responses as `{detail, code, field}` JSON
+- Rate limit handler forwards `Retry-After` header from slowapi
+- Streaming logging intercepted in `StructuredLoggingMiddleware.wrapped_iterator()`
+
+---
+
+## Cross-Cutting Concerns
+
+| Concern | Implementation |
+|---|---|
+| Structured logging | `logging_config.py` + `StructuredLoggingMiddleware` — JSON logs with method, path, status, duration_ms, user_id |
+| Request-scoped user_id | `request.state.user_id` propagated by `get_current_user()` dependency |
+| Rate limiting | `slowapi` per-route limits via `@limiter.limit()` decorator |
+| CORS | `CORSMiddleware` with `CORS_ORIGINS` env-configurable whitelist |
+| Multi-tenancy | All file/index paths scoped to `{user_id}/` subdirectories |

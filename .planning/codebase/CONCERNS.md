@@ -1,54 +1,81 @@
-# Codebase Concerns
+# Concerns & Risk Areas
 
-**Analysis Date:** 2026-07-02
+**Analysis Date:** 2026-07-09
 
-## Tech Debt
+---
 
-### Backend:
-- **`langchain-community` deprecation:** `parsers.py` imports loaders from `langchain-community`, which is being sunsetted. Migrate to standalone packages when stable.
-- **`httpx` + Starlette TestClient warning:** Starlette warns that using `httpx` directly is deprecated; `httpx2` is the recommended path.
-- **`asyncio.iscoroutinefunction` in Chroma:** Upstream `chromadb` calls deprecated async check, which will fail in Python 3.16.
+## Active Concerns
 
-### Frontend:
-- **Large Component Files:** `ChatShell.tsx` (~34KB) and `DashboardShell.tsx` (~26KB) mix complex state management, fetch calls, SSE listeners, markdown parsing, and layout presentation. They should be refactored into smaller sub-components and custom hooks.
-- **Tailwind v4 PostCSS compilation:** The project utilizes the new Tailwind CSS v4 compiler. Build pipelines must be closely monitored for styling discrepancies.
+### 1. SQLite Concurrency Under Load
+- **Risk:** Medium
+- **Description:** `UserDatabaseManager` and `ChatDatabaseManager` open a new SQLite connection per operation (no connection pool). Under high concurrent load, SQLite WAL mode may not fully protect against lock contention.
+- **Impact:** Request failures or delays under concurrent multi-user workloads.
+- **Mitigation:** Consider connection pooling (e.g., `aiosqlite`) or a proper async DB layer for scale.
 
-## Known Bugs
+### 2. FlashRank Model Download on Cold Start
+- **Risk:** Low-Medium
+- **Description:** `RerankManager.get_ranker()` triggers a model download on first invocation. In containerized/serverless environments (Render cold start), this adds significant cold-start latency.
+- **Impact:** First query after deploy may time out.
+- **Mitigation:** Pre-bake the model into the Docker image during build; or pre-warm in lifespan startup.
 
-- None currently identified.
+### 3. HuggingFace Embedding Model Cold Start
+- **Risk:** Low-Medium
+- **Description:** `EmbeddingsManager.get_embeddings()` loads `sentence-transformers/all-MiniLM-L6-v2` on first use. On Render free tier (memory-constrained), this may cause OOM or slow cold starts.
+- **Impact:** First upload/query post-restart is slow.
+- **Mitigation:** Pre-warm in lifespan hook or Dockerfile build step; use Render starter plan+ for memory headroom.
 
-## Security Considerations
+### 4. BM25 Retriever Rebuilt Per Query
+- **Risk:** Medium
+- **Description:** `VectorStoreManager.get_hybrid_retriever()` rebuilds the BM25 index from disk JSON on every query. For large documents with many chunks, this is a repeated CPU + I/O cost.
+- **Impact:** Query latency increases with document size.
+- **Mitigation:** Cache BM25 index keyed by `(user_id, document_id)` in memory (similar to ChromaConnectionCache).
 
-- **JWT Secret fallback:** Backend server falls back to weak defaults if `JWT_SECRET_KEY` is not defined. Key validation at startup is recommended.
-- **Client Auth Key storage:** JWT token is stored in browser cookies. Ensure cookies are configured with `Secure`, `SameSite=Strict`, and `HttpOnly` attributes where possible to reduce XSS/CSRF exposure.
-- **Cross-Origin Resource Sharing (CORS):** Ensure backend CORS middleware has strict domain constraints in production instead of wildcards.
+### 5. No Token Refresh Mechanism
+- **Risk:** Medium
+- **Description:** JWT tokens expire after 30 minutes (configurable). No refresh token or silent re-authentication is implemented. Frontend will receive 401 after expiry.
+- **Impact:** Users must re-login after 30 minutes; poor UX for long sessions.
+- **Mitigation:** Implement a `/auth/refresh` endpoint with longer-lived refresh tokens.
 
-## Performance Bottlenecks
+### 6. File Size Cap Only at Frontend
+- **Risk:** Low
+- **Description:** The 50 MB file size check is enforced in `UploadModal.tsx` (client-side only). No corresponding server-side file size limit is enforced in `/upload` route.
+- **Impact:** Malicious or misconfigured clients can bypass the cap and upload arbitrarily large files.
+- **Mitigation:** Add server-side file size validation in `upload.py`.
 
-- **Synchronous Model Cold-Start:** `EmbeddingsManager` and `RerankManager` lazy-load models on the first API request, causing a cold start latency of 10–30 seconds.
-- **Chroma Re-instantiation:** Re-opening SQLite connections in Chroma on each search query adds disk I/O overhead.
-- **Lexical BM25 Rebuilds:** The BM25 index is reconstructed from raw chunk JSONs on every incoming query, which scales poorly for large datasets.
+### 7. Chroma SQLite on Windows File Locking
+- **Risk:** Low (mitigated)
+- **Description:** ChromaDB uses SQLite for persistence; Windows does not release SQLite file locks until explicit `close()`. `ChromaConnectionCache` explicitly calls `close()` on eviction and lifespan shutdown.
+- **Impact:** Risk of lingering file locks on Windows if `close()` path is skipped.
+- **Status:** Partially mitigated; the explicit close logic is in place.
 
-## Fragile Areas
+### 8. No Output Sanitization for LLM Responses
+- **Risk:** Low-Medium
+- **Description:** LLM-generated answers are passed directly to the frontend. Prompt injection via document content could cause LLM to produce manipulative or misleading outputs.
+- **Impact:** Trust and safety issue for multi-user deployments.
+- **Mitigation:** Add content-level safety checks; consider output moderation layer.
 
-- **Windows File Locking (WinError 32):** SQLite backend for Chroma holds file handles on Windows. Explicit `.close()` calls are required to prevent file locking locks under concurrent writes.
-- **SSE Stream Closure:** Real-time token streaming depends on stable SSE event handlers. Interrupted networks can leave abandoned server processes or incomplete client messages.
+### 9. context/ Directory is Empty
+- **Risk:** Low
+- **Description:** `frontend/src/context/` was created but contains no React Context providers. Any context-related state management is either in components or missing.
+- **Impact:** Global state sharing (e.g., auth state, session state) may be handled inconsistently.
+- **Mitigation:** Evaluate if a context provider (e.g., AuthContext, SessionContext) is needed.
 
-## Scaling Limits
+### 10. Render Free Tier Sleep
+- **Risk:** Medium (production)
+- **Description:** Render free tier services sleep after 15 minutes of inactivity. Combined with cold start costs (#2, #3), wake-up latency can be 30-60+ seconds.
+- **Impact:** Poor user experience after inactivity periods.
+- **Mitigation:** Upgrade to Render starter plan for no-sleep; or use a cron ping to keep alive.
 
-- **Single-Process Async:** Concurrency is limited by single-process Python execution.
-- **Disk Storage:** Multi-tenant document uploads and Chroma SQLite directories are stored on the local file system. Storage scales with user growth.
+---
 
-## Dependencies at Risk
+## Resolved Concerns
 
-| Package | Risk | Reason |
-|---|---|---|
-| `langchain-community` | Medium | Being sunsetted; migration path announced |
-| `chromadb` | Low | Python 3.16 deprecation warning in async loop |
-| `tailwind` v4 | Low | Rapidly evolving; keep watch on build loader compatibility |
-| `flashrank` | Low | Monitor maintenance activity |
-
-## Test Coverage Gaps
-
-- No unit tests for parser edge cases (password-locked PDFs, nested directories, large files).
-- Frontend tests are limited to `DashboardShell.test.tsx` and `api-client.test.ts`. There are no dedicated tests for `ChatShell.tsx` SSE streaming handlers, or `UploadModal.tsx` file validation rules.
+| Concern | Resolution |
+|---|---|
+| Chroma connection leak on Windows | `ChromaConnectionCache` with explicit `close()` on eviction and shutdown |
+| Concurrent embedding model init | `EmbeddingsManager` double-checked locking singleton |
+| Concurrent Groq client init | `GroqConnectionManager` double-checked locking singleton |
+| Per-user data isolation | UUID-scoped filesystem directories for all uploads, chunks, vectorstores |
+| Rate limit abuse | `slowapi` middleware with per-route limits |
+| Unhandled server errors | Global `Exception` handler in `main.py` returns standardized 500 JSON |
+| Streaming log capture | `StructuredLoggingMiddleware.wrapped_iterator()` defers logging until stream completes |

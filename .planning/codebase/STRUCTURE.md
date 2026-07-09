@@ -1,90 +1,160 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-07-02
+**Analysis Date:** 2026-07-09
+
+---
 
 ## Directory Layout
 
 ```
 [document-rag]/
-â”œâ”€â”€ .agent/                 # GSD workflow configurations, custom hooks, and skill definitions
-â”œâ”€â”€ .planning/              # Current project planning documentation, roadmap, and audits
-â”‚   â”œâ”€â”€ codebase/           # Codebase state logs (STACK, ARCHITECTURE, STRUCTURE, etc.)
-â”‚   â””â”€â”€ phases/             # Phase-specific execution plans and verification details
-â”œâ”€â”€ backend/                # Python REST API codebase
-â”‚   â”œâ”€â”€ .env                # App environment credentials (GROQ_API_KEY, etc.)
-â”‚   â”œâ”€â”€ .python-version     # Sets local python target interpreter (3.14)
-â”‚   â”œâ”€â”€ .venv/              # Virtual environment containing pip dependencies
-â”‚   â”œâ”€â”€ app/                # Main application code
-â”‚   â”‚   â”œâ”€â”€ core/           # Business logic (auth, SQLite db, document parser, vectorstore, LLM qa)
-â”‚   â”‚   â””â”€â”€ routes/         # REST endpoints (authentication, uploads, query, documents)
-â”‚   â”œâ”€â”€ data/               # Persistent file system storage
-â”‚   â”‚   â”œâ”€â”€ users.db        # SQLite database holding credentials
-â”‚   â”‚   â”œâ”€â”€ uploads/        # Saved raw user files (isolated by user UUID)
-â”‚   â”‚   â”œâ”€â”€ chunks/         # Extracted document chunk metadata JSONs (isolated by user UUID)
-â”‚   â”‚   â””â”€â”€ vectorstore/    # Chroma DB sqlite indexing databases (isolated by user UUID)
-â”‚   â”œâ”€â”€ main.py             # Server entry-point (FastAPI, uvicorn bootstrap)
-â”‚   â”œâ”€â”€ pyproject.toml      # Project packaging constraints and dependencies
-â”‚   â”œâ”€â”€ tests/              # Automated unit/E2E test suite
-â”‚   â””â”€â”€ uv.lock             # Dependency lockfile
-â””â”€â”€ frontend/               # Next.js frontend application
-    â”œâ”€â”€ .env.local          # Client configuration environment keys
-    â”œâ”€â”€ components.json     # shadcn/ui framework options
-    â”œâ”€â”€ next.config.ts      # Next.js framework variables
-    â”œâ”€â”€ package.json        # Frontend commands and dependencies list
-    â”œâ”€â”€ pnpm-lock.yaml      # Node package lockfile
-    â”œâ”€â”€ tsconfig.json       # TypeScript static compiler configurations
-    â”œâ”€â”€ src/                # Frontend source code
-    â”‚   â”œâ”€â”€ app/            # Next.js App Router paths and Server Actions
-    â”‚   â”‚   â”œâ”€â”€ actions/    # Cookie getter/setter actions
-    â”‚   â”‚   â”œâ”€â”€ login/      # Sign-in page
-    â”‚   â”‚   â”œâ”€â”€ register/   # Sign-up page
-    â”‚   â”‚   â”œâ”€â”€ globals.css # Root style and Tailwind v4 definitions
-    â”‚   â”‚   â”œâ”€â”€ layout.tsx  # Main window frame structure
-    â”‚   â”‚   â””â”€â”€ page.tsx    # Dashboard entry-point page
-    â”‚   â”œâ”€â”€ components/     # UI Component definitions
-    â”‚   â”‚   â”œâ”€â”€ ui/         # Base shadcn design tokens (dialog, popover, button, inputs)
-    â”‚   â”‚   â”œâ”€â”€ __tests__/  # Component unit tests (Vitest)
-    â”‚   â”‚   â”œâ”€â”€ ChatShell.tsx      # Main RAG dialog and citations console
-    â”‚   â”‚   â”œâ”€â”€ DashboardShell.tsx # Full screen app wrapper
-    â”‚   â”‚   â”œâ”€â”€ PreviewModal.tsx   # Text and metadata reader
-    â”‚   â”‚   â”œâ”€â”€ Sidebar.tsx        # File uploads and user selection list
-    â”‚   â”‚   â”œâ”€â”€ ThemeToggle.tsx    # Dark/Light mode switcher button
-    â”‚   â”‚   â””â”€â”€ theme-provider.tsx # Next.js client theme router wrapper
-    â”‚   â”œâ”€â”€ hooks/          # Client react hooks (use-mobile.ts)
-    â”‚   â”œâ”€â”€ lib/            # Shared utilities
-    â”‚   â”‚   â”œâ”€â”€ __tests__/  # Client utility test files
-    â”‚   â”‚   â”œâ”€â”€ api-client.ts       # Backend fetch wrappers
-    â”‚   â”‚   â”œâ”€â”€ markdown-parser.tsx # Citation rendering logic
-    â”‚   â”‚   â””â”€â”€ utils.ts            # Helper function (clsx/tailwind-merge composer)
-    â”‚   â””â”€â”€ proxy.ts        # Optional routing proxies
-    â””â”€â”€ vitest.config.ts    # Frontend Vitest suite options
++-- .agent/                   # GSD workflow skills and hooks
++-- .impeccable/              # Impeccable UI audit artifacts
++-- .planning/                # Project planning, roadmap, phase artifacts
+¦   +-- codebase/             # Codebase intelligence documents (this file)
+¦   +-- phases/               # Phase execution plans and verifications
+¦   +-- milestones/           # Archived milestone directories
+¦   +-- graphs/               # Knowledge graph outputs
++-- backend/                  # Python FastAPI REST API
+¦   +-- .env                  # Local environment credentials (GROQ_API_KEY, JWT_SECRET_KEY, etc.)
+¦   +-- .python-version       # Python 3.14 version pin
+¦   +-- .venv/                # Virtual environment
+¦   +-- Dockerfile            # Docker image for backend service
+¦   +-- main.py               # Server entry point (FastAPI, uvicorn bootstrap, middleware)
+¦   +-- pyproject.toml        # Python project metadata and dependencies
+¦   +-- uv.lock               # Dependency lockfile
+¦   +-- app/
+¦   ¦   +-- core/             # Business logic modules
+¦   ¦   ¦   +-- auth.py               # bcrypt password hashing, JWT sign/verify, auth dependency
+¦   ¦   ¦   +-- chunker.py            # DocumentChunker: character & semantic chunking, parent-child nesting
+¦   ¦   ¦   +-- database.py           # UserDatabaseManager + ChatDatabaseManager (SQLite)
+¦   ¦   ¦   +-- limiter.py            # SlowAPI limiter singleton
+¦   ¦   ¦   +-- logging_config.py     # JSON structured logging configuration
+¦   ¦   ¦   +-- parsers.py            # PDF (pypdf) and DOCX (docx2txt) text extractors
+¦   ¦   ¦   +-- paths.py              # DATA_DIR environment-aware path resolution
+¦   ¦   ¦   +-- qa.py                 # QAPipeline: answer generation, streaming, condensation, expansion
+¦   ¦   ¦   +-- reranker.py           # RerankManager: FlashRank cross-encoder reranking singleton
+¦   ¦   ¦   +-- summarizer.py         # DocumentSummarizer: Groq-backed markdown summary generation
+¦   ¦   ¦   +-- vectorstore.py        # EmbeddingsManager, ChromaConnectionCache, VectorStoreManager
+¦   ¦   +-- routes/           # REST API endpoint routers
+¦   ¦       +-- auth.py               # POST /register, POST /login
+¦   ¦       +-- documents.py          # GET/DELETE /documents/*, GET /documents/{id}, POST /documents/{id}/summarize
+¦   ¦       +-- query.py              # POST /query, POST /query/stream, POST /query/multi
+¦   ¦       +-- sessions.py           # POST/GET/DELETE /sessions/*, GET /sessions/{id}
+¦   ¦       +-- upload.py             # POST /upload, GET /jobs/{job_id}
+¦   +-- data/                 # Persistent local file system storage (gitignored)
+¦   ¦   +-- users.db          # SQLite database (users, chat_sessions, chat_messages)
+¦   ¦   +-- uploads/          # Raw uploaded files isolated by {user_id}/
+¦   ¦   +-- chunks/           # Serialized JSON chunk metadata isolated by {user_id}/
+¦   ¦   +-- vectorstore/      # ChromaDB SQLite index files isolated by {user_id}/{document_id}/
+¦   +-- tests/                # pytest test suite
+¦       +-- conftest.py                   # Shared fixtures and app setup
+¦       +-- fixtures/                     # Test PDF/DOCX sample files
+¦       +-- test_api_quality.py           # API response format and error code tests
+¦       +-- test_async_upload.py          # Async background ingestion tests
+¦       +-- test_auth.py                  # Registration/login/JWT tests
+¦       +-- test_caching.py               # ChromaConnectionCache LRU tests
+¦       +-- test_chunking.py              # Character and semantic chunking tests
+¦       +-- test_conversational_endpoints.py  # Session create/list/delete endpoint tests
+¦       +-- test_conversational_retrieval.py  # Query condensation with history tests
+¦       +-- test_documents.py             # Document lifecycle CRUD tests
+¦       +-- test_e2e.py                   # Full end-to-end pipeline tests
+¦       +-- test_multi_query.py           # Multi-document Q&A tests
+¦       +-- test_observability.py         # Structured logging middleware tests
+¦       +-- test_qa.py                    # QAPipeline unit tests
+¦       +-- test_query_enhancements.py    # Query expansion tests
+¦       +-- test_reranker.py              # FlashRank reranker tests
+¦       +-- test_sessions.py              # Chat sessions CRUD tests
+¦       +-- test_streaming.py             # SSE streaming endpoint tests
+¦       +-- test_summarizer.py            # Document summarizer tests
+¦       +-- test_upload.py                # File upload and ingestion tests
+¦       +-- test_vectorstore.py           # VectorStoreManager and hybrid retrieval tests
+¦
++-- frontend/                 # Next.js React frontend application
+¦   +-- Dockerfile            # Docker image for frontend service
+¦   +-- .env.local            # Client env keys (NEXT_PUBLIC_API_URL, BACKEND_INTERNAL_URL)
+¦   +-- components.json       # shadcn/ui framework configuration
+¦   +-- next.config.ts        # Next.js framework variables
+¦   +-- package.json          # Frontend dependencies and scripts
+¦   +-- pnpm-lock.yaml        # pnpm lockfile
+¦   +-- tsconfig.json         # TypeScript compiler config
+¦   +-- vitest.config.ts      # Vitest test suite configuration
+¦   +-- src/
+¦       +-- app/              # Next.js App Router routes
+¦       ¦   +-- actions/               # Server Actions for cookie read/write (auth token)
+¦       ¦   +-- login/page.tsx         # Sign-in page
+¦       ¦   +-- register/page.tsx      # Sign-up page
+¦       ¦   +-- chat/                  # Chat route
+¦       ¦   ¦   +-- page.tsx           # Chat index page
+¦       ¦   ¦   +-- __tests__/         # Chat page tests
+¦       ¦   ¦   +-- [sessionId]/       # Dynamic session route
+¦       ¦   ¦       +-- page.tsx       # Session-specific chat shell
+¦       ¦   +-- globals.css            # Root CSS with Tailwind v4 definitions
+¦       ¦   +-- layout.tsx             # Root layout frame (ThemeProvider, font loading)
+¦       ¦   +-- page.tsx               # Dashboard entry point
+¦       +-- components/        # UI components
+¦       ¦   +-- ui/                    # shadcn/ui base components (button, dialog, popover, input, etc.)
+¦       ¦   +-- __tests__/             # Component unit tests (Vitest)
+¦       ¦   +-- ChatShell.tsx          # RAG dialog, SSE consumer, citation console
+¦       ¦   +-- DashboardShell.tsx     # Full-screen app wrapper with sidebar and document grid
+¦       ¦   +-- PreviewModal.tsx       # Document text and metadata preview
+¦       ¦   +-- Sidebar.tsx            # Document list, session navigation, user info
+¦       ¦   +-- UploadModal.tsx        # Drag-and-drop file upload dialog
+¦       ¦   +-- ThemeToggle.tsx        # Dark/light mode toggle button
+¦       ¦   +-- theme-provider.tsx     # next-themes client provider wrapper
+¦       +-- context/           # React Context providers (currently empty)
+¦       +-- hooks/             # Custom client hooks (use-mobile.ts)
+¦       +-- lib/               # Shared utilities
+¦       ¦   +-- __tests__/             # Utility unit tests
+¦       ¦   +-- api-client.ts          # Backend fetch wrappers with Bearer token injection
+¦       ¦   +-- markdown-parser.tsx    # Citation [N] tag rendering logic
+¦       ¦   +-- utils.ts               # cn() helper (clsx + tailwind-merge)
+¦       +-- proxy.ts           # Optional server-side routing proxy
+¦
++-- docker-compose.yml        # Docker Compose for local full-stack dev
++-- render.yaml               # Render Blueprint for backend production deploy
++-- vercel.json               # Vercel configuration for frontend deploy
++-- DEPLOYMENT.md             # Deployment guide documentation
++-- DESIGN.md                 # UI/UX design documentation
++-- PRODUCT.md                # Product requirements
++-- GEMINI.md                 # AI agent configuration (GSD project rules)
 ```
 
-## Directory Purposes
-
-**backend/app/**
-- Purpose: Backend core code. Manages secure SQLite operations, JWT token signing, document text extraction, text chunking, local Chroma indexing, BM25 building, and ChatGroq prompt completions.
-
-**backend/data/**
-- Purpose: Backend local file-system persistence. Isolates raw files, parsed JSON chunk lists, and individual Chroma SQLite files inside UUID directories.
-
-**frontend/src/app/**
-- Purpose: Frontend routing pages and Server Actions for setting session authentication cookie headers.
-
-**frontend/src/components/**
-- Purpose: Frontend interactive interface layout blocks. Combines shadcn inputs, buttons, and dialogs with main page elements like the chat prompt and citation displays.
-
-**frontend/src/lib/**
-- Purpose: Reusable helper scripts including customized fetch logic with automated Bearer token injection and citation tag parsers.
+---
 
 ## Key File Locations
 
-**Entry Points:**
-- `backend/main.py`: Starts the uvicorn web server, configures rate limiters, registers CORS options, and boots database connections.
-- `frontend/src/app/page.tsx`: Resolves active session server-side cookies, fetches active user uploads, and renders the Dashboard layout.
+### Entry Points
 
-**Configuration:**
-- `backend/pyproject.toml` / `backend/uv.lock`: Backend dependency lists.
-- `frontend/package.json` / `frontend/pnpm-lock.yaml`: Frontend dependency lists.
-- `frontend/components.json`: shadcn framework schema options.
-- `frontend/next.config.ts`: Next.js development variables.
+| File | Role |
+|---|---|
+| `backend/main.py` | FastAPI bootstrap, middleware registration, router mounting |
+| `frontend/src/app/layout.tsx` | Root HTML frame, theme provider |
+| `frontend/src/app/page.tsx` | Dashboard entry redirect |
+| `frontend/src/app/chat/[sessionId]/page.tsx` | Session-specific chat UI |
+
+### Core Business Logic
+
+| File | Role |
+|---|---|
+| `backend/app/core/vectorstore.py` | Embedding singleton, Chroma LRU cache, VectorStoreManager, hybrid retriever |
+| `backend/app/core/qa.py` | LLM answer generation, streaming, query expansion, condensation, session title |
+| `backend/app/core/chunker.py` | Document splitting strategies (character + semantic) with parent-child nesting |
+| `backend/app/core/database.py` | SQLite user and chat session/message management |
+| `backend/app/core/summarizer.py` | Groq-backed document summarization |
+| `backend/app/core/reranker.py` | FlashRank cross-encoder reranking singleton |
+
+### Configuration
+
+| File | Purpose |
+|---|---|
+| `backend/pyproject.toml` | Python dependencies |
+| `backend/uv.lock` | Pinned dependency lockfile |
+| `backend/.env` | Local secrets (GROQ_API_KEY, JWT_SECRET_KEY, etc.) |
+| `frontend/package.json` | Node dependencies |
+| `frontend/pnpm-lock.yaml` | Node lockfile |
+| `frontend/components.json` | shadcn/ui schema |
+| `frontend/next.config.ts` | Next.js options |
+| `docker-compose.yml` | Local full-stack dev orchestration |
+| `render.yaml` | Backend production deploy blueprint |
+| `vercel.json` | Frontend production deploy config |
