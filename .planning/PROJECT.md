@@ -10,9 +10,21 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ---
 
-## Current Milestone: Awaiting Next Milestone
+## Current Milestone: v11.0 Backend Optimization & Reliability Hardening
 
-**Goal:** Ready to define requirements and goals for the next version release. Run `/gsd-new-milestone` to initialize the next iteration cycle.
+**Goal:** Implement the prioritized fixes from the v10.0 audit report — addressing background ingestion failure logging, SQLite WAL concurrency, Chroma cache locking bottlenecks, rate limits on authentication endpoints, Bcrypt async blocking, async document reindexing queue, dynamic BM25 caching, and streaming exception catch-alls.
+
+**Target features:**
+- Implement full exception traceback logging inside background ingestion.
+- Enable SQLite WAL (Write-Ahead Logging) mode and busy timeout parameters.
+- Refactor Chroma cache locking scope to release the thread lock during connection init.
+- Apply SlowAPI rate limiters to auth register/login endpoints.
+- Execute CPU-intensive Bcrypt hashing/verifying inside AnyIO threadpool executors.
+- Convert document re-indexing endpoint to execute asynchronously via background tasks.
+- Implement an in-memory cache for BM25Retriever instances keyed by doc UUID.
+- Make Chroma connection cache limit configurable via CHROMA_CACHE_SIZE env var.
+- Yield structured JSON errors for unhandled exceptions in streaming generators.
+- Implement JWT refresh token endpoints and SQLite-backed persistence.
 
 ---
 
@@ -104,7 +116,11 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ### Active
 
-- *(None yet — defining requirements)*
+- OPT-SQL-01 → 03: Ingestion traceback logging, SQLite WAL concurrency & busy timeout (v11.0)
+- OPT-MEM-01 → 02: Chroma connection cache lock optimization & CHROMA_CACHE_SIZE env configuration (v11.0)
+- OPT-IO-01 → 02: Bcrypt hashing threadpool offloading & BackgroundTasks reindexing endpoint (v11.0)
+- OPT-AUTH-01 → 02: Signup/login endpoints rate-limiting & database-backed JWT refresh token endpoints (v11.0)
+- OPT-RAG-01 → 02: Built BM25Retriever dynamic memory cache & streaming generator sse try-except catch-all (v11.0)
 
 ---
 
