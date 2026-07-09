@@ -10,24 +10,16 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ---
 
-## Current Milestone: v10.0 Backend Audit & Reliability Report
+## Current Milestone: Awaiting Next Milestone
 
-**Goal:** Perform a comprehensive static analysis audit of the entire Python backend — covering concurrency, database safety, retrieval performance, memory pressure, authentication, API surface validation, error handling resilience, and async I/O blocking risks. Produce a structured findings report with severity ratings and a prioritized remediation roadmap for the next milestone.
-
-**Target features:**
-- Concurrency & thread safety audit of all singleton classes and shared state.
-- Database layer audit: SQLite connection anti-patterns, WAL mode, transaction boundaries, async blocking.
-- Retrieval performance audit: BM25 rebuild cost, Chroma LRU race, multi-query fan-out, parent I/O.
-- Memory pressure audit: combined model/cache RAM ceiling, semantic chunking spike.
-- Authentication & security audit: JWT lifecycle, bcrypt correctness, ownership enforcement.
-- API surface audit: missing server-side upload limits, rate limit gaps, Pydantic coverage, CORS risk.
-- Error handling audit: silent failures, partial artifact corruption, streaming error propagation.
-- Async blocking I/O audit: synchronous calls in async handlers and BackgroundTasks.
-- Produce `AUDIT-REPORT.md` with Critical/High/Medium/Low severity classification and prioritized remediation roadmap.
+**Goal:** Ready to define requirements and goals for the next version release. Run `/gsd-new-milestone` to initialize the next iteration cycle.
 
 ---
 
 ## Shipped Milestones
+
+### v10.0 Backend Audit & Reliability Report (Shipped 2026-07-09)
+**Goal:** Perform a comprehensive static analysis audit of the entire Python backend — covering concurrency, database safety, retrieval performance, memory pressure, authentication, API surface validation, error handling resilience, and async I/O blocking risks. Produced a detailed findings report with severity ratings and a prioritized remediation roadmap.
 
 ### v9.0 Dockerization & Containerization (Shipped 2026-07-06)
 **Goal:** Dockerize both frontend and backend separately and enable seamless orchestration using Docker Compose.

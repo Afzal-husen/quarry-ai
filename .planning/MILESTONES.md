@@ -1,5 +1,20 @@
 # Milestones
 
+## v10.0 Backend Audit & Reliability Report (Shipped: 2026-07-09)
+
+**Phases completed:** 9 phases (Phase 49 to Phase 57), 9 plans, 26 tasks
+
+**Key accomplishments:**
+- Audited double-checked locks and shared state inside backend singletons (`EmbeddingsManager`, `GroqConnectionManager`, `RerankManager`).
+- Analyzed SQLite connection management patterns and transaction atomic boundaries under WAL constraints.
+- Measured and profiled dynamic retrieval components: BM25 index rebuilding overhead, RRF multi-query expansion latency penalties, and Chroma connection caches.
+- Estimated RAM baselines for core SentenceTransformers/FlashRank runtimes and documented PyTorch batch transient allocations during semantic text segmentation.
+- Verified bcrypt and JWT auth configurations along with cross-route tenant isolation guards.
+- Logged rate limit coverages, unhandled exception blocks, and async event loop stalling conditions.
+- Compiled a comprehensive `AUDIT-REPORT.md` outlining 12 severity-ranked findings and recommended remediations.
+
+---
+
 ## v9.0 Dockerization & Containerization (Shipped: 2026-07-06)
 
 **Phases completed:** 3 phases (Phase 46, Phase 47, Phase 48), 3 plans, 6 tasks
