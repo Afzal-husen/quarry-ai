@@ -56,6 +56,7 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ### Validated
 
+- ✓ Comprehensive static analysis audit covering concurrency, database concurrency, retrieval performance, memory ceilings, authentication, rate limits, error resilience, and async I/O blocks (AUDIT-*). (v10.0)
 - ✓ Core background DocumentSummarizer service utilizing ChatGroq model connections (SUM-01, SUM-02, SUM-03, SUM-04, SUM-05). (v8.0)
 - ✓ Document listing and retrieval REST API endpoints with async regeneration trigger support (SUM-API-01, SUM-API-02, SUM-API-03). (v8.0)
 - ✓ UI grid cards summary tags, description snippets, and split-pane summary sidebar preview (SUM-UI-01, SUM-UI-02, SUM-UI-03). (v8.0)
@@ -111,15 +112,7 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ### Active
 
-- AUDIT-CONC-01 → 03: Singleton thread safety, concurrent streaming correctness (v10.0)
-- AUDIT-DB-01 → 04: SQLite connection patterns, WAL, transactions, async blocking (v10.0)
-- AUDIT-RET-01 → 04: BM25 rebuild, Chroma LRU eviction, multi-query fan-out, parent I/O (v10.0)
-- AUDIT-MEM-01 → 03: Resident memory ceiling, cache sizing, semantic chunking spikes (v10.0)
-- AUDIT-AUTH-01 → 03: JWT lifecycle, bcrypt, ownership enforcement completeness (v10.0)
-- AUDIT-API-01 → 04: Upload size enforcement, rate limit gaps, Pydantic coverage, CORS (v10.0)
-- AUDIT-ERR-01 → 04: Silent failures, partial artifact corruption, streaming error propagation (v10.0)
-- AUDIT-ASYNC-01 → 02: Blocking I/O in async handlers, BackgroundTasks thread pool (v10.0)
-- AUDIT-REPORT-01 → 02: Structured findings report with severity ratings and remediation roadmap (v10.0)
+- *(None yet — defining requirements)*
 
 ---
 

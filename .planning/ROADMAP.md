@@ -1,4 +1,4 @@
-﻿# Roadmap: Document RAG REST API
+# Roadmap: Document RAG REST API
 
 ## Overview
 
@@ -21,15 +21,15 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 ## Phases — v10.0 Backend Audit & Reliability Report
 
-- [ ] **Phase 49: Concurrency & Thread Safety Audit** — Deep-dive all singleton classes and shared state for deadlock potential, GIL interactions, and concurrent streaming correctness.
-- [ ] **Phase 50: Database Layer Audit** — Audit SQLite connection-per-operation patterns, WAL configuration, transaction boundary gaps, and async event loop blocking risk.
-- [ ] **Phase 51: Retrieval Performance Audit** — Profile BM25 rebuild cost per query, ChromaConnectionCache eviction correctness, multi-query fan-out latency ceiling, and parent document resolution I/O.
-- [ ] **Phase 52: Memory Pressure Audit** — Map full resident memory footprint of loaded models + Chroma cache + semantic chunking spikes under large document loads.
-- [ ] **Phase 53: Authentication & Security Audit** — Audit JWT lifecycle gaps, bcrypt correctness, and ownership enforcement consistency across all route modules.
-- [ ] **Phase 54: API Surface & Input Validation Audit** — Identify missing server-side upload limits, unprotected rate limit gaps, Pydantic coverage holes, and CORS over-permissiveness.
-- [ ] **Phase 55: Error Handling & Resilience Audit** — Walk all try/except blocks, background task failure isolation, summarization status update gaps, and streaming error propagation.
-- [ ] **Phase 56: Blocking I/O in Async Context Audit** — Identify synchronous blocking calls (file I/O, SQLite, bcrypt) in async route handlers and BackgroundTasks thread pool blocking.
-- [ ] **Phase 57: Findings Report & Remediation Roadmap** — Produce structured AUDIT-REPORT.md with severity-classified findings, file references, reproduction conditions, and a prioritized fix roadmap.
+- [x] **Phase 49: Concurrency & Thread Safety Audit** — Deep-dive all singleton classes and shared state for deadlock potential, GIL interactions, and concurrent streaming correctness. (completed 2026-07-09)
+- [x] **Phase 50: Database Layer Audit** — Audit SQLite connection-per-operation patterns, WAL configuration, transaction integrity, and async event loop blocking risk. (completed 2026-07-09)
+- [x] **Phase 51: Retrieval Performance Audit** — Profile BM25 rebuild cost per query, ChromaConnectionCache eviction correctness, multi-query fan-out latency ceiling, and parent document resolution I/O. (completed 2026-07-09)
+- [x] **Phase 52: Memory Pressure Audit** — Map full resident memory footprint of loaded models + Chroma cache + semantic chunking spikes under large document loads. (completed 2026-07-09)
+- [x] **Phase 53: Authentication & Security Audit** — Audit JWT lifecycle gaps, bcrypt correctness, and ownership enforcement consistency across all route modules. (completed 2026-07-09)
+- [x] **Phase 54: API Surface & Input Validation Audit** — Identify missing server-side upload limits, rate limit gaps, Pydantic coverage holes, and CORS over-permissiveness. (completed 2026-07-09)
+- [x] **Phase 55: Error Handling & Resilience Audit** — Walk all try/except blocks, background task failure isolation, summarization status update gaps, and streaming error propagation. (completed 2026-07-09)
+- [x] **Phase 56: Blocking I/O in Async Context Audit** — Identify synchronous blocking calls (file I/O, SQLite, bcrypt) in async route handlers and BackgroundTasks thread pool blocking. (completed 2026-07-09)
+- [x] **Phase 57: Findings Report & Remediation Roadmap** — Produce structured AUDIT-REPORT.md with severity-classified findings, file references, reproduction conditions, and a prioritized fix roadmap. (completed 2026-07-09)
 
 ## Phase Details
 
@@ -194,15 +194,15 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 49. Concurrency & Thread Safety | v10.0 | 0/1 | Planned | — |
-| 50. Database Layer | v10.0 | 0/1 | Planned | — |
-| 51. Retrieval Performance | v10.0 | 0/1 | Planned | — |
-| 52. Memory Pressure | v10.0 | 0/1 | Planned | — |
-| 53. Authentication & Security | v10.0 | 0/1 | Planned | — |
-| 54. API Surface & Validation | v10.0 | 0/1 | Planned | — |
-| 55. Error Handling & Resilience | v10.0 | 0/1 | Planned | — |
-| 56. Blocking I/O in Async Context | v10.0 | 0/1 | Planned | — |
-| 57. Findings Report | v10.0 | 0/1 | Planned | — |
+| 49. Concurrency & Thread Safety | v10.0 | 1/1 | Complete | 2026-07-09 |
+| 50. Database Layer | v10.0 | 1/1 | Complete | 2026-07-09 |
+| 51. Retrieval Performance | v10.0 | 1/1 | Complete | 2026-07-09 |
+| 52. Memory Pressure | v10.0 | 1/1 | Complete | 2026-07-09 |
+| 53. Authentication & Security | v10.0 | 1/1 | Complete | 2026-07-09 |
+| 54. API Surface & Validation | v10.0 | 1/1 | Complete | 2026-07-09 |
+| 55. Error Handling & Resilience | v10.0 | 1/1 | Complete | 2026-07-09 |
+| 56. Blocking I/O in Async | v10.0 | 1/1 | Complete | 2026-07-09 |
+| 57. Findings Report | v10.0 | 1/1 | Complete | 2026-07-09 |
 
 ---
-*Roadmap updated: 2026-07-09 — v10.0 Backend Audit & Reliability Report*
+*Roadmap updated: 2026-07-09 — v10.0 Backend Audit & Reliability Report complete*
