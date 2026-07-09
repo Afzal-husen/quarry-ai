@@ -9,29 +9,29 @@ Each requirement maps to a remediation fix from the v10.0 audit report.
 
 ### Logging & SQLite Concurrency Tuning (OPT-SQL)
 
-- [ ] **OPT-SQL-01**: Add full exception traceback logging inside background ingestion task `run_ingestion_job` exception handler.
-- [ ] **OPT-SQL-02**: Enable Write-Ahead Logging (WAL) mode for all SQLite database connections to prevent read-write locks.
-- [ ] **OPT-SQL-03**: Configure standard Busy Timeout parameter on SQLite connections to wait for locked indices to resolve instead of failing immediately.
+- [x] **OPT-SQL-01**: Add full exception traceback logging inside background ingestion task `run_ingestion_job` exception handler.
+- [x] **OPT-SQL-02**: Enable Write-Ahead Logging (WAL) mode for all SQLite database connections to prevent read-write locks.
+- [x] **OPT-SQL-03**: Configure standard Busy Timeout parameter on SQLite connections to wait for locked indices to resolve instead of failing immediately.
 
 ### Chroma Cache & Memory Optimization (OPT-MEM)
 
-- [ ] **OPT-MEM-01**: Optimize `ChromaConnectionCache.get()` double-checked locking mechanism to release the thread lock while initializing a new Chroma client connection.
-- [ ] **OPT-MEM-02**: Make Chroma LRU cache capacity limits configurable via `CHROMA_CACHE_SIZE` environment variable, defaulting to a conservative 10 connections.
+- [x] **OPT-MEM-01**: Optimize `ChromaConnectionCache.get()` double-checked locking mechanism to release the thread lock while initializing a new Chroma client connection.
+- [x] **OPT-MEM-02**: Make Chroma LRU cache capacity limits configurable via `CHROMA_CACHE_SIZE` environment variable, defaulting to a conservative 10 connections.
 
 ### Async Blocking I/O Remediation (OPT-IO)
 
-- [ ] **OPT-IO-01**: Offload synchronous CPU-intensive Bcrypt hashing and verification calls (`hash_password`, `verify_password`) to a background thread pool inside `/auth/signup` and `/auth/login` async endpoints.
-- [ ] **OPT-IO-02**: Convert the `/documents/{document_id}/reindex` endpoint to execute asynchronously via FastAPI `BackgroundTasks`, matching the `/upload` endpoint job registry and status polling behavior.
+- [x] **OPT-IO-01**: Offload synchronous CPU-intensive Bcrypt hashing and verification calls (`hash_password`, `verify_password`) to a background thread pool inside `/auth/signup` and `/auth/login` async endpoints.
+- [x] **OPT-IO-02**: Convert the `/documents/{document_id}/reindex` endpoint to execute asynchronously via FastAPI `BackgroundTasks`, matching the `/upload` endpoint job registry and status polling behavior.
 
 ### Auth rate limits & JWT Refresh (OPT-AUTH)
 
-- [ ] **OPT-AUTH-01**: Protect `/auth/login` and `/auth/signup` endpoints with strict SlowAPI rate limits (e.g. 5 requests per minute).
-- [ ] **OPT-AUTH-02**: Implement JWT refresh token mechanisms including refresh token generation, db persistence, and a `/auth/refresh` endpoint to generate new short-lived access tokens.
+- [x] **OPT-AUTH-01**: Protect `/auth/login` and `/auth/signup` endpoints with strict SlowAPI rate limits (e.g. 5 requests per minute).
+- [x] **OPT-AUTH-02**: Implement JWT refresh token mechanisms including refresh token generation, db persistence, and a `/auth/refresh` endpoint to generate new short-lived access tokens.
 
 ### Retrieval & Streaming Reliability (OPT-RAG)
 
-- [ ] **OPT-RAG-01**: Cache compiled `BM25Retriever` instances in memory keyed by `(user_id, document_id)` to eliminate redundant JSON read/parse operations during multi-query retrieval loops.
-- [ ] **OPT-RAG-02**: Wrap the async SSE streaming generator loop (`sse_generator`) in a broad try-except block to capture all non-Groq exceptions and yield a structured JSON error event before connection close.
+- [x] **OPT-RAG-01**: Cache compiled `BM25Retriever` instances in memory keyed by `(user_id, document_id)` to eliminate redundant JSON read/parse operations during multi-query retrieval loops.
+- [x] **OPT-RAG-02**: Wrap the async SSE streaming generator loop (`sse_generator`) in a broad try-except block to capture all non-Groq exceptions and yield a structured JSON error event before connection close.
 
 ## v2 Requirements
 
@@ -57,17 +57,17 @@ Deferred to future release.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| OPT-SQL-01  | Phase 58 | Planned |
-| OPT-SQL-02  | Phase 58 | Planned |
-| OPT-SQL-03  | Phase 58 | Planned |
-| OPT-MEM-01  | Phase 59 | Planned |
-| OPT-MEM-02  | Phase 59 | Planned |
-| OPT-IO-01   | Phase 60 | Planned |
-| OPT-IO-02   | Phase 60 | Planned |
-| OPT-AUTH-01 | Phase 61 | Planned |
-| OPT-AUTH-02 | Phase 61 | Planned |
-| OPT-RAG-01  | Phase 62 | Planned |
-| OPT-RAG-02  | Phase 62 | Planned |
+| OPT-SQL-01  | Phase 58 | Validated |
+| OPT-SQL-02  | Phase 58 | Validated |
+| OPT-SQL-03  | Phase 58 | Validated |
+| OPT-MEM-01  | Phase 59 | Validated |
+| OPT-MEM-02  | Phase 59 | Validated |
+| OPT-IO-01   | Phase 60 | Validated |
+| OPT-IO-02   | Phase 60 | Validated |
+| OPT-AUTH-01 | Phase 61 | Validated |
+| OPT-AUTH-02 | Phase 61 | Validated |
+| OPT-RAG-01  | Phase 62 | Validated |
+| OPT-RAG-02  | Phase 62 | Validated |
 
 **Coverage:**
 
@@ -77,4 +77,4 @@ Deferred to future release.
 
 ---
 *Requirements defined: 2026-07-09*
-*Last updated: 2026-07-09 — Milestone v11.0 start*
+*Last updated: 2026-07-09 — Milestone v11.0 complete*

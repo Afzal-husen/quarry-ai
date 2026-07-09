@@ -479,6 +479,14 @@ async def query_document_stream(
         except (GroqConnectionError, InferenceError) as e:
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
             return
+        except Exception as e:
+            import logging
+            logging.getLogger("app.exception").error(
+                f"Unhandled exception during streaming generation: {str(e)}",
+                exc_info=True
+            )
+            yield f"data: {json.dumps({'error': 'An unexpected error occurred during stream generation.'})}\n\n"
+            return
         finally:
             generation_ms = (time.perf_counter() - start_gen) * 1000
             total_ms = retrieval_ms + reranking_ms + generation_ms

@@ -22,12 +22,12 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 ## Phases — v11.0 Backend Optimization & Hardening
 
-- [ ] **Phase 58: Logging & SQLite Concurrency Tuning** — Add ingestion failure trace logs, enable SQLite WAL mode, and configure connection busy timeout.
-- [ ] **Phase 59: Chroma Cache & Memory Optimization** — Optimize Chroma connection thread-locking during init and introduce configurable environment capacity limits.
-- [ ] **Phase 60: Async Blocking I/O & Thread Pooling Remediation** — Run Bcrypt operations in thread pools and convert document reindexing to run asynchronously via BackgroundTasks.
-- [ ] **Phase 61: Authentication rate limits & JWT Refresh** — Apply rate limit decorators to auth signup/login endpoints and implement database-backed JWT refresh token mechanics.
-- [ ] **Phase 62: Retrieval & Streaming Reliability** — Implement an in-memory cache for built BM25Retriever instances and add a broad catch-all generator filter for SSE streams.
-- [ ] **Phase 63: Verification & Integration Testing** — Verify all fixes end-to-end using E2E integration test suites and add specific regression testing scripts.
+- [x] **Phase 58: Logging & SQLite Concurrency Tuning** — Add ingestion failure trace logs, enable SQLite WAL mode, and configure connection busy timeout. (completed 2026-07-09)
+- [x] **Phase 59: Chroma Cache & Memory Optimization** — Optimize Chroma connection thread-locking during init and introduce configurable environment capacity limits. (completed 2026-07-09)
+- [x] **Phase 60: Async Blocking I/O & Thread Pooling Remediation** — Run Bcrypt operations in thread pools and convert document reindexing to run asynchronously via BackgroundTasks. (completed 2026-07-09)
+- [x] **Phase 61: Authentication rate limits & JWT Refresh** — Apply rate limit decorators to auth signup/login endpoints and implement database-backed JWT refresh token mechanics. (completed 2026-07-09)
+- [x] **Phase 62: Retrieval & Streaming Reliability** — Implement an in-memory cache for built BM25Retriever instances and add a broad catch-all generator filter for SSE streams. (completed 2026-07-09)
+- [x] **Phase 63: Verification & Integration Testing** — Verify all fixes end-to-end using E2E integration test suites and add specific regression testing scripts. (completed 2026-07-09)
 
 ## Phase Details
 
@@ -44,7 +44,7 @@ This roadmap details completed milestones and future plans for the Document RAG 
 
 **Plans**: 1 plan
 Plans:
-- [ ] 58-01: Implement traceback logging in ingestion and configure SQLite WAL and busy timeout.
+- [x] 58-01: Implement traceback logging in ingestion and configure SQLite WAL and busy timeout.
 
 ---
 
@@ -60,7 +60,7 @@ Plans:
 
 **Plans**: 1 plan
 Plans:
-- [ ] 59-01: Refactor Chroma connection cache lock scope and support dynamic cache size.
+- [x] 59-01: Refactor Chroma connection cache lock scope and support dynamic cache size.
 
 ---
 
@@ -76,7 +76,7 @@ Plans:
 
 **Plans**: 1 plan
 Plans:
-- [ ] 60-01: Offload Bcrypt operations to threadpool and refactor reindex endpoint to be asynchronous.
+- [x] 60-01: Offload Bcrypt operations to threadpool and refactor reindex endpoint to be asynchronous.
 
 ---
 
@@ -92,7 +92,7 @@ Plans:
 
 **Plans**: 1 plan
 Plans:
-- [ ] 61-01: Apply rate limiters to auth routes and implement JWT refresh token endpoints.
+- [x] 61-01: Apply rate limiters to auth routes and implement JWT refresh token endpoints.
 
 ---
 
@@ -108,7 +108,7 @@ Plans:
 
 **Plans**: 1 plan
 Plans:
-- [ ] 62-01: Cache built BM25 retrievers and catch-all exceptions inside streaming generators.
+- [x] 62-01: Cache built BM25 retrievers and catch-all exceptions inside streaming generators.
 
 ---
 
@@ -124,7 +124,7 @@ Plans:
 
 **Plans**: 1 plan
 Plans:
-- [ ] 63-01: Add specific regression tests and run complete backend test suites.
+- [x] 63-01: Add specific regression tests and run complete backend test suites.
 
 ---
 
@@ -132,12 +132,12 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 58. Logging & SQLite Concurrency | v11.0 | 0/1 | Planned | — |
-| 59. Chroma Cache & Memory | v11.0 | 0/1 | Planned | — |
-| 60. Async Blocking I/O | v11.0 | 0/1 | Planned | — |
-| 61. Auth Rate Limits & Refresh | v11.0 | 0/1 | Planned | — |
-| 62. Retrieval & Streaming | v11.0 | 0/1 | Planned | — |
-| 63. Verification & Testing | v11.0 | 0/1 | Planned | — |
+| 58. Logging & SQLite Concurrency | v11.0 | 1/1 | Complete | 2026-07-09 |
+| 59. Chroma Cache & Memory | v11.0 | 1/1 | Complete | 2026-07-09 |
+| 60. Async Blocking I/O | v11.0 | 1/1 | Complete | 2026-07-09 |
+| 61. Auth Rate Limits & Refresh | v11.0 | 1/1 | Complete | 2026-07-09 |
+| 62. Retrieval & Streaming | v11.0 | 1/1 | Complete | 2026-07-09 |
+| 63. Verification & Testing | v11.0 | 1/1 | Complete | 2026-07-09 |
 
 ---
-*Roadmap updated: 2026-07-09 — v11.0 Backend Optimization & Hardening*
+*Roadmap updated: 2026-07-09 — v11.0 Backend Optimization & Hardening complete*
