@@ -10,21 +10,29 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ---
 
-## Current Milestone: v9.0 Dockerization & Containerization
+## Current Milestone: v10.0 Backend Audit & Reliability Report
 
-**Goal:** Dockerize both frontend and backend separately and enable seamless orchestration using Docker Compose.
+**Goal:** Perform a comprehensive static analysis audit of the entire Python backend — covering concurrency, database safety, retrieval performance, memory pressure, authentication, API surface validation, error handling resilience, and async I/O blocking risks. Produce a structured findings report with severity ratings and a prioritized remediation roadmap for the next milestone.
 
 **Target features:**
-- Create a multi-stage Dockerfile for the Next.js frontend to produce lightweight production images.
-- Create a Dockerfile for the FastAPI backend configured for Python 3.14, handling dynamic local volume persistence for database and Chroma files.
-- Configure a `docker-compose.yml` orchestration file linking frontend and backend, with environment variable mapping and local data volume persistence.
-- Provide clear verification scripts or commands to test production container builds and local developer orchestrations.
+- Concurrency & thread safety audit of all singleton classes and shared state.
+- Database layer audit: SQLite connection anti-patterns, WAL mode, transaction boundaries, async blocking.
+- Retrieval performance audit: BM25 rebuild cost, Chroma LRU race, multi-query fan-out, parent I/O.
+- Memory pressure audit: combined model/cache RAM ceiling, semantic chunking spike.
+- Authentication & security audit: JWT lifecycle, bcrypt correctness, ownership enforcement.
+- API surface audit: missing server-side upload limits, rate limit gaps, Pydantic coverage, CORS risk.
+- Error handling audit: silent failures, partial artifact corruption, streaming error propagation.
+- Async blocking I/O audit: synchronous calls in async handlers and BackgroundTasks.
+- Produce `AUDIT-REPORT.md` with Critical/High/Medium/Low severity classification and prioritized remediation roadmap.
 
 ---
 
 ## Shipped Milestones
 
-### v8.0 Document Summarization & Quick Digests (Shipped 2026-07-06)
+### v9.0 Dockerization & Containerization (Shipped 2026-07-06)
+**Goal:** Dockerize both frontend and backend separately and enable seamless orchestration using Docker Compose.
+
+### v8.0 Document Summarization & Quick Digests (Shipped 2026-07-04)
 **Goal:** Integrate automatic document summarization into the ingestion pipeline, persist summaries in the database, and display these quick digests within the document dashboard cards and preview modal.
 
 ### v7.0 Vercel Cloud Deployment & Serverless Integration (Shipped 2026-07-02)
@@ -103,7 +111,15 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ### Active
 
-- *(None yet — defining requirements)*
+- AUDIT-CONC-01 → 03: Singleton thread safety, concurrent streaming correctness (v10.0)
+- AUDIT-DB-01 → 04: SQLite connection patterns, WAL, transactions, async blocking (v10.0)
+- AUDIT-RET-01 → 04: BM25 rebuild, Chroma LRU eviction, multi-query fan-out, parent I/O (v10.0)
+- AUDIT-MEM-01 → 03: Resident memory ceiling, cache sizing, semantic chunking spikes (v10.0)
+- AUDIT-AUTH-01 → 03: JWT lifecycle, bcrypt, ownership enforcement completeness (v10.0)
+- AUDIT-API-01 → 04: Upload size enforcement, rate limit gaps, Pydantic coverage, CORS (v10.0)
+- AUDIT-ERR-01 → 04: Silent failures, partial artifact corruption, streaming error propagation (v10.0)
+- AUDIT-ASYNC-01 → 02: Blocking I/O in async handlers, BackgroundTasks thread pool (v10.0)
+- AUDIT-REPORT-01 → 02: Structured findings report with severity ratings and remediation roadmap (v10.0)
 
 ---
 
@@ -157,5 +173,5 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-06 — Milestone v9.0 started*
+*Last updated: 2026-07-09 — Milestone v10.0 started*
 
