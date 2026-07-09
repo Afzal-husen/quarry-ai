@@ -1,5 +1,22 @@
 # Milestones
 
+## v11.0 Backend Optimization & Reliability Hardening (Shipped: 2026-07-09)
+
+**Phases completed:** 6 phases (Phase 58 to Phase 63), 6 plans, 23 tasks
+
+**Key accomplishments:**
+- Enabled Write-Ahead Logging (WAL) and 5000ms connection busy timeouts for all SQLite connections.
+- Logged complete traceback details upon background parsing or chunking job failures.
+- Refactored Chroma connection cache to minimize global thread-lock scopes, preventing blocking during connection init, and support configurable cache sizes.
+- Shifted CPU-bound Bcrypt hashing and verification calls to threadpool executors.
+- Converted `/reindex` endpoint to execute asynchronously via FastAPI background tasks.
+- Applied SlowAPI rate limiters (5/minute) on auth register and login endpoints.
+- Implemented persistent SQLite refresh tokens, rotation, and logout revocation.
+- Implemented memory caching of initialized BM25Retriever objects.
+- Wrapped SSE streaming generator in broad exception catch-alls.
+
+---
+
 ## v10.0 Backend Audit & Reliability Report (Shipped: 2026-07-09)
 
 **Phases completed:** 9 phases (Phase 49 to Phase 57), 9 plans, 26 tasks

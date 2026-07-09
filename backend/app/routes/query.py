@@ -45,13 +45,14 @@ def retrieve_and_rerank_context(
         A tuple of (matching_chunks, retrieval_ms, reranking_ms).
     """
     # 1. Run query expansion
-    expanded_queries = qa_pipeline.generate_alternative_queries(rewritten_question)
+    expanded_queries = qa_pipeline.generate_alternative_queries(
+        rewritten_question)
     all_queries = [rewritten_question] + expanded_queries
 
     # 2. Per-document hybrid retrieval across all query variations
     start_retrieval = time.perf_counter()
     candidate_k = max(10, min(25, top_k * 3))
-    
+
     rrf_scores = {}
     try:
         for query in all_queries:
@@ -65,9 +66,10 @@ def retrieve_and_rerank_context(
                 for idx, doc in enumerate(chunks):
                     rank = idx + 1
                     score = 1.0 / (60.0 + rank)
-                    
+
                     # Deduplicate by text content and source block tracking keys
-                    chunk_id = doc.metadata.get("chunk_id", doc.metadata.get("parent_id", ""))
+                    chunk_id = doc.metadata.get(
+                        "chunk_id", doc.metadata.get("parent_id", ""))
                     key = (doc.page_content.strip(), chunk_id)
                     if key not in rrf_scores:
                         rrf_scores[key] = [doc, score]
@@ -510,12 +512,13 @@ async def query_document_stream(
                     # Save assistant message
                     assistant_answer = "".join(tokens_accumulated)
                     is_fallback = "Disclaimer: This information was not found" in assistant_answer
-                    is_greeting = not any(f"[{i+1}]" in assistant_answer for i in range(len(matching_chunks)))
-                    
+                    is_greeting = not any(
+                        f"[{i+1}]" in assistant_answer for i in range(len(matching_chunks)))
+
                     final_citations = []
                     if not is_fallback and not is_greeting:
                         final_citations = citations
-                        
+
                     citations_serialized = json.dumps(final_citations)
                     assistant_msg_id = str(uuid.uuid4())
                     ChatDatabaseManager.create_message(

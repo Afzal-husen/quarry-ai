@@ -5,7 +5,7 @@ import shutil
 import threading
 from collections import OrderedDict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from app.core.paths import get_data_dir
 
@@ -369,7 +369,8 @@ class VectorStoreManager:
             bm25_retriever.k = top_k
         else:
             # 1. Resolve paths
-            chunks_file_path = self.chunks_dir / user_id / f"{document_id}.json"
+            chunks_file_path = self.chunks_dir / \
+                user_id / f"{document_id}.json"
             if not chunks_file_path.exists():
                 raise VectorStoreError(
                     f"Ingested chunks metadata file not found at {chunks_file_path}. Please upload the document first."
