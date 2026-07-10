@@ -1,5 +1,50 @@
 # Living Retrospective: Document RAG REST API
 
+## Milestone: v11.0 — Backend Optimization & Reliability Hardening
+
+**Shipped:** 2026-07-10
+**Phases:** 6 | **Plans:** 6
+
+### What Was Built
+- Enabled SQLite Write-Ahead Logging (WAL) and busy timeout to handle concurrent database read/write actions without connection locking.
+- Redesigned the Chroma connection cache to use minimized locking scopes during client instantiation, preventing concurrent query locking.
+- Exposed configurable Chroma client cache limits via the `CHROMA_CACHE_SIZE` environment variable to mitigate OOM risks.
+- Routed CPU-heavy Bcrypt password hashing/verification operations to background threadpools via FastAPI's `run_in_threadpool` to prevent event-loop blocks.
+- Transitioned the `/reindex` endpoint to execute asynchronously using FastAPI `BackgroundTasks` matching the `/upload` path design.
+- Implemented rate limiting for auth endpoints, and persistent SQLite-backed JWT refresh token verification, rotation, and revocation.
+- Integrated an in-memory `BM25Retriever` cache to eliminate redundant JSON file parses.
+- Protected Server-Sent Events (SSE) streaming connections with a catch-all exception generator yielding formatted JSON errors on failure.
+
+### What Worked
+- **Threadpool Offloading**: Threadpool execution for Bcrypt hash operations immediately restored responsive request handling under concurrent logins.
+- **SQLite WAL & Connection Caching**: Combining WAL mode and connection caching drastically reduced database locking exceptions.
+
+### What Was Inefficient
+- None encountered; the target fixes from the v10.0 audit roadmap mapped cleanly to implementation.
+
+### Patterns Established
+- **Background Task Routing for Heavy Operations**: Ensuring all parsing/indexing endpoints follow the async task-queue model with job polling.
+- **Minimizing Global Locks**: Releasing locks during client instantiation and re-acquiring only on lookup miss ensures concurrent requests map smoothly.
+
+---
+
+## Milestone: v10.0 — Backend Audit & Reliability Report
+
+**Shipped:** 2026-07-09
+**Phases:** 9 | **Plans:** 9
+
+### What Was Built
+- Conducted a comprehensive static analysis and code review of the FastAPI / SQLite / ChromaDB / LangChain backend.
+- Audited double-checked locks and shared state singletons.
+- Measured and profiled dynamic retrieval components: BM25 index rebuilding overhead, RRF multi-query expansion latency, and Chroma cache.
+- Estimated RAM baselines for SentenceTransformers/FlashRank and PyTorch transient allocations.
+- Documented findings in `AUDIT-REPORT.md` and compiled a 10-point prioritized remediation roadmap.
+
+### What Worked
+- **Systematic Profiling**: Mapping out latency bottlenecks and lock-contention zones structurally provided a high-confidence implementation plan.
+
+---
+
 ## Milestone: v8.0 — Document Summarization & Quick Digests
 
 **Shipped:** 2026-07-06
