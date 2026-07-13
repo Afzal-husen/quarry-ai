@@ -45,7 +45,7 @@ This roadmap tracks completed milestones and active phases for the Document RAG 
 | Phase | Milestone | Requirements | Status | Completed |
 |-------|-----------|--------------|--------|-----------|
 | 70. Ingestion Performance & Event Loop Starvation Hardening | v15.0 | GC-RELOC-01–02, ONNX-THREADS-01–02 | Complete | 2026-07-13 |
-| 71. Ingestion Memory Batching Optimization | v15.0 | MEM-BATCH-01–02 | Not started | — |
+| 71. Ingestion Memory Batching Optimization | v15.0 | MEM-BATCH-01–02 | Complete | 2026-07-13 |
 
 ---
 *Roadmap updated: 2026-07-13 — Phase 71 added*
