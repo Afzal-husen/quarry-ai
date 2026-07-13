@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v12.0
 milestone_name: Interactive Citations & Guided Summaries
 status: planning
-stopped_at: Defining requirements for v12.0
-last_updated: "2026-07-13T03:18:00.000Z"
-last_activity: 2026-07-13 — Milestone v12.0 started
+stopped_at: Roadmap created — 3 phases defined (64-66)
+last_updated: "2026-07-13T03:30:00.000Z"
+last_activity: 2026-07-13 — Roadmap created for v12.0
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
-  total_plans: 0
+  total_plans: 3
   completed_plans: 0
   percent: 0
 ---
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-07-09)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Phase 64 — Interactive Citation Jump (not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-07-13 — Milestone v12.0 started
+Status: Ready to execute Phase 64
+Last activity: 2026-07-13 — Roadmap created for v12.0
 
 ## Milestone Goal
 
@@ -87,5 +87,7 @@ Resume file: .planning/ROADMAP.md
 
 ## Operator Next Steps
 
-- Research phase in progress — spawning parallel research agents
-- Then: define requirements and create roadmap
+- Start Phase 64 with `/gsd-discuss-phase 64` or `/gsd-plan-phase 64`
+- Phase 64: Interactive Citation Jump (FE-JUMP-01) — JUMP-01 through JUMP-04
+- Phase 65: Guided Summary Backend (SUM-GUIDED-01 BE) — GUIDED-BE-01 through GUIDED-BE-03
+- Phase 66: Guided Summary Frontend UI (SUM-GUIDED-01 FE) — GUIDED-UI-01 through GUIDED-UI-04
