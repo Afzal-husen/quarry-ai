@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v15.0
 milestone_name: Ingestion Performance & Event Loop Starvation Hardening
 status: planning
-stopped_at: Phase 70 context gathered
-last_updated: "2026-07-13T14:38:00.000Z"
-last_activity: 2026-07-13 — Phase 70 context gathered
+stopped_at: Phase 70 planned
+last_updated: "2026-07-13T14:40:00.000Z"
+last_activity: 2026-07-13 — Phase 70 planned
 progress:
   total_phases: 1
   completed_phases: 0
-  total_plans: 0
+  total_plans: 1
   completed_plans: 0
   percent: 0
 ---
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-07-13)
 
 ## Current Position
 
-Phase: Phase 70 — Ingestion Performance & Event Loop Starvation Hardening (not started)
-Plan: —
-Status: Ready to plan Phase 70
-Last activity: 2026-07-13 — Phase 70 context gathered
+Phase: Phase 70 — Ingestion Performance & Event Loop Starvation Hardening (planned)
+Plan: 70-01-PLAN.md
+Status: Ready to execute
+Last activity: 2026-07-13 — Phase 70 planned
 
 ## Milestone Goal
 
@@ -64,11 +64,11 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-07-13T14:38:00.000Z
-Stopped at: Phase 70 context gathered
-Resume file: .planning/phases/70-ingestion-performance/70-CONTEXT.md
+Last session: 2026-07-13T14:40:00.000Z
+Stopped at: Phase 70 planned
+Resume file: .planning/phases/70-ingestion-performance/70-01-PLAN.md
 
 ## Operator Next Steps
 
-- Start Phase 70 with `/gsd-plan-phase 70`
+- Start Phase 70 with `/gsd-execute-phase 70`
 - Phase 70: Ingestion Performance & Event Loop Starvation Hardening (PERF-INGEST) — GC-RELOC-01 through ONNX-THREADS-02
