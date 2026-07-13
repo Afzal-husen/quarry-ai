@@ -38,7 +38,7 @@ This roadmap tracks completed milestones and active phases for the Document RAG 
 
 | Phase | Milestone | Requirements | Status | Completed |
 |-------|-----------|--------------|--------|-----------|
-| 69. Dockerization & Model Baking Hardening | v14.0 | MEM-DK-01–05 | Not started | — |
+| 69. Dockerization & Model Baking Hardening | v14.0 | MEM-DK-01–05 | Complete | 2026-07-13 |
 
 ---
 *Roadmap updated: 2026-07-13 — v14.0 milestone started*
