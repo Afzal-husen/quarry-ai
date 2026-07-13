@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v12.0
 milestone_name: Guided Focus Summaries
 status: planning
-stopped_at: Phase 65 context gathered
-last_updated: "2026-07-13T04:29:00.000Z"
-last_activity: 2026-07-13 — Phase 65 context gathered
+stopped_at: Phase 65 planned
+last_updated: "2026-07-13T04:31:00.000Z"
+last_activity: 2026-07-13 — Phase 65 planned
 progress:
   total_phases: 2
   completed_phases: 1
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-07-09)
 
 ## Current Position
 
-Phase: Phase 65 — Guided Summary Frontend UI (not started)
-Plan: —
-Status: Ready to execute Phase 65
-Last activity: 2026-07-13 — Phase 65 context gathered
+Phase: Phase 65 — Guided Summary Frontend UI (planned)
+Plan: 65-01-PLAN.md
+Status: Ready to execute
+Last activity: 2026-07-13 — Phase 65 planned
 
 ## Milestone Goal
 
@@ -78,11 +78,11 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-07-13T04:29:00.000Z
-Stopped at: Phase 65 context gathered
-Resume file: .planning/phases/65-guided-summary-frontend-ui/65-CONTEXT.md
+Last session: 2026-07-13T04:31:00.000Z
+Stopped at: Phase 65 planned
+Resume file: .planning/phases/65-guided-summary-frontend-ui/65-01-PLAN.md
 
 ## Operator Next Steps
 
-- Start Phase 65 with `/gsd-plan-phase 65`
+- Start Phase 65 with `/gsd-execute-phase 65`
 - Phase 65: Guided Summary Frontend UI (SUM-GUIDED-01 FE) — GUIDED-UI-01 through GUIDED-UI-04
