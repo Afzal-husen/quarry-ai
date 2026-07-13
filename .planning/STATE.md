@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v14.0
 milestone_name: Dockerization & Model Baking Hardening
 status: planning
-stopped_at: Milestone v14.0 complete
-last_updated: "2026-07-13T11:48:00.000Z"
-last_activity: 2026-07-13 — Milestone v14.0 complete
+stopped_at: Milestone v14.0 audited
+last_updated: "2026-07-13T11:51:00.000Z"
+last_activity: 2026-07-13 — Milestone v14.0 audited
 progress:
   total_phases: 1
   completed_phases: 1
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-07-13)
 
 ## Current Position
 
-Phase: Milestone v14.0 complete
+Phase: Milestone v14.0 audited
 Plan: —
-Status: Ready to audit
-Last activity: 2026-07-13 — Milestone v14.0 complete
+Status: Ready to complete
+Last activity: 2026-07-13 — Milestone v14.0 audited
 
 ## Milestone Goal
 
@@ -64,10 +64,10 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-07-13T11:48:00.000Z
-Stopped at: Milestone v14.0 complete
+Last session: 2026-07-13T11:51:00.000Z
+Stopped at: Milestone v14.0 audited
 Resume file: .planning/ROADMAP.md
 
 ## Operator Next Steps
 
-- Audit milestone with `/gsd-audit-milestone`
+- Archive milestone with `/gsd-complete-milestone`
