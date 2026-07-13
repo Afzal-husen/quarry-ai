@@ -66,7 +66,7 @@ This roadmap details the phased execution plan for **v12.0: Guided Focus Summari
 | Phase | Milestone | Requirements | Status | Completed |
 |-------|-----------|--------------|--------|-----------|
 | 64. Guided Summary Backend | v12.0 | GUIDED-BE-01–03 | Complete | 2026-07-13 |
-| 65. Guided Summary Frontend UI | v12.0 | GUIDED-UI-01–04 | Not started | — |
+| 65. Guided Summary Frontend UI | v12.0 | GUIDED-UI-01–04 | Complete | 2026-07-13 |
 
 ---
 *Roadmap created: 2026-07-13 — v12.0 milestone*
