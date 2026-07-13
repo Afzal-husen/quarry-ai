@@ -1,40 +1,38 @@
 ---
 gsd_state_version: 1.0
-milestone: v12.0
-milestone_name: Guided Focus Summaries
+milestone: TBD
+milestone_name: TBD
 status: planning
-stopped_at: Phase 65 complete
-last_updated: "2026-07-13T04:33:00.000Z"
-last_activity: 2026-07-13 — Phase 65 complete
+stopped_at: Milestone v12.0 archived
+last_updated: "2026-07-13T05:55:00.000Z"
+last_activity: 2026-07-13 — Milestone v12.0 completed and archived
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 2
-  completed_plans: 2
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-07-09)
+See: .planning/PROJECT.md (updated 2026-07-13)
 
 **Core value:** Enable seamless, low-latency document parsing and precise Q&A retrieval via a programmatic REST API using local embeddings and high-speed cloud LLM inference.
-**Current focus:** Milestone v12.0 — Guided Focus Summaries
+**Current focus:** Next Milestone Goals Definition
 
 ## Current Position
 
-Phase: Phase 65 — Guided Summary Frontend UI (complete)
-Plan: 65-01-PLAN.md
-Status: Milestone v12.0 Complete
-Last activity: 2026-07-13 — Phase 65 complete
+Phase: TBD
+Plan: —
+Status: Planning next milestone
+Last activity: 2026-07-13 — Milestone v12.0 completed and archived
 
 ## Milestone Goal
 
-Ship user-driven guided focus summaries:
-
-- SUM-GUIDED-01: Guided Focus Summaries — users can request a custom summary for a document scoped to a specific keyword, topic, or area; result displayed in the Preview Modal summary pane.
+TBD
 
 ## Performance Metrics
 
@@ -43,17 +41,6 @@ Ship user-driven guided focus summaries:
 - Total plans completed: 41
 - Average duration: 4.8 min
 - Total execution time: 3.3 hours
-
-**By Phase (v11.0):**
-
-| Phase | Plans | Total | Avg/Plan | Status |
-|-------|-------|-------|----------|--------|
-| 58. Logging & SQLite Concurrency | 1/1 | 1.0 min | 1.0 min | Complete |
-| 59. Chroma Cache & Memory | 1/1 | 1.2 min | 1.2 min | Complete |
-| 60. Async Blocking I/O | 1/1 | 1.5 min | 1.5 min | Complete |
-| 61. Auth Rate Limits & Refresh | 1/1 | 2.0 min | 2.0 min | Complete |
-| 62. Retrieval & Streaming | 1/1 | 1.5 min | 1.5 min | Complete |
-| 63. Verification & Testing | 1/1 | 2.5 min | 2.5 min | Complete |
 
 *Updated after each plan completion*
 
@@ -78,11 +65,11 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-07-13T04:33:00.000Z
-Stopped at: Phase 65 complete
-Resume file: .planning/ROADMAP.md
+Last session: 2026-07-13T05:55:00.000Z
+Stopped at: Milestone v12.0 archived
+Resume file: .planning/PROJECT.md
 
 ## Operator Next Steps
 
-- Archive current milestone v12.0 and prepare for next milestone with `/gsd-complete-milestone`
-- Start new milestone phase cycles with `/gsd-new-milestone`
+- Define requirements for the next milestone in `.planning/REQUIREMENTS.md`
+- Update roadmap in `.planning/ROADMAP.md`

@@ -10,16 +10,16 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ---
 
-## Current Milestone: v12.0 Guided Focus Summaries
+## Current Milestone: TBD
 
-**Goal:** Ship user-driven guided focus summaries scoped to a specific keyword, topic, or area.
-
-**Target features:**
-- SUM-GUIDED-01: Guided Focus Summaries — users can request a custom summary for a document scoped to a specific keyword, topic, or area, with results displayed in the Preview Modal summary pane.
+**Goal:** Defining next milestone goals.
 
 ---
 
 ## Shipped Milestones
+
+### v12.0 Guided Focus Summaries (Shipped 2026-07-13)
+**Goal:** Ship user-driven guided focus summaries scoped to a specific keyword, topic, or area.
 
 ### v11.0 Backend Optimization & Reliability Hardening (Shipped 2026-07-09)
 **Goal:** Implement the prioritized fixes from the v10.0 audit report — addressing background ingestion failure logging, SQLite WAL concurrency, Chroma cache locking bottlenecks, rate limits on authentication endpoints, Bcrypt async blocking, async document reindexing queue, dynamic BM25 caching, and streaming exception catch-alls.
