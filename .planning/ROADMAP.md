@@ -8,6 +8,7 @@ This roadmap tracks completed milestones and active phases for the Document RAG 
 
 ## Milestones
 
+- ✅ **v14.0 Dockerization & Model Baking Hardening** — Phase 69 (shipped 2026-07-13): [v14.0 ROADMAP](file:///.planning/milestones/v14.0-ROADMAP.md)
 - ✅ **v13.0 Memory Optimization & Cloud Readiness** — Phases 66-68 (shipped 2026-07-13): [v13.0 ROADMAP](file:///.planning/milestones/v13.0-ROADMAP.md)
 - ✅ **v12.0 Guided Focus Summaries** — Phases 64-65 (shipped 2026-07-13): [v12.0 ROADMAP](file:///.planning/milestones/v12.0-ROADMAP.md)
 - ✅ **v11.0 Backend Optimization & Reliability Hardening** — Phases 58-63 (shipped 2026-07-09): [v11.0 ROADMAP](file:///.planning/milestones/v11.0-ROADMAP.md)
@@ -22,15 +23,9 @@ This roadmap tracks completed milestones and active phases for the Document RAG 
 
 ---
 
-## Active Milestone: v14.0 Dockerization & Model Baking Hardening
+## Active Milestone: None
 
-### Phase 69: Dockerization & Model Baking Hardening (DOCKER-BAKE)
-**Goal:** Bake FastEmbed/FlashRank model weights during Docker build, configure cache environment directories, and update dependencies installation methods in Dockerfile.
-**Requirements:** MEM-DK-01, MEM-DK-02, MEM-DK-03, MEM-DK-04, MEM-DK-05
-**Key changes:**
-- `backend/Dockerfile`: Expose variables, copy `requirements.txt`, run model cache pre-downloads, change permissions of `/app/models`.
-- `backend/app/core/reranker.py`: Support `cache_dir` from environment.
-- `docker-compose.yml`: Set model cache env variables.
+No active milestone is currently running. Use `/gsd-new-milestone` to initialize the next milestone cycle.
 
 ---
 
@@ -38,7 +33,7 @@ This roadmap tracks completed milestones and active phases for the Document RAG 
 
 | Phase | Milestone | Requirements | Status | Completed |
 |-------|-----------|--------------|--------|-----------|
-| 69. Dockerization & Model Baking Hardening | v14.0 | MEM-DK-01–05 | Complete | 2026-07-13 |
+| — | — | — | — | — |
 
 ---
-*Roadmap updated: 2026-07-13 — v14.0 milestone started*
+*Roadmap updated: 2026-07-13 — Milestone v14.0 complete*

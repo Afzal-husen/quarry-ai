@@ -10,14 +10,9 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ---
 
-## Current Milestone: v14.0 Dockerization & Model Baking Hardening
+## Current Milestone: None
 
-**Goal:** Update the docker files and docker compose to bake FastEmbed and FlashRank models, resolve volume-mounting cache conflicts, and harden dependency builds.
-
-**Target features:**
-- DOCKER-BAKE-01: Correct dependency installation from requirements.txt in Dockerfile
-- DOCKER-BAKE-02: Support configurable cache directories for FastEmbed and FlashRank outside the database mount
-- DOCKER-BAKE-03: Pre-download and bake embedding and reranker models in Docker image build stage
+No active milestone is currently running. Use `/gsd-new-milestone` to initialize the next milestone cycle.
 
 ---
 
@@ -106,6 +101,7 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 - ✓ SSE Token Streaming: `/query/stream` token streaming (STREAM-01, STREAM-02). (v1.4)
 - ✓ API Quality & DX: Rate limits, pagination, and unified error formats (API-01, API-02, API-03, API-04). (v1.4)
 - ✓ Structured Observability: JSON logging and latency trackers (OBS-01, OBS-02, OBS-03). (v1.4)
+- ✓ Docker Model Baking & Cache Hardening: Correct dependency installations from requirements.txt, configurable model cache directories, and pre-downloaded ONNX model weights in Dockerfile. (v14.0)
 - ✓ Advanced Chunking: Semantic sentence boundary splitting and query-time parent swapping (CHUNK-01, CHUNK-02, CHUNK-03). (v1.4)
 - ✓ Hybrid Search: Combined dense vectors and BM25 lexical keyword matching (RET-01). (v1.3)
 - ✓ Candidate Re-ranking: Fast, lightweight re-ranking engine using FlashRank (RET-02). (v1.3)
@@ -122,9 +118,7 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ### Active
 
-- DOCKER-BAKE-01: Update backend Dockerfile to use requirements.txt instead of pyproject.toml for dependency installations. (v14.0)
-- DOCKER-BAKE-02: Configure FastEmbed and FlashRank to support independent model cache directories in the environment. (v14.0)
-- DOCKER-BAKE-03: Pre-download and cache embedding and reranking ONNX models during image builds. (v14.0)
+- None.
 
 ---
 
