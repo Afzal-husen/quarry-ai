@@ -32,11 +32,10 @@ This roadmap tracks completed milestones and active phases for the Document RAG 
 
 ---
 
-### Phase 67: API-Based Embeddings Option (MEM-OPT-02)
-**Goal:** Add support for external embedding generation APIs (Groq and Hugging Face serverless api) to achieve zero local model RAM footprint.
+### Phase 67: API-Based Embeddings Option (MEM-OPT-02) [CANCELLED]
+**Goal:** Add support for external embedding generation APIs (Groq and Hugging Face serverless api) to achieve zero local model RAM footprint. (Cancelled: FastEmbed baseline memory reduction (~103MB) is highly sufficient for cost-effective cloud deployments).
 **Requirements:** MEM-API-01, MEM-API-02, MEM-API-03
-**Key changes:**
-- `backend/app/core/vectorstore.py`: Implement conditional model loading for `EMBEDDING_PROVIDER` ("local", "groq", "huggingface-api"). Integrates Groq Nomics or HF Serverless requests.
+**Key changes:** None.
 
 ---
 
@@ -54,7 +53,7 @@ This roadmap tracks completed milestones and active phases for the Document RAG 
 | Phase | Milestone | Requirements | Status | Completed |
 |-------|-----------|--------------|--------|-----------|
 | 66. PyTorch Elimination via FastEmbed | v13.0 | MEM-FE-01–03 | Complete | 2026-07-13 |
-| 67. API-Based Embeddings Option | v13.0 | MEM-API-01–03 | Not started | — |
+| 67. API-Based Embeddings Option | v13.0 | MEM-API-01–03 | Cancelled | 2026-07-13 |
 | 68. Configurable Reranking & Ingestion | v13.0 | MEM-CFG-01–02 | Not started | — |
 
 ---
