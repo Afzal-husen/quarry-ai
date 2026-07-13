@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { X, Download, FileText, Loader2, RefreshCw } from "lucide-react";
+import { X, Download, FileText, Loader2, RefreshCw, Sparkles } from "lucide-react";
 import { getTokenAction } from "../app/actions/cookies";
 import { apiGet, apiPost } from "../lib/api-client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { parseMarkdown } from "../lib/markdown-parser";
 
@@ -41,7 +42,23 @@ export default function PreviewModal({ isOpen, onClose, document }: PreviewModal
   const [summaryStatus, setSummaryStatus] = useState<string>("pending");
   const [regenerating, setRegenerating] = useState(false);
 
+  const [activeTab, setActiveTab] = useState<"auto" | "guided">("auto");
+  const [focusTopic, setFocusTopic] = useState<string>("");
+  const [guidedSummary, setGuidedSummary] = useState<string>("");
+  const [guidedStatus, setGuidedStatus] = useState<"idle" | "pending" | "completed" | "failed">("idle");
+  const [generatingGuided, setGeneratingGuided] = useState(false);
+  const [prevDocId, setPrevDocId] = useState<string>("");
+
+  if ((document?.document_id || "") !== prevDocId) {
+    setPrevDocId(document?.document_id || "");
+    setFocusTopic("");
+    setGuidedSummary("");
+    setGuidedStatus("idle");
+    setActiveTab("auto");
+  }
+
   const pdfUrlRef = useRef<string | null>(null);
+
 
   // Sync initial summary states from selected document
   useEffect(() => {
@@ -94,6 +111,32 @@ export default function PreviewModal({ isOpen, onClose, document }: PreviewModal
       setRegenerating(false);
     }
   };
+
+  const handleGenerateGuided = async () => {
+    if (!document || focusTopic.trim().length < 3) return;
+    setGeneratingGuided(true);
+    setGuidedStatus("pending");
+    try {
+      const res = await apiPost(`/documents/${document.document_id}/summary/guided`, {
+        focus_topic: focusTopic.trim()
+      });
+      if (res && res.guided_summary) {
+        setGuidedSummary(res.guided_summary);
+        setGuidedStatus("completed");
+        toast.success("Focused summary generated");
+      } else {
+        toast.error("Failed to generate focused summary");
+        setGuidedStatus("failed");
+      }
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "Failed to generate focused summary";
+      toast.error(errMsg);
+      setGuidedStatus("failed");
+    } finally {
+      setGeneratingGuided(false);
+    }
+  };
+
 
   useEffect(() => {
     if (!isOpen || !document) {
@@ -340,54 +383,153 @@ export default function PreviewModal({ isOpen, onClose, document }: PreviewModal
         {/* Right Pane: AI Summary Sidebar */}
         {showSummary && (
           <div className="w-80 md:w-96 h-full border-l border-border bg-card flex flex-col overflow-hidden shrink-0 animate-in slide-in-from-right duration-200 select-none">
-            {/* Summary Sidebar Header */}
+            {/* Summary Sidebar Header with Pill Toggle */}
             <div className="h-12 border-b border-border px-5 flex items-center justify-between bg-muted/20 shrink-0">
               <span className="text-xs font-bold uppercase tracking-wider text-foreground">
-                AI Document Summary
+                AI Summary
               </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleRegenerate}
-                disabled={summaryStatus === "pending" || regenerating}
-                className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-sm"
-                title="Regenerate Summary"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${(summaryStatus === "pending" || regenerating) ? "animate-spin" : ""}`} />
-              </Button>
+              <div className="flex bg-neutral-100 dark:bg-neutral-800 p-0.5 rounded-sm border border-border">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`h-7 px-3 text-xs rounded-xs font-medium transition-all ${
+                    activeTab === "auto"
+                      ? "bg-background shadow-xs text-foreground font-semibold"
+                      : "text-muted-foreground hover:text-foreground bg-transparent"
+                  }`}
+                  onClick={() => setActiveTab("auto")}
+                >
+                  Auto
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`h-7 px-3 text-xs rounded-xs font-medium transition-all ${
+                    activeTab === "guided"
+                      ? "bg-background shadow-xs text-foreground font-semibold"
+                      : "text-muted-foreground hover:text-foreground bg-transparent"
+                  }`}
+                  onClick={() => setActiveTab("guided")}
+                >
+                  Focus
+                </Button>
+              </div>
             </div>
 
             {/* Summary Sidebar Content */}
-            <div className="flex-1 overflow-y-auto p-5 select-text">
-              {summaryStatus === "completed" && summary ? (
-                <div className="prose prose-sm prose-zinc dark:prose-invert max-w-none text-xs select-text space-y-4">
-                  {parseMarkdown(summary, () => null)}
-                </div>
-              ) : summaryStatus === "pending" ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center gap-3 select-none">
-                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                  <p className="text-xs text-muted-foreground">
-                    Analyzing document and generating digest...
-                  </p>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-20 text-center p-4 select-none">
-                  <p className="text-xs text-muted-foreground mb-4">
-                    No summary available or generation failed.
-                  </p>
+            {activeTab === "auto" ? (
+              <div className="flex-1 overflow-y-auto p-5 select-text relative">
+                {/* Auto summary regeneration trigger (absolute/sticky or floating next to summary content) */}
+                <div className="absolute top-3 right-3 z-10">
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant="ghost"
+                    size="icon"
                     onClick={handleRegenerate}
-                    disabled={regenerating}
-                    className="flex items-center gap-1.5 text-xs h-9 rounded-sm"
+                    disabled={summaryStatus === "pending" || regenerating}
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground rounded-sm bg-card/80 border border-border/50 backdrop-blur"
+                    title="Regenerate Summary"
                   >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    <span>Generate Summary</span>
+                    <RefreshCw className={`w-3 h-3 ${(summaryStatus === "pending" || regenerating) ? "animate-spin" : ""}`} />
                   </Button>
                 </div>
-              )}
-            </div>
+
+                {summaryStatus === "completed" && summary ? (
+                  <div className="prose prose-sm prose-zinc dark:prose-invert max-w-none text-xs select-text space-y-4 pr-6">
+                    {parseMarkdown(summary, () => null)}
+                  </div>
+                ) : summaryStatus === "pending" ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-center gap-3 select-none">
+                    <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                    <p className="text-xs text-muted-foreground">
+                      Analyzing document and generating digest...
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-20 text-center p-4 select-none">
+                    <p className="text-xs text-muted-foreground mb-4">
+                      No summary available or generation failed.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRegenerate}
+                      disabled={regenerating}
+                      className="flex items-center gap-1.5 text-xs h-9 rounded-sm"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Generate Summary</span>
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Fixed input container */}
+                <div className="p-4 border-b border-border bg-muted/10 flex flex-col gap-2 shrink-0 select-none">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Enter focus topic (e.g. revenue, terms)..."
+                      value={focusTopic}
+                      onChange={(e) => setFocusTopic(e.target.value)}
+                      disabled={generatingGuided}
+                      className="text-xs h-8 focus-visible:ring-1"
+                    />
+                    <Button
+                      size="sm"
+                      disabled={focusTopic.trim().length < 3 || generatingGuided}
+                      onClick={handleGenerateGuided}
+                      className="h-8 text-xs font-semibold px-3 shrink-0 flex items-center gap-1.5"
+                    >
+                      {generatingGuided ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                      <span>Generate</span>
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Scrollable results container */}
+                <div className="flex-1 overflow-y-auto p-5 select-text">
+                  {guidedStatus === "completed" && guidedSummary ? (
+                    <div className="prose prose-sm prose-zinc dark:prose-invert max-w-none text-xs select-text space-y-4">
+                      {parseMarkdown(guidedSummary, () => null)}
+                    </div>
+                  ) : guidedStatus === "pending" ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-center gap-3 select-none">
+                      <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                      <p className="text-xs text-muted-foreground">
+                        Searching and generating focused digest...
+                      </p>
+                    </div>
+                  ) : guidedStatus === "failed" ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-center p-4 select-none">
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Generation failed. Please try a different topic.
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleGenerateGuided}
+                        disabled={focusTopic.trim().length < 3 || generatingGuided}
+                        className="flex items-center gap-1.5 text-xs h-9 rounded-sm font-semibold"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>Retry</span>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-20 text-center px-4 select-none text-muted-foreground">
+                      <Sparkles className="w-8 h-8 mb-3 text-muted-foreground/40" />
+                      <p className="text-xs font-medium">
+                        Enter a focus topic above to generate a scoped summary.
+                      </p>
+                      <p className="text-[10px] text-muted-foreground/70 mt-1 max-w-[220px]">
+                        Only matching document segments will be analyzed by the AI.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
