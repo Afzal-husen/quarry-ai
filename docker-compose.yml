@@ -11,6 +11,9 @@ services:
       - DATA_DIR=/app/data
       - FASTEMBED_CACHE_DIR=/app/models/fastembed
       - FLASHRANK_CACHE_DIR=/app/models/flashrank
+      - OMP_NUM_THREADS=1
+      - MKL_NUM_THREADS=1
+      - OPENBLAS_NUM_THREADS=1
     volumes:
       - backend_data:/app/data
 
