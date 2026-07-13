@@ -2,9 +2,9 @@
 
 ## Overview
 
-This roadmap details the phased execution plan for **v12.0: Interactive Citations & Guided Summaries** — shipping two deferred backlog items: citation jump navigation and guided focus summaries.
+This roadmap details the phased execution plan for **v12.0: Guided Focus Summaries** — shipping user-driven guided focus summaries.
 
-**Phases: 64–66** | **11 requirements** | **Continuing from Phase 63 (v11.0)**
+**Phases: 64–65** | **7 requirements** | **Continuing from Phase 63 (v11.0)**
 
 ---
 
@@ -24,25 +24,7 @@ This roadmap details the phased execution plan for **v12.0: Interactive Citation
 
 ## v12.0 Phases
 
-### Phase 64: Interactive Citation Jump (FE-JUMP-01)
-
-**Goal:** Wire citation badge clicks in ChatShell to open PreviewModal for the correct document and jump to the cited page — for both PDF and DOCX document types.
-
-**Requirements:** JUMP-01, JUMP-02, JUMP-03, JUMP-04
-
-**Key changes:**
-- `ChatShell.tsx`: Add `initialPreviewPage` state; resolve document from citation `source_filename` (case-insensitive); pass page to `setActivePreviewDoc`; toast on document not found
-- `PreviewModal.tsx`: Add `initialPage` prop; for DOCX — scroll via `scrollIntoView` after `textPages` loads; for PDF — replace `<iframe>` with `@react-pdf-viewer/core` + `jumpToPage()`; pdfjs worker URL via CDN or `/public/`
-
-**Success criteria:**
-1. Clicking `[1]` in the chat references sidebar opens the PreviewModal for the document named in that citation
-2. For a DOCX document, the preview scrolls smoothly to the cited page section on open
-3. For a PDF document, the viewer renders at the cited page number on open
-4. If the citation's source document doesn't exist in the user's library, a toast message appears and the modal does not open
-
----
-
-### Phase 65: Guided Summary — Backend (SUM-GUIDED-01 BE)
+### Phase 64: Guided Summary — Backend (SUM-GUIDED-01 BE)
 
 **Goal:** Add a new `POST /documents/{id}/summary/guided` endpoint that generates a focus-scoped document summary via the existing DocumentSummarizer, non-blocking and authenticated.
 
@@ -61,7 +43,7 @@ This roadmap details the phased execution plan for **v12.0: Interactive Citation
 
 ---
 
-### Phase 66: Guided Summary — Frontend UI (SUM-GUIDED-01 FE)
+### Phase 65: Guided Summary — Frontend UI (SUM-GUIDED-01 FE)
 
 **Goal:** Extend the PreviewModal summary sidebar with a focus topic input, generate button, loading state, and tab toggle between the auto-generated and focused summaries.
 
@@ -83,9 +65,8 @@ This roadmap details the phased execution plan for **v12.0: Interactive Citation
 
 | Phase | Milestone | Requirements | Status | Completed |
 |-------|-----------|--------------|--------|-----------|
-| 64. Interactive Citation Jump | v12.0 | JUMP-01–04 | Not started | — |
-| 65. Guided Summary Backend | v12.0 | GUIDED-BE-01–03 | Not started | — |
-| 66. Guided Summary Frontend UI | v12.0 | GUIDED-UI-01–04 | Not started | — |
+| 64. Guided Summary Backend | v12.0 | GUIDED-BE-01–03 | Not started | — |
+| 65. Guided Summary Frontend UI | v12.0 | GUIDED-UI-01–04 | Not started | — |
 
 ---
 *Roadmap created: 2026-07-13 — v12.0 milestone*

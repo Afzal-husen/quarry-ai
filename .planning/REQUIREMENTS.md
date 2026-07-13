@@ -1,19 +1,12 @@
-# Requirements: v12.0 Interactive Citations & Guided Summaries
+# Requirements: v12.0 Guided Focus Summaries
 
 ## Milestone Goal
 
-Ship two deferred backlog features: clickable citation jump navigation inside the document preview modal, and user-driven guided focus summaries scoped to a specific keyword, topic, or area.
+Ship user-driven guided focus summaries scoped to a specific keyword, topic, or area.
 
 ---
 
 ## v12.0 Requirements
-
-### FE-JUMP-01: Interactive Citation Jump
-
-- [ ] **JUMP-01**: User can click a citation badge `[N]` in the chat references sidebar and have the correct document's preview modal open automatically
-- [ ] **JUMP-02**: When the PreviewModal opens via a citation click on a DOCX document, the view scrolls smoothly to the cited page section
-- [ ] **JUMP-03**: When the PreviewModal opens via a citation click on a PDF document, the viewer navigates to the cited page number
-- [ ] **JUMP-04**: If the cited document is not found in the user's library, a toast notification informs the user instead of silently failing
 
 ### SUM-GUIDED-01: Guided Focus Summaries
 
@@ -29,6 +22,7 @@ Ship two deferred backlog features: clickable citation jump navigation inside th
 
 ## Future Requirements (Deferred)
 
+- Clickable citation jump navigation inside the document preview modal (scroll DOCX page / jump PDF page)
 - Highlight/underline the specific cited text chunk within the page after navigation (beyond page-level jump)
 - Persistent guided summary history per session
 - Streaming token output for guided summaries
@@ -50,17 +44,13 @@ Ship two deferred backlog features: clickable citation jump navigation inside th
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| JUMP-01 | Phase 64 | — |
-| JUMP-02 | Phase 64 | — |
-| JUMP-03 | Phase 64 | — |
-| JUMP-04 | Phase 64 | — |
-| GUIDED-BE-01 | Phase 65 | — |
-| GUIDED-BE-02 | Phase 65 | — |
-| GUIDED-BE-03 | Phase 65 | — |
-| GUIDED-UI-01 | Phase 66 | — |
-| GUIDED-UI-02 | Phase 66 | — |
-| GUIDED-UI-03 | Phase 66 | — |
-| GUIDED-UI-04 | Phase 66 | — |
+| GUIDED-BE-01 | Phase 64 | — |
+| GUIDED-BE-02 | Phase 64 | — |
+| GUIDED-BE-03 | Phase 64 | — |
+| GUIDED-UI-01 | Phase 65 | — |
+| GUIDED-UI-02 | Phase 65 | — |
+| GUIDED-UI-03 | Phase 65 | — |
+| GUIDED-UI-04 | Phase 65 | — |
 
 ---
 *Requirements defined: 2026-07-13 — Milestone v12.0*

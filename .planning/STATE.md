@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
 milestone: v12.0
-milestone_name: Interactive Citations & Guided Summaries
+milestone_name: Guided Focus Summaries
 status: planning
-stopped_at: Roadmap created — 3 phases defined (64-66)
-last_updated: "2026-07-13T03:30:00.000Z"
+stopped_at: Roadmap created — 2 phases defined (64-65)
+last_updated: "2026-07-13T03:41:00.000Z"
 last_activity: 2026-07-13 — Roadmap created for v12.0
 progress:
-  total_phases: 3
+  total_phases: 2
   completed_phases: 0
-  total_plans: 3
+  total_plans: 2
   completed_plans: 0
   percent: 0
 ---
@@ -21,20 +21,19 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-09)
 
 **Core value:** Enable seamless, low-latency document parsing and precise Q&A retrieval via a programmatic REST API using local embeddings and high-speed cloud LLM inference.
-**Current focus:** Milestone v11.0 — Backend Optimization & Hardening
+**Current focus:** Milestone v12.0 — Guided Focus Summaries
 
 ## Current Position
 
-Phase: Phase 64 — Interactive Citation Jump (not started)
+Phase: Phase 64 — Guided Summary Backend (not started)
 Plan: —
 Status: Ready to execute Phase 64
 Last activity: 2026-07-13 — Roadmap created for v12.0
 
 ## Milestone Goal
 
-Ship two deferred backlog features:
+Ship user-driven guided focus summaries:
 
-- FE-JUMP-01: Interactive Citation Jump — clicking a reference citation in the chat references sidebar jumps directly to the matching page or section in the document preview modal.
 - SUM-GUIDED-01: Guided Focus Summaries — users can request a custom summary for a document scoped to a specific keyword, topic, or area; result displayed in the Preview Modal summary pane.
 
 ## Performance Metrics
@@ -62,8 +61,6 @@ Ship two deferred backlog features:
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
-
 ### Pending Todos
 
 None yet.
@@ -88,6 +85,5 @@ Resume file: .planning/ROADMAP.md
 ## Operator Next Steps
 
 - Start Phase 64 with `/gsd-discuss-phase 64` or `/gsd-plan-phase 64`
-- Phase 64: Interactive Citation Jump (FE-JUMP-01) — JUMP-01 through JUMP-04
-- Phase 65: Guided Summary Backend (SUM-GUIDED-01 BE) — GUIDED-BE-01 through GUIDED-BE-03
-- Phase 66: Guided Summary Frontend UI (SUM-GUIDED-01 FE) — GUIDED-UI-01 through GUIDED-UI-04
+- Phase 64: Guided Summary Backend (SUM-GUIDED-01 BE) — GUIDED-BE-01 through GUIDED-BE-03
+- Phase 65: Guided Summary Frontend UI (SUM-GUIDED-01 FE) — GUIDED-UI-01 through GUIDED-UI-04
