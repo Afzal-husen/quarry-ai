@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v12.0
 milestone_name: Guided Focus Summaries
 status: planning
-stopped_at: Phase 64 planned
-last_updated: "2026-07-13T04:17:00.000Z"
-last_activity: 2026-07-13 — Phase 64 planned
+stopped_at: Phase 64 complete
+last_updated: "2026-07-13T04:20:00.000Z"
+last_activity: 2026-07-13 — Phase 64 complete
 progress:
   total_phases: 2
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 50
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-07-09)
 
 ## Current Position
 
-Phase: Phase 64 — Guided Summary Backend (planned)
-Plan: 64-01-PLAN.md
-Status: Ready to execute
-Last activity: 2026-07-13 — Phase 64 planned
+Phase: Phase 65 — Guided Summary Frontend UI (not started)
+Plan: —
+Status: Ready to plan Phase 65
+Last activity: 2026-07-13 — Phase 64 complete
 
 ## Milestone Goal
 
@@ -40,9 +40,9 @@ Ship user-driven guided focus summaries:
 
 **Velocity:**
 
-- Total plans completed: 39
+- Total plans completed: 40
 - Average duration: 4.8 min
-- Total execution time: 3.1 hours
+- Total execution time: 3.2 hours
 
 **By Phase (v11.0):**
 
@@ -78,12 +78,11 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-07-13T04:17:00.000Z
-Stopped at: Phase 64 planned
-Resume file: .planning/phases/64-guided-summary-backend/64-01-PLAN.md
+Last session: 2026-07-13T04:20:00.000Z
+Stopped at: Phase 64 complete
+Resume file: .planning/ROADMAP.md
 
 ## Operator Next Steps
 
-- Start Phase 64 with `/gsd-execute-phase 64`
-- Phase 64: Guided Summary Backend (SUM-GUIDED-01 BE) — GUIDED-BE-01 through GUIDED-BE-03
+- Start Phase 65 with `/gsd-discuss-phase 65` or `/gsd-plan-phase 65`
 - Phase 65: Guided Summary Frontend UI (SUM-GUIDED-01 FE) — GUIDED-UI-01 through GUIDED-UI-04
