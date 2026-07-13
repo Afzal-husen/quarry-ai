@@ -10,18 +10,16 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ---
 
-## Current Milestone: v13.0 Memory Optimization & Cloud Readiness
+## Current Milestone: None
 
-**Goal:** Optimize backend memory profile (eliminate PyTorch, adopt FastEmbed ONNX, add API embeddings support) to prevent OOM issues and ensure stable, low-cost deployments on Render/Railway.
-
-**Target features:**
-- MEM-OPT-01: PyTorch Elimination via FastEmbed (ONNX)
-- MEM-OPT-02: API-Based Embeddings Option (Groq & HF Serverless API)
-- MEM-OPT-03: Configurable Reranking & Ingestion Memory Tuning
+No active milestone is currently running. Use `/gsd-new-milestone` to initialize the next milestone cycle.
 
 ---
 
 ## Shipped Milestones
+
+### v13.0 Memory Optimization & Cloud Readiness (Shipped 2026-07-13)
+**Goal:** Optimize backend memory profile (adopt FastEmbed ONNX, support optional reranking, tune ingestion garbage collection) to ensure OOM-free cost-effective cloud deployments.
 
 ### v12.0 Guided Focus Summaries (Shipped 2026-07-13)
 **Goal:** Ship user-driven guided focus summaries scoped to a specific keyword, topic, or area.
@@ -59,6 +57,9 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ### Validated
 
+- ✓ Replace PyTorch sentence transformers with CPU-optimized ONNX FastEmbed (MEM-FE-01, MEM-FE-02, MEM-FE-03). (v13.0)
+- ✓ Support optional FlashRank reranker, page-level GC ingestion tuning, and upload file size constraints (MEM-CFG-01, MEM-CFG-02). (v13.0)
+- ✓ Ephemeral focus summaries scoped to specific keywords, topic input boxes, and tabs toggling in modal (SUM-GUIDED-01). (v12.0)
 - ✓ Comprehensive static analysis audit covering concurrency, database concurrency, retrieval performance, memory ceilings, authentication, rate limits, error resilience, and async I/O blocks (AUDIT-*). (v10.0)
 - ✓ Core background DocumentSummarizer service utilizing ChatGroq model connections (SUM-01, SUM-02, SUM-03, SUM-04, SUM-05). (v8.0)
 - ✓ Document listing and retrieval REST API endpoints with async regeneration trigger support (SUM-API-01, SUM-API-02, SUM-API-03). (v8.0)
@@ -116,7 +117,7 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ### Active
 
-- SUM-GUIDED-01: Guided Focus Summaries — users can request a custom document summary scoped to a specific keyword, topic, or area; result displayed in the Preview Modal summary pane. (v12.0)
+- None.
 
 ---
 
@@ -125,7 +126,7 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 - **Backend**: Greenfield Python 3.14 codebase utilizing `uv` for modern fast dependency management.
 - **Frontend**: Next.js App Router client configured with TypeScript, Tailwind CSS, Lucide icons, and Vitest.
 - **Libraries**: Orchestration is built using LangChain.
-- **Embeddings**: Hugging Face local embedding models are utilized to generate semantic vectors without external API calls.
+- **Embeddings**: Local FastEmbed ONNX models are utilized to generate semantic vectors without external API calls.
 - **Inference**: High-speed Groq API is utilized for generation.
 - **Storage**: Vector and document metadata are stored locally (SQLite and local Chroma/FAISS on disk).
 
@@ -139,6 +140,10 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
+| Optional FlashRank Reranker | Save another ~100MB of RAM by skipping cross-encoder ONNX weights initialization if reranking is disabled. | ✓ Validated (v13.0) |
+| Active Page-level Ingestion GC | Run gc.collect() at the end of each page iteration inside the split documents loop to prune transient heap spikes immediately. | ✓ Validated (v13.0) |
+| Ingestion Size Validation | Reject document uploads exceeding MAX_UPLOAD_SIZE_MB at route level with HTTP 400 to prevent OOM errors. | ✓ Validated (v13.0) |
+| FastEmbed ONNX Integration | Replacing sentence-transformers with CPU-optimized ONNX fastembed saves ~450-500MB of RAM, eliminating PyTorch. | ✓ Validated (v13.0) |
 | Fault-Isolated Async Summarization | Run summarization inside background tasks with try/except wrapping so failure does not block vector indexing/ingestion. | ✓ Validated (v8.0) |
 | Toggleable Preview Split View | Add collapsible side-panel for scrollable markdown summaries alongside document viewer in PreviewModal. | ✓ Validated (v8.0) |
 | Asynchronous Status Polling | Poll backend every 2.5s for pending status and update local state dynamically. | ✓ Validated (v8.0) |
@@ -170,5 +175,5 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-13 — Milestone v12.0 started*
+*Last updated: 2026-07-13 — Milestone v13.0 complete*
 
