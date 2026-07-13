@@ -10,13 +10,13 @@ Ship user-driven guided focus summaries scoped to a specific keyword, topic, or 
 
 ### SUM-GUIDED-01: Guided Focus Summaries
 
-- [ ] **GUIDED-BE-01**: Backend exposes `POST /documents/{id}/summary/guided` endpoint accepting `{ focus_topic: str }` and returning `{ guided_summary: str }` inline (no DB persistence)
-- [ ] **GUIDED-BE-02**: Backend validates that `focus_topic` is non-empty and ≤ 200 characters; rejects with HTTP 400 otherwise
-- [ ] **GUIDED-BE-03**: Guided summary generation runs in a thread pool (non-blocking) and is scoped exclusively to the focus topic via a targeted system prompt
-- [ ] **GUIDED-UI-01**: The Preview Modal summary sidebar shows a focus topic input field and a "Generate" button
-- [ ] **GUIDED-UI-02**: The "Generate" button is disabled when the focus topic input is fewer than 3 characters
-- [ ] **GUIDED-UI-03**: A loading state (spinner) is shown while the guided summary is being generated
-- [ ] **GUIDED-UI-04**: The summary pane supports toggling between the auto-generated summary and the guided focus summary result
+- [x] **GUIDED-BE-01**: Backend exposes `POST /documents/{id}/summary/guided` endpoint accepting `{ focus_topic: str }` and returning `{ guided_summary: str }` inline (no DB persistence)
+- [x] **GUIDED-BE-02**: Backend validates that `focus_topic` is non-empty and ≤ 200 characters; rejects with HTTP 400 otherwise
+- [x] **GUIDED-BE-03**: Guided summary generation runs in a thread pool (non-blocking) and is scoped exclusively to the focus topic via a targeted system prompt
+- [x] **GUIDED-UI-01**: The Preview Modal summary sidebar shows a focus topic input field and a "Generate" button
+- [x] **GUIDED-UI-02**: The "Generate" button is disabled when the focus topic input is fewer than 3 characters
+- [x] **GUIDED-UI-03**: A loading state (spinner) is shown while the guided summary is being generated
+- [x] **GUIDED-UI-04**: The summary pane supports toggling between the auto-generated summary and the guided focus summary result
 
 ---
 
@@ -44,13 +44,13 @@ Ship user-driven guided focus summaries scoped to a specific keyword, topic, or 
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| GUIDED-BE-01 | Phase 64 | — |
-| GUIDED-BE-02 | Phase 64 | — |
-| GUIDED-BE-03 | Phase 64 | — |
-| GUIDED-UI-01 | Phase 65 | — |
-| GUIDED-UI-02 | Phase 65 | — |
-| GUIDED-UI-03 | Phase 65 | — |
-| GUIDED-UI-04 | Phase 65 | — |
+| GUIDED-BE-01 | Phase 64 | Complete |
+| GUIDED-BE-02 | Phase 64 | Complete |
+| GUIDED-BE-03 | Phase 64 | Complete |
+| GUIDED-UI-01 | Phase 65 | Complete |
+| GUIDED-UI-02 | Phase 65 | Complete |
+| GUIDED-UI-03 | Phase 65 | Complete |
+| GUIDED-UI-04 | Phase 65 | Complete |
 
 ---
 *Requirements defined: 2026-07-13 — Milestone v12.0*
