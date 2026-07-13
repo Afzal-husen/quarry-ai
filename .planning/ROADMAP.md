@@ -32,6 +32,12 @@ This roadmap tracks completed milestones and active phases for the Document RAG 
 - `backend/app/core/chunker.py`: Move `gc.collect()` outside page loops.
 - `backend/Dockerfile`: Add environment limits for threads.
 
+### Phase 71: Ingestion Memory Batching Optimization (MEM-BATCH)
+**Goal:** Implement document chunk batching during Chroma vector store indexing to clamp peak memory spikes.
+**Requirements:** MEM-BATCH-01, MEM-BATCH-02
+**Key changes:**
+- `backend/app/core/vectorstore.py`: Convert `Chroma.from_documents` to iterative batch additions.
+
 ---
 
 ## Progress
@@ -39,6 +45,7 @@ This roadmap tracks completed milestones and active phases for the Document RAG 
 | Phase | Milestone | Requirements | Status | Completed |
 |-------|-----------|--------------|--------|-----------|
 | 70. Ingestion Performance & Event Loop Starvation Hardening | v15.0 | GC-RELOC-01–02, ONNX-THREADS-01–02 | Complete | 2026-07-13 |
+| 71. Ingestion Memory Batching Optimization | v15.0 | MEM-BATCH-01–02 | Not started | — |
 
 ---
-*Roadmap updated: 2026-07-13 — Milestone v15.0 started*
+*Roadmap updated: 2026-07-13 — Phase 71 added*

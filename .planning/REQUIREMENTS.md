@@ -16,6 +16,10 @@ Resolve event loop starvation and high CPU utilization during ingestion of multi
 - **[ ] ONNX-THREADS-01**: Expose `ENV OMP_NUM_THREADS=1` in `backend/Dockerfile` to limit ONNX Runtime thread pools from causing context switching cpu spikes.
 - **[ ] ONNX-THREADS-02**: Set `ENV MKL_NUM_THREADS=1` and `ENV OPENBLAS_NUM_THREADS=1` for general linear algebra thread safety.
 
+### PERF-INGEST-03: Ingestion Memory Batching Optimization
+- **[ ] MEM-BATCH-01**: Modify `backend/app/core/vectorstore.py` to instantiate the Chroma vector store and add documents iteratively in configured chunks (batches of 100).
+- **[ ] MEM-BATCH-02**: Invoke explicit garbage collection (`gc.collect()`) after indexing each document batch to prune transient ONNX model inference heaps immediately.
+
 ---
 
 ## Future Requirements (Deferred)
@@ -33,10 +37,12 @@ Resolve event loop starvation and high CPU utilization during ingestion of multi
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| GC-RELOC-01 | Phase 70 | — |
-| GC-RELOC-02 | Phase 70 | — |
-| ONNX-THREADS-01 | Phase 70 | — |
-| ONNX-THREADS-02 | Phase 70 | — |
+| GC-RELOC-01 | Phase 70 | Complete |
+| GC-RELOC-02 | Phase 70 | Complete |
+| ONNX-THREADS-01 | Phase 70 | Complete |
+| ONNX-THREADS-02 | Phase 70 | Complete |
+| MEM-BATCH-01 | Phase 71 | — |
+| MEM-BATCH-02 | Phase 71 | — |
 
 ---
 *Requirements defined: 2026-07-13 — Milestone v15.0*
