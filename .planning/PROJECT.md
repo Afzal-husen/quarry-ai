@@ -10,9 +10,13 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ---
 
-## Current Milestone: Awaiting Next Milestone
+## Current Milestone: v12.0 Interactive Citations & Guided Summaries
 
-**Goal:** Ready to define requirements and goals for the next version release. Run `/gsd-new-milestone` to initialize the next iteration cycle.
+**Goal:** Ship two deferred backlog features — clickable citation jump navigation inside the document preview modal, and user-driven guided focus summaries scoped to a specific keyword, topic, or area.
+
+**Target features:**
+- FE-JUMP-01: Interactive Citation Jump — clicking a reference citation in the chat references sidebar opens the document preview and scrolls/jumps to the matching page or section.
+- SUM-GUIDED-01: Guided Focus Summaries — users can request a custom summary for a document scoped to a specific keyword, topic, or area, with results displayed in the Preview Modal summary pane.
 
 ---
 
@@ -108,7 +112,8 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ### Active
 
-- *(None yet — defining requirements)*
+- FE-JUMP-01: Interactive Citation Jump — clicking a reference citation in the chat sidebar jumps directly to the matching page/section in the document preview modal. (v12.0)
+- SUM-GUIDED-01: Guided Focus Summaries — users can request a custom document summary scoped to a specific keyword, topic, or area; result displayed in the Preview Modal summary pane. (v12.0)
 
 ---
 
@@ -162,5 +167,5 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-09 — Milestone v10.0 started*
+*Last updated: 2026-07-13 — Milestone v12.0 started*
 

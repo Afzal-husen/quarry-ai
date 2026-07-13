@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v11.0
-milestone_name: Backend Optimization & Hardening
-status: Awaiting next milestone
-stopped_at: Milestone v11.0 complete — all optimization fixes implemented and verified.
-last_updated: "2026-07-10T02:26:08.930Z"
-last_activity: 2026-07-10 — Milestone v11.0 completed and archived
+milestone: v12.0
+milestone_name: Interactive Citations & Guided Summaries
+status: planning
+stopped_at: Defining requirements for v12.0
+last_updated: "2026-07-13T03:18:00.000Z"
+last_activity: 2026-07-13 — Milestone v12.0 started
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 6
-  completed_plans: 6
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,25 +25,17 @@ See: .planning/PROJECT.md (updated 2026-07-09)
 
 ## Current Position
 
-Phase: Milestone v11.0 complete
+Phase: Not started (defining requirements)
 Plan: —
-Status: Awaiting next milestone
-Last activity: 2026-07-10 — Milestone v11.0 completed and archived
+Status: Defining requirements
+Last activity: 2026-07-13 — Milestone v12.0 started
 
 ## Milestone Goal
 
-Implement all 10 prioritized optimization and reliability fixes discovered during the v10.0 backend audit:
+Ship two deferred backlog features:
 
-- Ingestion traceback logs logging
-- SQLite WAL concurrency & connection busy timeout
-- Chroma connection caching thread-lock scope minimization
-- SlowAPI rate-limiting on register/login endpoints
-- Async threadpool execution for CPU-bound Bcrypt operations
-- Async BackgroundTasks re-indexing endpoint queue
-- In-memory BM25Retriever dynamic instance caching
-- Configurable Chroma client cache sizing via environment
-- Streaming connection SSE try-except exception catch-alls
-- SQLite-backed JWT refresh token endpoints and token verification
+- FE-JUMP-01: Interactive Citation Jump — clicking a reference citation in the chat references sidebar jumps directly to the matching page or section in the document preview modal.
+- SUM-GUIDED-01: Guided Focus Summaries — users can request a custom summary for a document scoped to a specific keyword, topic, or area; result displayed in the Preview Modal summary pane.
 
 ## Performance Metrics
 
@@ -95,4 +87,5 @@ Resume file: .planning/ROADMAP.md
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Research phase in progress — spawning parallel research agents
+- Then: define requirements and create roadmap
