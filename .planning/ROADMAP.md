@@ -54,7 +54,7 @@ This roadmap tracks completed milestones and active phases for the Document RAG 
 |-------|-----------|--------------|--------|-----------|
 | 66. PyTorch Elimination via FastEmbed | v13.0 | MEM-FE-01–03 | Complete | 2026-07-13 |
 | 67. API-Based Embeddings Option | v13.0 | MEM-API-01–03 | Cancelled | 2026-07-13 |
-| 68. Configurable Reranking & Ingestion | v13.0 | MEM-CFG-01–02 | Not started | — |
+| 68. Configurable Reranking & Ingestion | v13.0 | MEM-CFG-01–02 | Complete | 2026-07-13 |
 
 ---
 *Roadmap updated: 2026-07-13 — v13.0 milestone*
