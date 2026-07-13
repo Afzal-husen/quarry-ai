@@ -9,6 +9,8 @@ services:
       - ./backend/.env
     environment:
       - DATA_DIR=/app/data
+      - FASTEMBED_CACHE_DIR=/app/models/fastembed
+      - FLASHRANK_CACHE_DIR=/app/models/flashrank
     volumes:
       - backend_data:/app/data
 
