@@ -10,9 +10,13 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ---
 
-## Current Milestone: None
+## Current Milestone: v15.0 Ingestion Performance & Event Loop Starvation Hardening
 
-No active milestone is currently running. Use `/gsd-new-milestone` to initialize the next milestone cycle.
+**Goal:** Resolve event loop starvation and high CPU utilization during ingestion of multi-page documents on single-core cloud containers (Railway).
+
+**Target features:**
+- PERF-INGEST-01: Relocate GC calls out of per-page loops in document chunker
+- PERF-INGEST-02: Configure system-wide single-threading constraints for ONNX Runtime in Dockerfile
 
 ---
 
@@ -118,7 +122,8 @@ No active milestone is currently running. Use `/gsd-new-milestone` to initialize
 
 ### Active
 
-- None.
+- PERF-INGEST-01: Relocate GC calls out of per-page loops in document chunker to run once per document. (v15.0)
+- PERF-INGEST-02: Configure system-wide single-threading constraints for ONNX Runtime in Dockerfile via OMP_NUM_THREADS. (v15.0)
 
 ---
 

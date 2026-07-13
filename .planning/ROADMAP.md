@@ -23,9 +23,14 @@ This roadmap tracks completed milestones and active phases for the Document RAG 
 
 ---
 
-## Active Milestone: None
+## Active Milestone: v15.0 Ingestion Performance & Event Loop Starvation Hardening
 
-No active milestone is currently running. Use `/gsd-new-milestone` to initialize the next milestone cycle.
+### Phase 70: Ingestion Performance & Event Loop Starvation Hardening (PERF-INGEST)
+**Goal:** Relocate CPU-heavy garbage collection outside loops in document chunker and restrict thread pool allocations for ONNX.
+**Requirements:** GC-RELOC-01, GC-RELOC-02, ONNX-THREADS-01, ONNX-THREADS-02
+**Key changes:**
+- `backend/app/core/chunker.py`: Move `gc.collect()` outside page loops.
+- `backend/Dockerfile`: Add environment limits for threads.
 
 ---
 
@@ -33,7 +38,7 @@ No active milestone is currently running. Use `/gsd-new-milestone` to initialize
 
 | Phase | Milestone | Requirements | Status | Completed |
 |-------|-----------|--------------|--------|-----------|
-| — | — | — | — | — |
+| 70. Ingestion Performance & Event Loop Starvation Hardening | v15.0 | GC-RELOC-01–02, ONNX-THREADS-01–02 | Not started | — |
 
 ---
-*Roadmap updated: 2026-07-13 — Milestone v14.0 complete*
+*Roadmap updated: 2026-07-13 — Milestone v15.0 started*
