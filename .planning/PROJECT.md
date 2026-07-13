@@ -10,9 +10,14 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ---
 
-## Current Milestone: TBD
+## Current Milestone: v13.0 Memory Optimization & Cloud Readiness
 
-**Goal:** Defining next milestone goals.
+**Goal:** Optimize backend memory profile (eliminate PyTorch, adopt FastEmbed ONNX, add API embeddings support) to prevent OOM issues and ensure stable, low-cost deployments on Render/Railway.
+
+**Target features:**
+- MEM-OPT-01: PyTorch Elimination via FastEmbed (ONNX)
+- MEM-OPT-02: API-Based Embeddings Option (Groq & HF Serverless API)
+- MEM-OPT-03: Configurable Reranking & Ingestion Memory Tuning
 
 ---
 

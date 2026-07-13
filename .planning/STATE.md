@@ -1,15 +1,15 @@
 ---
 gsd_state_version: 1.0
-milestone: TBD
-milestone_name: TBD
+milestone: v13.0
+milestone_name: Memory Optimization & Cloud Readiness
 status: planning
-stopped_at: Milestone v12.0 archived
-last_updated: "2026-07-13T05:55:00.000Z"
-last_activity: 2026-07-13 — Milestone v12.0 completed and archived
+stopped_at: Milestone v13.0 initialized
+last_updated: "2026-07-13T06:03:00.000Z"
+last_activity: 2026-07-13 — Milestone v13.0 initialized
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
-  total_plans: 0
+  total_plans: 3
   completed_plans: 0
   percent: 0
 ---
@@ -21,18 +21,18 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-13)
 
 **Core value:** Enable seamless, low-latency document parsing and precise Q&A retrieval via a programmatic REST API using local embeddings and high-speed cloud LLM inference.
-**Current focus:** Next Milestone Goals Definition
+**Current focus:** Milestone v13.0 — Memory Optimization & Cloud Readiness
 
 ## Current Position
 
-Phase: TBD
+Phase: Phase 66 — PyTorch Elimination via FastEmbed (not started)
 Plan: —
-Status: Planning next milestone
-Last activity: 2026-07-13 — Milestone v12.0 completed and archived
+Status: Ready to plan Phase 66
+Last activity: 2026-07-13 — Milestone v13.0 initialized
 
 ## Milestone Goal
 
-TBD
+Optimize backend memory profile (adopt FastEmbed ONNX, support API-based embeddings option, make reranking optional, tune ingestion garbage collection) to ensure OOM-free cost-effective cloud deployments.
 
 ## Performance Metrics
 
@@ -61,15 +61,14 @@ None yet.
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
 | Feature | Interactive Citation Jump (FE-JUMP-01) | v2 backlog | 2026-07-06 |
-| Feature | Guided Focus Summaries (SUM-GUIDED-01) | v2 backlog | 2026-07-06 |
 
 ## Session Continuity
 
-Last session: 2026-07-13T05:55:00.000Z
-Stopped at: Milestone v12.0 archived
-Resume file: .planning/PROJECT.md
+Last session: 2026-07-13T06:03:00.000Z
+Stopped at: Milestone v13.0 initialized
+Resume file: .planning/ROADMAP.md
 
 ## Operator Next Steps
 
-- Define requirements for the next milestone in `.planning/REQUIREMENTS.md`
-- Update roadmap in `.planning/ROADMAP.md`
+- Start Phase 66 with `/gsd-discuss-phase 66` or `/gsd-plan-phase 66`
+- Phase 66: PyTorch Elimination via FastEmbed (MEM-OPT-01) — MEM-FE-01 through MEM-FE-03
