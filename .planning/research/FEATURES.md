@@ -1,86 +1,97 @@
-# Feature Research: Document Summarization & Quick Digests
+# Feature Research
 
-**Domain:** Document Summarization & Quick Digests
-**Researched:** 2026-07-04
+**Domain:** Interactive citation navigation + guided focus summaries in a RAG document viewer
+**Researched:** 2026-07-13
 **Confidence:** HIGH
-
-## Overview & Expected Behavior
-
-In a production-ready Retrieval-Augmented Generation (RAG) system, document summarization serves as a high-level bridge between raw data ingestion and user Q&A. Instead of relying purely on local context chunks for granular questions, users need a macroscopic view of their uploaded documents for quick scanning and content verification.
-
-### Typical Workflow in RAG
-1. **Extraction & Chunking**: A document is parsed and split into semantic chunks for vector database indexing.
-2. **Summarization Pipeline**: The extracted text (or key chunks/pages if it exceeds context windows) is sent to a High-Performance LLM (via Groq API) to generate a structured summary.
-3. **Metadata Database Persistence**: The generated summary is saved in the relational database (SQLite) alongside other document metadata.
-4. **UI Display**: The summary is cached and rendered in document overview cards and the preview modal.
-
-### Expected Behavior & UX
-- **Asynchronous Execution**: Summarization runs in the background within the async ingestion pipeline. The API returns an immediate response (HTTP 202), and the frontend shows a "Summarizing..." status badge.
-- **Fail-Safe Ingestion**: If the LLM summarization fails (due to Groq API rate limits, timeouts, or format issues), the document ingestion process must still complete. The document index will still be queryable, and the summary will support manual regeneration.
-- **Caching**: The summary must be persisted locally in SQLite so that viewing files does not trigger continuous LLM calls.
-
----
 
 ## Feature Landscape
 
 ### Table Stakes (Users Expect These)
 
-Features users assume exist. Missing these = product feels incomplete.
-
 | Feature | Why Expected | Complexity | Notes |
-|:---|:---|:---|:---|
-| **Asynchronous Summarization** | Summarizing takes several seconds; doing it synchronously blocks user uploads and causes timeouts. | MEDIUM | Orchestrated in the background task worker alongside chunking and indexing. |
-| **SQLite Schema Persistence** | Summaries must be cached to prevent unnecessary model inference costs and latency. | LOW | Add a `summary` (text) and `summary_status` (string/enum) to the SQLite document model. |
-| **FastAPI REST Endpoints** | Endpoints are needed to fetch, check status of, or manually trigger summarization. | MEDIUM | Expose `GET /api/documents/{document_id}/summary` and `POST /api/documents/{document_id}/summary/regenerate`. |
-| **Dashboard Grid Card Snippets** | Users want to quickly scan documents without opening them individually. | LOW | Truncate the persisted summary in the frontend card rendering. |
-| **Preview Modal Integration** | A central place to read the full digest when looking at the document inline. | MEDIUM | Render the full summary (using Markdown for formatting) inside the document preview modal. |
-| **Failure Recovery** | Rate limits or API outages should not block core document ingestion. | MEDIUM | Gracefully catch exceptions in the summarization worker, set state to `FAILED`, and allow manual retry. |
+|---------|--------------|------------|-------|
+| Click citation → jump to page | Users who see a citation badge [1] expect to navigate to the referenced page | MEDIUM | Requires PDF viewer page jump or scroll-to-anchor for DOCX |
+| Open document preview from citation | Clicking a citation referencing a doc should open that doc's preview | LOW | ChatShell already has `setActivePreviewDoc` and `setIsPreviewOpen` |
+| Guided summary scoped to keyword/topic | Users want "summarize for me what this document says about X" | MEDIUM | Backend: add `focus_topic` param to summarize endpoint; Frontend: input UI in summary pane |
+| Loading state during guided summary | User knows generation is in-progress | LOW | Spinner / skeleton already used for auto-summaries |
 
 ### Differentiators (Competitive Advantage)
 
-Features that set the product apart. Not required, but valuable.
-
 | Feature | Value Proposition | Complexity | Notes |
-|:---|:---|:---|:---|
-| **Prompt-Guided Focus Summary** | Allows users to ask for a custom summary focused on a specific interest (e.g. "Focus on financial metrics"). | MEDIUM | The regeneration endpoint accepts a custom `focus_prompt` string payload. |
-| **Auto-Generated FAQ Prompts** | Automatically suggests 3-5 starting questions for chat based on the document summary. | MEDIUM | During summarization, generate typical user questions and show them as clickable quick-starts in the chat context. |
-| **Hierarchical Search Routing** | Uses document-level summaries to filter or rank chunks before retrieval. | HIGH | Index the generated summary in the Chroma database and use it to score overall document relevance first. |
-| **Multi-Document Comparative Summaries** | Synthesis of commonalities and differences across multiple selected documents. | HIGH | UI allows selecting multiple files to request a combined cross-document comparative digest. |
+|---------|-------------------|------------|-------|
+| Inline citation → document + page auto-open | Clicking [1] in chat opens the document preview AND scrolls to the exact page | MEDIUM-HIGH | Best-in-class RAG UX; requires coordinating ChatShell state with PreviewModal |
+| Highlight/scrollmark the cited chunk text | Visually highlight the matching chunk text after navigation | HIGH | Needs text search within page content; defer to future milestone |
+| Per-session guided summary history | Show previously requested focus summaries as a list | MEDIUM | Defer — adds persistence complexity |
+| Compare focused summaries side-by-side | Show two focus summaries for two different topics | HIGH | Defer — complex UI |
 
 ### Anti-Features (Commonly Requested, Often Problematic)
 
-Features that seem good but create problems.
-
 | Feature | Why Requested | Why Problematic | Alternative |
-|:---|:---|:---|:---|
-| **Synchronous Ingestion Summarizing** | Get the summary instantly upon file upload return. | Blocks the UI, causes gateway timeouts (especially with larger files), and degrades UX. | Return upload confirmation immediately; poll status or stream state changes. |
-| **Uncapped Map-Reduce Summaries** | Summarize extremely large documents (e.g. 500+ pages) without token boundaries. | Exponential increase in Groq API costs, high rate-limiting frequency, and long queue times. | Truncate incoming text to first N chunks or main pages for summary generation. |
-| **On-demand Summary Generation** | Generate the summary fresh every time the user clicks "Preview". | Very slow UI load times (1-5s delay per file view) and high token costs. | Generate once during ingestion and persist in SQLite; support manual regeneration only. |
-| **Summary-Only RAG Retrieval** | Store only summaries in the vector database to save space. | Prevents exact retrieval for specific, detailed questions, breaking grounding. | Keep full document chunking for query retrieval, and use summaries for overview and navigation. |
-
----
+|---------|---------------|-----------------|-------------|
+| Store guided summaries in DB permanently | "Reuse previous focus summaries" | Bloats storage; focus summaries are highly contextual per query | Cache in frontend React state for the session; regenerate on demand |
+| Auto-open preview on every citation hover | "Preview citations inline without clicking" | Creates too much noise; users often hover accidentally | Stick to explicit click → open preview |
+| Real-time streaming of guided summaries | "See the answer as it's being typed" | Complexity vs. value is low for short summaries | Return the full guided summary in one response (fast enough via Groq) |
 
 ## Feature Dependencies
 
 ```
-[UI Card & Preview Modal] ──depends on──> [API Summary Endpoints]
-[API Summary Endpoints]   ──depends on──> [SQLite Persistence Schema]
-[Groq Ingestion Task]     ──depends on──> [Async Background Worker]
+[Click Citation Badge]
+    └──requires──> [PreviewModal open for correct document]
+                       └──requires──> [Document page jump to page_index]
+
+[Guided Focus Summary]
+    └──requires──> [Focus topic input UI in Summary pane]
+    └──requires──> [Backend guided_summarize endpoint]
+                       └──requires──> [DocumentSummarizer.summarize_with_focus(topic)]
 ```
+
+### Dependency Notes
+
+- **Citation jump requires PreviewModal open:** ChatShell must pass `page_index` to PreviewModal when opening via citation click
+- **Guided summary requires backend endpoint:** New `POST /documents/{id}/summary/guided` endpoint with `focus_topic` body param
+- **Guided summary does NOT require DB change:** Result returned inline, stored in frontend state only
 
 ## MVP Definition
 
-### Launch With (v8.0)
+### Launch With (v12.0)
 
-- [ ] Add `summary` and `summary_status` (pending, completed, failed) fields to the SQLite Document database model.
-- [ ] Implement a LangChain-based Groq summarization step in the background ingestion pipeline.
-- [ ] Expose FastAPI endpoints:
-  - `GET /api/documents/{document_id}/summary`
-  - `POST /api/documents/{document_id}/summary/regenerate`
-- [ ] Update frontend API client to fetch and trigger summaries.
-- [ ] Display a truncated summary on the dashboard document grid cards.
-- [ ] Update the Document Preview Modal to show the full summary (rendered in Markdown) with a "Regenerate" button for failed or outdated summaries.
+- [x] **FE-JUMP-01:** Click citation badge → opens PreviewModal for that document → scrolls/jumps to page_index — why essential: core backlog item, completes the citation experience
+- [x] **SUM-GUIDED-01:** Guided focus summary UI (topic input + generate button) in the summary pane + backend endpoint — why essential: core backlog item
+
+### Add After Validation (v12.x)
+
+- [ ] Highlight matched chunk text within the page — trigger: user feedback that page jump alone isn't precise enough
+- [ ] Guided summary history per session — trigger: users repeatedly request same topics
+
+### Future Consideration (v2+)
+
+- [ ] Compare two guided summaries side-by-side
+- [ ] Export guided summary as PDF/markdown
+- [ ] Guided summary from the chat interface ("summarize for topic X" as a chat command)
+
+## Feature Prioritization Matrix
+
+| Feature | User Value | Implementation Cost | Priority |
+|---------|------------|---------------------|----------|
+| Citation click → PreviewModal jump | HIGH | MEDIUM | P1 |
+| Guided focus summary (backend + UI) | HIGH | MEDIUM | P1 |
+| Highlight cited chunk text | MEDIUM | HIGH | P3 |
+| Guided summary history | LOW | MEDIUM | P3 |
+
+## Competitor Feature Analysis
+
+| Feature | Notion AI | ChatPDF | Our Approach |
+|---------|-----------|---------|--------------|
+| Citation navigation | Links to page in embedded viewer | Page-number badge, click opens viewer | Click badge → jump to page in our PreviewModal |
+| Guided summaries | Ask AI about page selection | Topic-based summary prompt | Focus topic input in summary pane sidebar |
+
+## Sources
+
+- Existing ChatShell.tsx — citation badge click handler already exists (`setSelectedCitation`)
+- Existing PreviewModal.tsx — has page-indexed DOCX text rendering; iframe for PDFs
+- Existing documents.py — summarizer pattern, regenerate endpoint
+- v8.0 milestone artifacts — DocumentSummarizer implementation context
 
 ---
-*Feature research for: Document RAG REST API v8.0*
-*Researched: 2026-07-04*
+*Feature research for: Interactive Citation Jump & Guided Focus Summaries*
+*Researched: 2026-07-13*
