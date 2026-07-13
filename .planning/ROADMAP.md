@@ -38,7 +38,7 @@ This roadmap tracks completed milestones and active phases for the Document RAG 
 
 | Phase | Milestone | Requirements | Status | Completed |
 |-------|-----------|--------------|--------|-----------|
-| 70. Ingestion Performance & Event Loop Starvation Hardening | v15.0 | GC-RELOC-01–02, ONNX-THREADS-01–02 | Not started | — |
+| 70. Ingestion Performance & Event Loop Starvation Hardening | v15.0 | GC-RELOC-01–02, ONNX-THREADS-01–02 | Complete | 2026-07-13 |
 
 ---
 *Roadmap updated: 2026-07-13 — Milestone v15.0 started*
