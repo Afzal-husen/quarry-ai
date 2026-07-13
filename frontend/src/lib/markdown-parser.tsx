@@ -193,19 +193,25 @@ export function parseMarkdown(
 
     if (isOrdered(line)) {
       const listItems: React.ReactNode[] = [];
+      let startValue = 1;
+      let isFirst = true;
       while (i < lines.length && isOrdered(lines[i])) {
-        const match = lines[i].match(/^\s*\d+\.\s+(.*)$/);
+        const match = lines[i].match(/^\s*(\d+)\.\s+(.*)$/);
         if (match) {
+          if (isFirst) {
+            startValue = parseInt(match[1], 10);
+            isFirst = false;
+          }
           listItems.push(
             <li key={`li-${i}`} className="leading-relaxed">
-              {parseInlineMarkdown(match[1], onRenderCitation)}
+              {parseInlineMarkdown(match[2], onRenderCitation)}
             </li>
           );
         }
         i++;
       }
       blocks.push(
-        <ol key={`ol-${i}`} className="list-decimal pl-5 my-2 text-sm space-y-1 text-muted-foreground">
+        <ol key={`ol-${i}`} start={startValue} className="list-decimal pl-5 my-2 text-sm space-y-1 text-muted-foreground">
           {listItems}
         </ol>
       );

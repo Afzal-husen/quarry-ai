@@ -115,7 +115,8 @@ def run_ingestion_job(
                 parents = payload.get("parents", [])
                 if parents:
                     # Join parent texts
-                    parent_texts = [p.get("text", "") for p in parents if p.get("text")]
+                    parent_texts = [p.get("text", "")
+                                    for p in parents if p.get("text")]
                     combined_text = "\n\n".join(parent_texts)
 
                     # Safeguard truncation limit: 10,000 characters
@@ -141,7 +142,8 @@ def run_ingestion_job(
         except Exception as summarization_err:
             import json
             import logging
-            logging.error(f"Failed to generate summary for document {document_id}: {str(summarization_err)}")
+            logging.error(
+                f"Failed to generate summary for document {document_id}: {str(summarization_err)}")
             try:
                 chunks_file_path = CHUNKS_DIR / user_id / f"{document_id}.json"
                 if chunks_file_path.exists():
@@ -199,7 +201,7 @@ def run_ingestion_job(
     description="Uploads a PDF, DOC, or DOCX document and dispatches the parsing and vector indexing to the background.",
     response_description="Returns the background ingestion job ID and status."
 )
-@limiter.limit(os.getenv("RATE_LIMIT_UPLOAD", "5/minute"))
+@limiter.limit(os.getenv("RATE_LIMIT_UPLOAD", "30/minute"))
 async def upload_file(
     request: Request,
     background_tasks: BackgroundTasks,
