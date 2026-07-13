@@ -22,9 +22,23 @@ This roadmap tracks completed milestones and active phases for the Document RAG 
 
 ---
 
-## Active Milestone: None
+## Active Milestone: v14.0 Dockerization & Model Baking Hardening
 
-No active milestone is currently running. Use `/gsd-new-milestone` to initialize the next milestone cycle.
+### Phase 69: Dockerization & Model Baking Hardening (DOCKER-BAKE)
+**Goal:** Bake FastEmbed/FlashRank model weights during Docker build, configure cache environment directories, and update dependencies installation methods in Dockerfile.
+**Requirements:** MEM-DK-01, MEM-DK-02, MEM-DK-03, MEM-DK-04, MEM-DK-05
+**Key changes:**
+- `backend/Dockerfile`: Expose variables, copy `requirements.txt`, run model cache pre-downloads, change permissions of `/app/models`.
+- `backend/app/core/reranker.py`: Support `cache_dir` from environment.
+- `docker-compose.yml`: Set model cache env variables.
 
 ---
-*Roadmap updated: 2026-07-13 — v13.0 archived*
+
+## Progress
+
+| Phase | Milestone | Requirements | Status | Completed |
+|-------|-----------|--------------|--------|-----------|
+| 69. Dockerization & Model Baking Hardening | v14.0 | MEM-DK-01–05 | Not started | — |
+
+---
+*Roadmap updated: 2026-07-13 — v14.0 milestone started*

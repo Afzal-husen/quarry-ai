@@ -10,9 +10,14 @@ Enable seamless, low-latency document parsing and precise Q&A retrieval via a pr
 
 ---
 
-## Current Milestone: None
+## Current Milestone: v14.0 Dockerization & Model Baking Hardening
 
-No active milestone is currently running. Use `/gsd-new-milestone` to initialize the next milestone cycle.
+**Goal:** Update the docker files and docker compose to bake FastEmbed and FlashRank models, resolve volume-mounting cache conflicts, and harden dependency builds.
+
+**Target features:**
+- DOCKER-BAKE-01: Correct dependency installation from requirements.txt in Dockerfile
+- DOCKER-BAKE-02: Support configurable cache directories for FastEmbed and FlashRank outside the database mount
+- DOCKER-BAKE-03: Pre-download and bake embedding and reranker models in Docker image build stage
 
 ---
 
@@ -117,7 +122,9 @@ No active milestone is currently running. Use `/gsd-new-milestone` to initialize
 
 ### Active
 
-- None.
+- DOCKER-BAKE-01: Update backend Dockerfile to use requirements.txt instead of pyproject.toml for dependency installations. (v14.0)
+- DOCKER-BAKE-02: Configure FastEmbed and FlashRank to support independent model cache directories in the environment. (v14.0)
+- DOCKER-BAKE-03: Pre-download and cache embedding and reranking ONNX models during image builds. (v14.0)
 
 ---
 
